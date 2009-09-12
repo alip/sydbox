@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <polatel@gmail.com>
+ * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
  * Based in part upon catbox which is:
  *  Copyright (c) 2006-2007 TUBITAK/UEKAE
  *

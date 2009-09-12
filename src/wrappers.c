@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <polatel@gmail.com>
+ * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
  * Based in part upon coreutils' lib/canonicalize.c which is:
  *  Copyright (C) 1996-2008 Free Software Foundation, Inc.
  *

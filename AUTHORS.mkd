@@ -1,6 +1,6 @@
 ## Sydbox Authors ##
 
-- Ali Polatel \<[polatel@gmail.com](mailto:polatel@gmail.com)\>  
+- Ali Polatel \<[alip@exherbo.org](mailto:alip@exherbo.org)\>  
   Main code
 - Saleem Abdulrasool \<[compnerd@compnerd.org](mailto:compnerd@compnerd.org)\>  
   Contributor, [glib](http://library.gnome.org/devel/glib/),

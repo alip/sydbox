@@ -1,6 +1,6 @@
 // sydbox man page
 // vim: set ts=4 sts=4 et tw=120 ft=asciidoc :
-// Copyright (c) 2009 Ali Polatel <polatel@gmail.com>
+// Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
 // Distributed under the terms of the GNU General Public License v2
 SYDBOX(1)
 =========

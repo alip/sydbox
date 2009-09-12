@@ -1,6 +1,6 @@
 /* Check program for t31-fchmodat.bash
  * vim: set et ts=4 sts=4 sw=4 fdm=syntax :
- * Copyright 2009 Ali Polatel <polatel@gmail.com>
+ * Copyright 2009 Ali Polatel <alip@exherbo.org>
  * Distributed under the terms of the GNU General Public License v2
  */
 
