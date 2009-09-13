@@ -26,23 +26,11 @@ check_PROGRAMS = test-lib.bash t01_chmod t01_chmod_toolong t02_chown t02_chown_t
 
 test_lib_bash_SOURCES= test-lib.bash.in
 
-if X86_64
 test-lib.bash: test-lib.bash.in
 	$(SED) \
 		-e "s:@TOP_BUILDDIR@:$(top_builddir):" \
-		-e "s:@LINUX32_PATH@:$(LINUX32):" \
 		-e "s:@PERL_PATH@:$(PERL):" \
-		-e "s:@CHECK_32BIT@:true:" \
 		$< > $@
-else
-test-lib.bash: test-lib.bash.in
-	$(SED) \
-		-e "s:@TOP_BUILDDIR@:$(top_builddir):" \
-		-e "s:@LINUX32_PATH@:$(LINUX32):" \
-		-e "s:@PERL_PATH@:$(PERL):" \
-		-e "s:@CHECK_32BIT@:false:" \
-		$< > $@
-endif
 
 check-valgrind:
 	SYDBOX_RUN_UNDER_VALGRIND=1 $(MAKE) check

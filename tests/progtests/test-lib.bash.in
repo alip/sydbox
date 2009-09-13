@@ -94,8 +94,7 @@ toolong_dir="$(
         printf "$long_dir"
         [[ $i != 64 ]] && printf /
     done)"
-linux32="@LINUX32_PATH@"
-check_32bit=@CHECK_32BIT@
+
 SYDBOX_LOG="${cwd}/sydbox-$$.log"
 remove_log=true
 
