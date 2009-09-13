@@ -3,6 +3,9 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.2
+* Fixed exit code, now sydbox always returns the exit code of the eldest child.
+
 ### 0.2_alpha4
 * Add options and magic commands to {en,dis}able the lstat wrapper.
 
