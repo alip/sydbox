@@ -21,7 +21,7 @@ DESCRIPTION
 Sydbox is a sandboxing utility.
 
 *Features*:::
-- Ptrace based which means it can sandbox static binaries unliked *LD_PRELOAD* based sandbox utilities.
+- Ptrace based which means it can sandbox static binaries unlike *LD_PRELOAD* based sandbox utilities.
 - Intercepts system calls and checks for allowed filesystem prefixes, denies them when checks fail.
 - Basic support for disallowing network connections.
 - Basic support for sandboxing execve(2) calls.
