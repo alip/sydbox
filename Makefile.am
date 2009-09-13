@@ -17,5 +17,5 @@ checksum: dist
 
 upload:
 	@echo "UPLOAD $(PACKAGE)-$(VERSION).tar.bz2*"
-	scp $(PACKAGE)-$(VERSION).tar.bz2* anapnea.net:www/sydbox
+	scp $(PACKAGE)-$(VERSION).tar.bz2* bach.exherbo.org:public_html/sydbox
 
