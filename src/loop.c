@@ -146,12 +146,12 @@ static int xunknown(context_t *ctx, struct tchild *child, int status)
 
 int trace_loop(context_t *ctx)
 {
-    int status, ret;
+    int status, ret, exit_code;
     unsigned int event;
     pid_t pid;
     struct tchild *child;
 
-    ret = EXIT_SUCCESS;
+    exit_code = ret = EXIT_SUCCESS;
     while (NULL != ctx->children) {
         pid = waitpid(-1, &status, __WALL);
         if (G_UNLIKELY(0 > pid)) {
@@ -160,7 +160,7 @@ int trace_loop(context_t *ctx)
             else {
                 g_critical("waitpid failed: %s", g_strerror(errno));
                 g_printerr("waitpid failed: %s", g_strerror(errno));
-                exit (-1);
+                exit(-1);
             }
         }
         child = tchild_find(ctx->children, pid);
@@ -180,25 +180,25 @@ int trace_loop(context_t *ctx)
                     child = tchild_find(ctx->children, pid);
                     ret = xsetup(ctx, child);
                     if (0 != ret)
-                        return ret;
+                        return exit_code;
                 }
                 else {
                     g_debug("setting up child %i", child->pid);
                     ret = xsetup(ctx, child);
                     if (0 != ret)
-                        return ret;
+                        return exit_code;
                     ret = xsyscall(ctx, child);
                     if (0 != ret)
-                        return ret;
+                        return exit_code;
                 }
                 break;
             case E_SYSCALL:
                 ret = syscall_handle(ctx, child);
                 if (0 != ret)
-                    return ret;
+                    return exit_code;
                 ret = xsyscall(ctx, child);
                 if (0 != ret)
-                    return ret;
+                    return exit_code;
                 break;
             case E_FORK:
             case E_VFORK:
@@ -206,10 +206,10 @@ int trace_loop(context_t *ctx)
                 g_debug("latest event for child %i is E_FORK, calling event handler", pid);
                 ret = xfork(ctx, child);
                 if (0 != ret)
-                    return ret;
+                    return exit_code;
                 ret = xsyscall(ctx, child);
                 if (0 != ret)
-                    return ret;
+                    return exit_code;
                 break;
             case E_EXEC:
                 g_debug("latest event for child %i is E_EXEC, calling event handler", pid);
@@ -228,27 +228,27 @@ int trace_loop(context_t *ctx)
                 g_debug("updated child %i's personality to %s mode", child->pid, dispatch_mode(child->personality));
                 ret = xsyscall(ctx, child);
                 if (0 != ret)
-                    return ret;
+                    return exit_code;
                 break;
             case E_GENUINE:
                 g_debug("latest event for child %i is E_GENUINE, calling event handler", pid);
                 ret = xgenuine(ctx, child, status);
                 if (0 != ret)
-                    return ret;
+                    return exit_code;
                 break;
             case E_EXIT:
                 if (G_UNLIKELY(ctx->eldest == pid)) {
                     // Eldest child, keep return value.
-                    ret = WEXITSTATUS(status);
-                    if (0 != ret)
-                        g_message("eldest child %i exited with return code %d", pid, ret);
+                    exit_code = WEXITSTATUS(status);
+                    if (EXIT_SUCCESS != exit_code)
+                        g_message("eldest child %i exited with return code %d", pid, exit_code);
                     else
-                        g_info("eldest child %i exited with return code %d", pid, ret);
+                        g_info("eldest child %i exited with return code %d", pid, exit_code);
                     if (!sydbox_config_get_wait_all()) {
                         g_hash_table_foreach(ctx->children, tchild_cont_one, NULL);
                         g_hash_table_destroy(ctx->children);
                         ctx->children = NULL;
-                        return ret;
+                        return exit_code;
                     }
                 }
                 else
@@ -257,13 +257,13 @@ int trace_loop(context_t *ctx)
                 break;
             case E_EXIT_SIGNAL:
                 if (G_UNLIKELY(ctx->eldest == pid)) {
-                    ret = 128 + WTERMSIG(status);
+                    exit_code = 128 + WTERMSIG(status);
                     g_message("eldest child %i exited with signal %d", pid, WTERMSIG(status));
                     if (!sydbox_config_get_wait_all()) {
                         g_hash_table_foreach(ctx->children, tchild_cont_one, NULL);
                         g_hash_table_destroy(ctx->children);
                         ctx->children = NULL;
-                        return ret;
+                        return exit_code;
                     }
                 }
                 else
@@ -274,12 +274,12 @@ int trace_loop(context_t *ctx)
                 g_info("unknown signal %#x received from child %i", WSTOPSIG(status), pid);
                 ret = xunknown(ctx, child, status);
                 if (0 != ret)
-                    return ret;
+                    return exit_code;
                 break;
             default:
                 g_assert_not_reached();
         }
     }
-    return ret;
+    return exit_code;
 }
 
