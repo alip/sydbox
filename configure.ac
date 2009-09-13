@@ -427,6 +427,10 @@ PKG_CHECK_MODULES([gobject], [gobject-2.0 >= $GLIB_REQUIRED],,
 PKG_CHECK_MODULES([check], [check >= $CHECK_REQUIRED])
 dnl }}}
 
+dnl {{{ Check for linux32
+AC_PATH_PROG([LINUX32], linux32)
+dnl }}}
+
 dnl {{{ Check for Perl
 AC_PATH_PROG([PERL], perl)
 dnl }}}
