@@ -37,7 +37,7 @@ static char *shell_expand(const char * const str)
 
     quoted = g_shell_quote(str);
     argv[2] = g_strdup_printf("echo '%s'", quoted);
-    g_free (quoted);
+    g_free(quoted);
 
     if (G_UNLIKELY(!g_spawn_sync(NULL, argv, NULL, G_SPAWN_STDERR_TO_DEV_NULL, NULL, NULL,
                     &output, NULL, &retval, &spawn_error))) {
