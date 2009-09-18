@@ -9,9 +9,8 @@
 #include <stdlib.h>
 
 int main(void) {
-    if (0 > mount("/dev", "see.emily.play", "pinkfs", MS_BIND, "")) {
-        return EXIT_FAILURE;
-    }
+    if (0 > mount("/dev", "see.emily.play", "pinkfs", MS_BIND, ""))
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

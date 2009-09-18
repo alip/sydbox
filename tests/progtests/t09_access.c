@@ -4,6 +4,7 @@
  * Distributed under the terms of the GNU General Public License v2
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
         mode = X_OK;
 
     if (0 > access("arnold.layne", mode))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

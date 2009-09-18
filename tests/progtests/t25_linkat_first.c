@@ -5,6 +5,7 @@
  */
 
 #define _ATFILE_SOURCE
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -19,7 +20,7 @@ int main(void) {
     if (-1 == dfd)
         return EXIT_FAILURE;
     if (0 > linkat(dfd, "arnold.layne", AT_FDCWD, "arnold.layne.hard", 0))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

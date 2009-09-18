@@ -4,6 +4,7 @@
  * Distributed under the terms of the GNU General Public License v2
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
     }
 
     if (0 > mkdir(dname, 0644))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

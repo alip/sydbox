@@ -5,13 +5,14 @@
  */
 
 #define _ATFILE_SOURCE
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 int main(void) {
     if (0 > renameat(AT_FDCWD, "arnold.layne", AT_FDCWD, "lucifer.sam"))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

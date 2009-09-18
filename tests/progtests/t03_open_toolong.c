@@ -6,6 +6,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -36,7 +37,7 @@ int main(int argc, char **argv) {
         case T_WRONLY:
             fd = open(fname, O_WRONLY);
             if (0 > fd)
-                return EXIT_FAILURE;
+                return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
             else {
                 write(fd, "why can't you see?", 18);
                 close(fd);
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
         case T_RDWR:
             fd = open(fname, O_RDWR);
             if (0 > fd)
-                return EXIT_FAILURE;
+                return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
             else {
                 write(fd, "why can't you see?", 18);
                 close(fd);

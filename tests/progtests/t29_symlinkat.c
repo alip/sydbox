@@ -5,6 +5,7 @@
  */
 
 #define _ATFILE_SOURCE
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -20,7 +21,7 @@ int main(void) {
         return EXIT_FAILURE;
 
     if (0 > symlinkat("see.emily.play/gnome", dfd, "jugband.blues"))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

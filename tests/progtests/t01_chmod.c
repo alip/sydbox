@@ -4,12 +4,13 @@
  * Distributed under the terms of the GNU General Public License v2
  */
 
+#include <errno.h>
 #include <sys/stat.h>
 #include <stdlib.h>
 
 int main(void) {
     if (0 > chmod("arnold.layne", 0000))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

@@ -4,6 +4,7 @@
  * Distributed under the terms of the GNU General Public License v2
  */
 
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
         case T_WRONLY:
             fd = open(f, O_WRONLY);
             if (0 > fd)
-                return EXIT_FAILURE;
+                return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
             else {
                 write(fd, "why can't you see?", 18);
                 close(fd);
@@ -39,7 +40,7 @@ int main(int argc, char **argv) {
         case T_RDWR:
             fd = open(f, O_RDWR);
             if (0 > fd)
-                return EXIT_FAILURE;
+                return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
             else {
                 write(fd, "why can't you see?", 18);
                 close(fd);

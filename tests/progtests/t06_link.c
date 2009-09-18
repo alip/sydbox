@@ -10,7 +10,7 @@
 
 int main(void) {
     if (0 > link("see.emily.play/gnome", "arnold.layne.hard"))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

@@ -9,9 +9,8 @@
 #include <stdlib.h>
 
 int main(void) {
-    if (0 > umount2("see.emily.play", 0)) {
-        return EXIT_FAILURE;
-    }
+    if (0 > umount2("see.emily.play", 0))
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

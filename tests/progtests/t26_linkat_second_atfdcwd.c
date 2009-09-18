@@ -5,13 +5,14 @@
  */
 
 #define _ATFILE_SOURCE
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 
 int main(void) {
     if (0 > linkat(AT_FDCWD, "see.emily.play/gnome", AT_FDCWD, "arnold.layne.hard", 0))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }

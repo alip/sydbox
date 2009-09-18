@@ -4,7 +4,7 @@
  * Distributed under the terms of the GNU General Public License v2
  */
 
-
+#include <errno.h>
 #include <sys/types.h>
 #include <utime.h>
 #include <stdlib.h>
@@ -16,7 +16,7 @@ int main(void) {
     times.modtime = 0;
 
     if (0 > utime("arnold.layne", &times))
-        return EXIT_FAILURE;
+        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
     else
         return EXIT_SUCCESS;
 }
