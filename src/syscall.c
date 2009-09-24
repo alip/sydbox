@@ -196,21 +196,21 @@ static void systemcall_start_check(SystemCall *self, gpointer ctx_ptr,
             return;
     }
     if (self->flags & CHECK_PATH_AT) {
-        if (!systemcall_get_dirfd(self, child, 0, data))
-            return;
         if (!systemcall_get_path(child->pid, child->personality, 1, data))
+            return;
+        if (!g_path_is_absolute(data->pathlist[1]) && !systemcall_get_dirfd(self, child, 0, data))
             return;
     }
     if (self->flags & CHECK_PATH_AT1) {
-        if (!systemcall_get_dirfd(self, child, 1, data))
-            return;
         if (!systemcall_get_path(child->pid, child->personality, 2, data))
+            return;
+        if (!g_path_is_absolute(data->pathlist[2]) && !systemcall_get_dirfd(self, child, 1, data))
             return;
     }
     if (self->flags & CHECK_PATH_AT2) {
-        if (!systemcall_get_dirfd(self, child, 2, data))
-            return;
         if (!systemcall_get_path(child->pid, child->personality, 3, data))
+            return;
+        if (!g_path_is_absolute(data->pathlist[3]) && !systemcall_get_dirfd(self, child, 2, data))
             return;
     }
     if (!ctx->before_initial_execve && child->sandbox->exec && self->flags & EXEC_CALL) {
