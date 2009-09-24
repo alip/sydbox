@@ -59,8 +59,15 @@ char *pgetdir(pid_t pid, int dfd) {
     dir = ereadlink(linkdir);
     if (G_LIKELY(NULL != dir))
         return dir;
-    else if (ENAMETOOLONG != errno)
+    else if (ENAMETOOLONG != errno) {
+        if (ENOENT == errno) {
+            /* The file descriptor doesn't exist!
+             * Correct errno to EBADF.
+             */
+            errno = EBADF;
+        }
         return NULL;
+    }
 
     // Now try egetcwd()
     errno = 0;
