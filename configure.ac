@@ -248,14 +248,18 @@ int main(void) {
     else {
         char proc[32], path[PATH_MAX];
         char *cwd = NULL;
+        ssize_t len;
 
         cwd = getcwd(cwd, PATH_MAX);
         if (NULL == cwd)
             goto fail;
 
         snprintf(proc, 32, "/proc/%i/cwd", pid);
-        if (0 > readlink(proc, path, PATH_MAX))
+        len = readlink(proc, path, PATH_MAX);
+        if (0 > len)
             goto fail;
+        else
+            path[len] = '\0';
         if (0 != strncmp(cwd, path, PATH_MAX))
             goto fail;
 
