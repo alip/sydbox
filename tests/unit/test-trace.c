@@ -51,7 +51,7 @@ static void test1(void)
         kill(getpid(), SIGSTOP);
     }
     else { // parent
-        wait(&status);
+        waitpid(pid, &status, 0);
 
         if (!WIFSTOPPED(status)) {
             g_printerr("child %i didn't stop by sending itself SIGSTOP\n", pid);
@@ -85,7 +85,7 @@ static void test2(void)
         sleep(1);
     }
     else { // parent
-        wait(&status);
+        waitpid(pid, &status, 0);
 
         if (!WIFSTOPPED(status)) {
             g_printerr("child %i didn't stop by sending itself SIGSTOP\n", pid);
@@ -102,7 +102,7 @@ static void test2(void)
             g_assert(FALSE);
         }
 
-        wait(&status);
+        waitpid(pid, &status, 0);
 
         if (!WIFSTOPPED(status)) {
             g_printerr("child %i didn't stop by sending itself SIGTRAP\n", pid);
