@@ -431,14 +431,13 @@ dnl {{{ Check for Perl
 AC_PATH_PROG([PERL], perl)
 dnl }}}
 
-dnl {{{ Use AM_SILENT_RULES if present, shave otherwise
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES(yes)], [SHAVE_INIT([.], [enable])])
+dnl {{{ Use AM_SILENT_RULES
+AM_SILENT_RULES(yes)
 dnl }}}
 
 dnl {{{ output
 AM_CONFIG_HEADER(config.h)
 AC_OUTPUT(
-	shave
 	Makefile
 	data/Makefile
 	src/Makefile

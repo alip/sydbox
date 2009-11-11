@@ -3,6 +3,8 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Require automake 1.11
+
 ### 0.3
 * Set errno correctly when a file descriptor doesn't exist.
 * Ignore dirfd if path argument is absolute.
