@@ -10,5 +10,5 @@
 
 int main(void)
 {
-  return !(STDERR_FILENO < openat(-1, "/dev/null", O_WRONLY));
+    return !(STDERR_FILENO < openat(-1, "/dev/null", O_WRONLY));
 }

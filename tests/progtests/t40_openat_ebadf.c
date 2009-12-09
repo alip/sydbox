@@ -10,6 +10,6 @@
 
 int main(void)
 {
-  openat(-1, ".", O_RDONLY);
-  return !(errno == EBADF);
+    openat(-1, ".", O_RDONLY);
+    return !(errno == EBADF);
 }
