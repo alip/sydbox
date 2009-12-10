@@ -27,6 +27,6 @@ children_LDADD = $(glib_LIBS)
 path_SOURCES = $(libsydbox_SOURCES) test-path.c
 path_LDADD = $(glib_LIBS)
 
-trace_SOURCES = $(libsydbox_SOURCES) test-trace.c
+trace_SOURCES = $(libsydbox_SOURCES) test-helpers.h test-trace.c
 trace_LDADD = $(glib_LIBS)
 
