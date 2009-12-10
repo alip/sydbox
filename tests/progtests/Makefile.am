@@ -10,7 +10,7 @@ TESTS = t01-chmod.bash t02-chown.bash t03-open.bash t04-creat.bash t05-lchown.ba
 	t28-symlinkat-atfdcwd.bash t29-symlinkat.bash t30-fchmodat-atfdcwd.bash t31-fchmodat.bash \
 	t32-magic-onoff.bash t33-magic-enabled.bash t34-magic-lock.bash t35-magic-exec_lock.bash \
 	t36-magic-write.bash t37-magic-unwrite.bash t38-magic-addfilter.bash t39-magic-rmfilter.bash \
-	t40-openat-ebadf.bash t41-openat-fileno.bash t42-magic-wrap_lstat.bash
+	t40-openat-ebadf.bash t41-openat-fileno.bash t42-magic-wrap_lstat.bash t43-exit-code.bash
 
 EXTRA_DIST= $(TESTS)
 
@@ -24,7 +24,8 @@ check_PROGRAMS = test-lib.bash t01_chmod t01_chmod_toolong t02_chown t02_chown_t
 		 t24_linkat_first_atfdcwd t25_linkat_first t26_linkat_second_atfdcwd t27_linkat_second \
 		 t28_symlinkat_atfdcwd t29_symlinkat t30_fchmodat_atfdcwd t31_fchmodat \
 		 t32_magic_onoff_set_on t32_magic_onoff_set_off t32_magic_onoff_check_off \
-		 t32_magic_onoff_check_on t40_openat_ebadf t41_openat_fileno t42_magic_wrap_lstat
+		 t32_magic_onoff_check_on t40_openat_ebadf t41_openat_fileno t42_magic_wrap_lstat \
+		 t43_exit_code_single t43_exit_code_signal t43_exit_code_many
 
 test_lib_bash_SOURCES= test-lib.bash.in
 
