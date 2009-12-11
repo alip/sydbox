@@ -1396,6 +1396,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
             /* Check result */
             switch(data.result) {
                 case RS_ERROR:
+                    errno = data.save_errno;
                     if (ESRCH == errno)
                         return context_remove_child(ctx, child->pid);
                     else if (EIO != errno && EFAULT != errno) {
@@ -1405,6 +1406,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                                 sno, sname, g_strerror(errno));
                         exit(-1);
                     }
+                    child->retval = -errno;
                     /* fall through */
                 case RS_DENY:
                     g_debug("denying access to system call %lu(%s)", sno, sname);
