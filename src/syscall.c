@@ -1406,6 +1406,23 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                                 sno, sname, g_strerror(errno));
                         exit(-1);
                     }
+                    else if (EIO == errno) {
+                        /* Quoting from ptrace(2):
+                         * There  was  an  attempt  to read from or write to an
+                         * invalid area in the parent's or child's memory,
+                         * probably because the area wasn't mapped or
+                         * accessible. Unfortunately, under Linux, different
+                         * variations of this fault will return EIO or EFAULT
+                         * more or less arbitrarily.
+                         */
+                        /* For consistency we change the errno to EFAULT here.
+                         * Because it's usually what we actually want.
+                         * For example:
+                         * open(NULL, O_RDONLY) (returns: -1, errno: EFAULT)
+                         * under ptrace, we get errno: EIO
+                         */
+                        errno = EFAULT;
+                    }
                     child->retval = -errno;
                     /* fall through */
                 case RS_DENY:
