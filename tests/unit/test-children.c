@@ -20,8 +20,9 @@
 
 #include <stdlib.h>
 #include <glib.h>
-#include <children.h>
-#include <sydbox-config.h>
+
+#include "children.h"
+#include "sydbox-config.h"
 
 static void test1(void)
 {
@@ -56,7 +57,7 @@ static void test2(void)
     g_hash_table_destroy(children);
 }
 
-static void no_log (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
+static void no_log(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
 {
 }
 
@@ -65,13 +66,13 @@ int main(int argc, char **argv)
     g_setenv(ENV_NO_CONFIG, "1", 1);
     sydbox_config_load(NULL, NULL);
 
-    g_test_init (&argc, &argv, NULL);
+    g_test_init(&argc, &argv, NULL);
 
-    g_log_set_default_handler (no_log, NULL);
+    g_log_set_default_handler(no_log, NULL);
 
     g_test_add_func ("/children/new", test1);
     g_test_add_func ("/children/delete", test2);
 
-    return g_test_run ();
+    return g_test_run();
 }
 
