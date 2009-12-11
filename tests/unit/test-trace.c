@@ -112,7 +112,123 @@ static void test2(void)
     }
 }
 
-static void test7(void)
+static void test3(void)
+{
+    int ret, status;
+    pid_t pid, cpid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+
+        cpid = fork();
+        if (0 > cpid) {
+            g_printerr("fork() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        pause();
+    }
+    else {
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the fork() */
+        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the event */
+        ret = trace_event(status);
+        XFAIL_UNLESS(E_FORK == ret, "Expected E_FORK got %d\n", ret);
+
+        trace_kill(pid);
+    }
+}
+
+static void test4(void)
+{
+    int ret, status;
+    pid_t pid, cpid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+
+        cpid = vfork();
+        if (0 > cpid) {
+            g_printerr("vfork() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        pause();
+    }
+    else {
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the vfork() */
+        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the event */
+        ret = trace_event(status);
+        XFAIL_UNLESS(E_VFORK == ret, "Expected E_VFORK got %d\n", ret);
+
+        trace_kill(pid);
+    }
+}
+
+static void test5(void)
+{
+    int ret, status;
+    pid_t pid;
+    char *myargv[] = { "/bin/true", NULL };
+    char *myenviron[] = { NULL };
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+
+        execve(myargv[0], myargv, myenviron);
+        g_printerr("execve() failed: %s\n", g_strerror(errno));
+        _exit(EXIT_FAILURE);
+    }
+    else {
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the execve() */
+        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the event */
+        ret = trace_event(status);
+        XFAIL_UNLESS(E_EXEC == ret, "Expected E_EXEC got %d\n", ret);
+
+        trace_kill(pid);
+    }
+}
+
+static void test6(void)
 {
     int ret, status;
     pid_t pid;
@@ -144,7 +260,7 @@ static void test7(void)
     }
 }
 
-static void test8(void)
+static void test7(void)
 {
     int ret, status;
     pid_t pid;
@@ -176,7 +292,7 @@ static void test8(void)
     }
 }
 
-static void test9(void)
+static void test8(void)
 {
     int ret, status;
     pid_t pid;
@@ -209,7 +325,7 @@ static void test9(void)
     }
 }
 
-static void test10(void)
+static void test9(void)
 {
     int ret, status;
     long sno;
@@ -244,7 +360,7 @@ static void test10(void)
     }
 }
 
-static void test11(void)
+static void test10(void)
 {
     int ret, status;
     long sno;
@@ -286,7 +402,7 @@ static void test11(void)
     }
 }
 
-static void test12(void)
+static void test11(void)
 {
     int ret, status;
     char *path;
@@ -323,7 +439,7 @@ static void test12(void)
     }
 }
 
-static void test13(void)
+static void test12(void)
 {
     int ret, status;
     char *path;
@@ -360,7 +476,7 @@ static void test13(void)
     }
 }
 
-static void test14(void)
+static void test13(void)
 {
     int ret, status;
     char *path;
@@ -397,7 +513,7 @@ static void test14(void)
     }
 }
 
-static void test15(void)
+static void test14(void)
 {
     int ret, status;
     char *path;
@@ -442,23 +558,20 @@ int main(int argc, char **argv)
 
     g_test_add_func("/trace/event/stop", test1);
     g_test_add_func("/trace/event/syscall", test2);
-/* TODO
- *  g_test_add_func("/trace/event/fork", test3);
- *  g_test_add_func("/trace/event/vfork", test4);
- *  g_test_add_func("/trace/event/clone", test5);
- *  g_test_add_func("/trace/event/execv", test6);
- */
-    g_test_add_func("/trace/event/genuine", test7);
-    g_test_add_func("/trace/event/exit/normal", test8);
-    g_test_add_func("/trace/event/exit/signal", test9);
+    g_test_add_func("/trace/event/fork", test3);
+    g_test_add_func("/trace/event/vfork", test4);
+    g_test_add_func("/trace/event/exec", test5);
+    g_test_add_func("/trace/event/genuine", test6);
+    g_test_add_func("/trace/event/exit/normal", test7);
+    g_test_add_func("/trace/event/exit/signal", test8);
 
-    g_test_add_func("/trace/syscall/get", test10);
-    g_test_add_func("/trace/syscall/set", test11);
+    g_test_add_func("/trace/syscall/get", test9);
+    g_test_add_func("/trace/syscall/set", test10);
 
-    g_test_add_func("/trace/path/get/first", test12);
-    g_test_add_func("/trace/path/get/second", test13);
-    g_test_add_func("/trace/path/get/third", test14);
-    g_test_add_func("/trace/path/get/fourth", test15);
+    g_test_add_func("/trace/path/get/first", test11);
+    g_test_add_func("/trace/path/get/second", test12);
+    g_test_add_func("/trace/path/get/third", test13);
+    g_test_add_func("/trace/path/get/fourth", test14);
 
     return g_test_run();
 }
