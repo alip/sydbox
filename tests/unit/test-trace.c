@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -40,6 +41,19 @@
 #include "../src/trace.h"
 
 #include "test-helpers.h"
+
+#if defined(I386) || defined(IA64) || defined(POWERPC)
+#define CHECK_PERSONALITY 0
+#elif defined(X86_64)
+#define CHECK_PERSONALITY 1
+#else
+#error unsupported architecture
+#endif
+
+static void cleanup(void)
+{
+    unlink("arnold_layne");
+}
 
 static void test1(void)
 {
@@ -272,8 +286,158 @@ static void test11(void)
     }
 }
 
+static void test12(void)
+{
+    int ret, status;
+    char *path;
+    pid_t pid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+        open("/dev/null", O_RDONLY);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child and it will stop at the next system call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the path argument */
+        path = trace_get_path(pid, CHECK_PERSONALITY, 0);
+        XFAIL_IF(NULL == path, "failed to get string: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(path, "/dev/null", 10), "expected `/dev/null' got `%s'", path);
+
+        free(path);
+        trace_kill(pid);
+    }
+}
+
+static void test13(void)
+{
+    int ret, status;
+    char *path;
+    pid_t pid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+        openat(-1, "/dev/null", O_RDONLY);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child and it will stop at the next system call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the path argument */
+        path = trace_get_path(pid, CHECK_PERSONALITY, 1);
+        XFAIL_IF(NULL == path, "failed to get string: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(path, "/dev/null", 10), "expected `/dev/null' got `%s'", path);
+
+        free(path);
+        trace_kill(pid);
+    }
+}
+
+static void test14(void)
+{
+    int ret, status;
+    char *path;
+    pid_t pid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+        symlinkat("emily", AT_FDCWD, "arnold_layne");
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child and it will stop at the next system call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the path argument */
+        path = trace_get_path(pid, CHECK_PERSONALITY, 2);
+        XFAIL_IF(NULL == path, "failed to get string: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(path, "arnold_layne", 13), "expected `arnold_layne' got `%s'", path);
+
+        free(path);
+        trace_kill(pid);
+    }
+}
+
+static void test15(void)
+{
+    int ret, status;
+    char *path;
+    pid_t pid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+        linkat(AT_FDCWD, "emily", AT_FDCWD, "arnold_layne", 0600);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child and it will stop at the next system call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the path argument */
+        path = trace_get_path(pid, CHECK_PERSONALITY, 3);
+        XFAIL_IF(NULL == path, "failed to get string: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(path, "arnold_layne", 13), "expected `arnold_layne' got `%s'", path);
+
+        free(path);
+        trace_kill(pid);
+    }
+}
+
 int main(int argc, char **argv)
 {
+    atexit(cleanup);
+
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/trace/event/stop", test1);
@@ -290,6 +454,11 @@ int main(int argc, char **argv)
 
     g_test_add_func("/trace/syscall/get", test10);
     g_test_add_func("/trace/syscall/set", test11);
+
+    g_test_add_func("/trace/path/get/first", test12);
+    g_test_add_func("/trace/path/get/second", test13);
+    g_test_add_func("/trace/path/get/third", test14);
+    g_test_add_func("/trace/path/get/fourth", test15);
 
     return g_test_run();
 }
