@@ -64,8 +64,10 @@ static void test1(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
     }
     else { // parent
@@ -89,8 +91,10 @@ static void test2(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         sleep(1);
     }
@@ -121,8 +125,10 @@ static void test3(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
 
         cpid = fork();
@@ -160,8 +166,10 @@ static void test4(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
 
         cpid = vfork();
@@ -201,8 +209,10 @@ static void test5(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
 
         execve(myargv[0], myargv, myenviron);
@@ -237,8 +247,10 @@ static void test6(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         kill(getpid(), SIGINT);
     }
@@ -269,8 +281,10 @@ static void test7(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         exit(EXIT_SUCCESS);
     }
@@ -301,8 +315,10 @@ static void test8(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         pause();
     }
@@ -335,8 +351,10 @@ static void test9(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         open("/dev/null", O_RDONLY);
         pause();
@@ -370,8 +388,10 @@ static void test10(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         open("/dev/null", O_RDONLY);
         pause();
@@ -412,8 +432,10 @@ static void test11(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         open("/dev/null", O_RDONLY);
         pause();
@@ -449,8 +471,10 @@ static void test12(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         openat(-1, "/dev/null", O_RDONLY);
         pause();
@@ -486,8 +510,10 @@ static void test13(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         symlinkat("emily", AT_FDCWD, "arnold_layne");
         pause();
@@ -523,8 +549,10 @@ static void test14(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me())
+        if (0 > trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
         kill(getpid(), SIGSTOP);
         linkat(AT_FDCWD, "emily", AT_FDCWD, "arnold_layne", 0600);
         pause();
