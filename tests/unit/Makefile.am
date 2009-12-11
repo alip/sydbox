@@ -10,7 +10,28 @@ libsydbox_SOURCES = $(top_srcdir)/src/sydbox-utils.c  \
 		    $(top_srcdir)/src/path.c          \
 		    $(top_srcdir)/src/children.c      \
 		    $(top_srcdir)/src/trace.c         \
-		    $(top_srcdir)/src/net.c
+		    $(top_srcdir)/src/trace-util.c    \
+		    $(top_srcdir)/src/net.c           \
+libsydbox_SOURCES += $(top_srcdir)/src/dispatch.h \
+		     $(top_srcdir)/src/dispatch-table.h
+if I386
+libsydbox_SOURCES+= $(top_srcdir)/src/dispatch.c \
+		    $(top_srcdir)/src/trace-x86.c
+endif
+if X86_64
+libsydbox_SOURCES+= $(top_srcdir)/src/dispatch32.c \
+		    $(top_srcdir)/src/dispatch64.c \
+		    $(top_srcdir)/src/trace-x86_64.c
+endif
+if IA64
+libsydbox_SOURCES+= $(top_srcdir)/src/dispatch.c \
+		    $(top_srcdir)/src/trace-ia64.c
+endif
+if POWERPC
+libsydbox_SOURCES+= $(top_srcdir)/src/dispatch.c \
+		    $(top_srcdir)/src/trace-powerpc.c
+endif
+
 AM_CFLAGS += -DDATADIR="\"$(datadir)\"" -DSYSCONFDIR="\"$(sysconfdir)\"" -I$(top_srcdir)/src
 # }}}
 

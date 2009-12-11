@@ -25,6 +25,7 @@
 #include "config.h"
 #endif // HAVE_CONFIG_H
 
+#include <asm/unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -194,6 +195,83 @@ static void test9(void)
     }
 }
 
+static void test10(void)
+{
+    int ret, status;
+    long sno;
+    pid_t pid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+        open("/dev/null", O_RDONLY);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child and it will stop at the next system call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the system call number */
+        XFAIL_IF(0 > trace_get_syscall(pid, &sno), "failed to get system call: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(__NR_open == sno, "expected __NR_open, got %d\n", sno);
+
+        trace_kill(pid);
+    }
+}
+
+static void test11(void)
+{
+    int ret, status;
+    long sno;
+    pid_t pid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me())
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+        kill(getpid(), SIGSTOP);
+        open("/dev/null", O_RDONLY);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child and it will stop at the next system call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        XFAIL_IF(0 > trace_set_syscall(pid, 0xbadca11), "failed to set system call: %s", g_strerror(errno));
+
+        /* Resume the child and it will stop at the end of the system call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the system call number */
+        XFAIL_IF(0 > trace_get_syscall(pid, &sno), "failed to get system call: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0xbadca11 == sno, "expected 0xbadca11, got %d\n", sno);
+
+        trace_kill(pid);
+    }
+}
+
 int main(int argc, char **argv)
 {
     g_test_init(&argc, &argv, NULL);
@@ -209,6 +287,9 @@ int main(int argc, char **argv)
     g_test_add_func("/trace/event/genuine", test7);
     g_test_add_func("/trace/event/exit/normal", test8);
     g_test_add_func("/trace/event/exit/signal", test9);
+
+    g_test_add_func("/trace/syscall/get", test10);
+    g_test_add_func("/trace/syscall/set", test11);
 
     return g_test_run();
 }
