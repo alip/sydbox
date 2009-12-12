@@ -95,7 +95,7 @@ every change, see git log.
 * Fix segfaults caused by wrong handling of the list of children.
 
 ### 0.1_beta6:
-* Implement proper `execve(2)` sandboxing instead of the ban_exec hack.
+* Implement proper `execve(2)` sandboxing instead of the ban\_exec hack.
 * Add command line options `--sandbox-exec` and `--sandbox--network`.
 * Fix inheritance of sandbox data between children.
 
