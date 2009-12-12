@@ -189,13 +189,13 @@ static gchar *get_groupname (void)
 static void G_GNUC_NORETURN sydbox_execute_child(int argc G_GNUC_UNUSED, char **argv)
 {
     if (trace_me() < 0) {
-        g_printerr("failed to set tracing: %s", g_strerror(errno));
+        g_printerr("failed to set tracing: %s\n", g_strerror(errno));
         _exit(-1);
     }
 
     /* stop and wait for the parent to resume us with trace_syscall */
     if (kill(getpid(), SIGSTOP) < 0) {
-        g_printerr("failed to send SIGSTOP: %s", g_strerror(errno));
+        g_printerr("failed to send SIGSTOP: %s\n", g_strerror(errno));
         _exit(-1);
     }
 
@@ -236,14 +236,14 @@ static int sydbox_execute_parent(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUS
     wait (&status);
     if (WIFEXITED (status)) {
         g_critical("wtf? child died before sending SIGSTOP");
-        g_printerr("wtf? child died before sending SIGSTOP");
+        g_printerr("wtf? child died before sending SIGSTOP\n");
         exit(WEXITSTATUS(status));
     }
     g_assert(WIFSTOPPED(status) && SIGSTOP == WSTOPSIG(status));
 
     if (0 > trace_setup(pid)) {
         g_critical("failed to setup tracing options: %s", g_strerror(errno));
-        g_printerr("failed to setup tracing options: %s", g_strerror(errno));
+        g_printerr("failed to setup tracing options: %s\n", g_strerror(errno));
         exit(-1);
     }
 
@@ -253,7 +253,7 @@ static int sydbox_execute_parent(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUS
     eldest->personality = trace_personality(pid);
     if (0 > eldest->personality) {
         g_critical("failed to determine personality of eldest child %i: %s", eldest->pid, g_strerror(errno));
-        g_printerr("failed to determine personality of eldest child %i: %s", eldest->pid, g_strerror(errno));
+        g_printerr("failed to determine personality of eldest child %i: %s\n", eldest->pid, g_strerror(errno));
         exit(-1);
     }
     g_debug("eldest child %i runs in %s mode", eldest->pid, dispatch_mode(eldest->personality));
@@ -268,7 +268,7 @@ static int sydbox_execute_parent(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUS
     eldest->cwd = egetcwd();
     if (NULL == eldest->cwd) {
         g_critical("failed to get current working directory: %s", g_strerror(errno));
-        g_printerr("failed to get current working directory: %s", g_strerror(errno));
+        g_printerr("failed to get current working directory: %s\n", g_strerror(errno));
         exit(-1);
     }
     eldest->flags &= ~TCHILD_NEEDINHERIT;
@@ -277,7 +277,7 @@ static int sydbox_execute_parent(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUS
     if (0 > trace_syscall(pid, 0)) {
         trace_kill(pid);
         g_critical("failed to resume eldest child %i: %s", pid, g_strerror(errno));
-        g_printerr("failed to resume eldest child %i: %s", pid, g_strerror(errno));
+        g_printerr("failed to resume eldest child %i: %s\n", pid, g_strerror(errno));
         exit(-1);
     }
 
@@ -394,12 +394,12 @@ static int sydbox_internal_main(int argc, char **argv)
         GString *command = NULL;
 
         if (!(username = get_username())) {
-            g_printerr("failed to get password file entry: %s", g_strerror(errno));
+            g_printerr("failed to get password file entry: %s\n", g_strerror(errno));
             return EXIT_FAILURE;
         }
 
         if (!(groupname = get_groupname())) {
-            g_printerr("failed to get group file entry: %s", g_strerror(errno));
+            g_printerr("failed to get group file entry: %s\n", g_strerror(errno));
             g_free(username);
             return EXIT_FAILURE;
         }
@@ -423,7 +423,7 @@ static int sydbox_internal_main(int argc, char **argv)
     g_setenv("SYDBOX_GITHEAD", GIT_HEAD, 1);
 
     if ((pid = fork()) < 0) {
-        g_printerr("failed to fork: %s", g_strerror(errno));
+        g_printerr("failed to fork: %s\n", g_strerror(errno));
         return EXIT_FAILURE;
     }
 

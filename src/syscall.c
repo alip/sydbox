@@ -1128,7 +1128,7 @@ static int syscall_handle_badcall(struct tchild *child)
              * child is still alive, hence the error is fatal.
              */
             g_critical("failed to restore system call: %s", g_strerror(errno));
-            g_printerr("failed to restore system call: %s", g_strerror(errno));
+            g_printerr("failed to restore system call: %s\n", g_strerror(errno));
             exit(-1);
         }
         // Child is dead.
@@ -1140,7 +1140,7 @@ static int syscall_handle_badcall(struct tchild *child)
              * child is still alive, hence the error is fatal.
              */
             g_critical("failed to set return code: %s", g_strerror(errno));
-            g_printerr("failed to set return code: %s", g_strerror(errno));
+            g_printerr("failed to set return code: %s\n", g_strerror(errno));
             exit(-1);
         }
         // Child is dead.
@@ -1163,7 +1163,7 @@ static int syscall_handle_chdir(struct tchild *child)
              * child is still alive, hence the error is fatal.
              */
             g_critical("failed to get return code: %s", g_strerror(errno));
-            g_printerr("failed to get return code: %s", g_strerror(errno));
+            g_printerr("failed to get return code: %s\n", g_strerror(errno));
             exit(-1);
         }
         // Child is dead.
@@ -1189,7 +1189,7 @@ static int syscall_handle_chdir(struct tchild *child)
                      * child is still alive, hence the error is fatal.
                      */
                     g_critical("failed to set return code: %s", g_strerror(errno));
-                    g_printerr("failed to set return code: %s", g_strerror(errno));
+                    g_printerr("failed to set return code: %s\n", g_strerror(errno));
                     exit(-1);
                 }
                 // Child is dead.
@@ -1231,7 +1231,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
              * child is still alive, hence the error is fatal.
              */
             g_critical("failed to get return code: %s", g_strerror(errno));
-            g_printerr("failed to get return code: %s", g_strerror(errno));
+            g_printerr("failed to get return code: %s\n", g_strerror(errno));
             exit(-1);
         }
         // Child is dead.
@@ -1251,7 +1251,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
                  * child is still alive, hence the error is fatal.
                  */
                 g_critical("Failed to decode socketcall: %s", g_strerror(errno));
-                g_printerr("Failed to decode socketcall: %s", g_strerror(errno));
+                g_printerr("Failed to decode socketcall: %s\n", g_strerror(errno));
                 exit(-1);
             }
             // Child is dead.
@@ -1273,7 +1273,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
              * child is still alive, hence the error is fatal.
              */
             g_critical("Failed to get address of bind() call: %s", g_strerror(errno));
-            g_printerr("Failed to get address of bind() call: %s", g_strerror(errno));
+            g_printerr("Failed to get address of bind() call: %s\n", g_strerror(errno));
             exit(-1);
         }
         // Child is dead
@@ -1305,7 +1305,7 @@ static int syscall_handle_clone(context_t *ctx, struct tchild *child)
              * child is still alive, hence the error is fatal.
              */
             g_critical("failed to get return code: %s", g_strerror(errno));
-            g_printerr("failed to get return code: %s", g_strerror(errno));
+            g_printerr("failed to get return code: %s\n", g_strerror(errno));
             exit(-1);
         }
         // Child is dead.
@@ -1331,7 +1331,7 @@ static int syscall_handle_clone(context_t *ctx, struct tchild *child)
     if (0 > trace_syscall(newchild->pid, 0)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i: %s", child->pid, g_strerror (errno));
-            g_printerr("failed to resume child %i: %s", child->pid, g_strerror (errno));
+            g_printerr("failed to resume child %i: %s\n", child->pid, g_strerror (errno));
             exit(-1);
         }
         context_remove_child(ctx, newchild->pid);
@@ -1362,7 +1362,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                  * child is still alive, hence the error is fatal.
                  */
                 g_critical("failed to get system call: %s", g_strerror(errno));
-                g_printerr("failed to get system call: %s", g_strerror(errno));
+                g_printerr("failed to get system call: %s\n", g_strerror(errno));
                 exit(-1);
             }
             // Child is dead, remove it
@@ -1402,7 +1402,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                     else if (EIO != errno && EFAULT != errno) {
                         g_critical("error while checking system call %lu(%s) for access: %s",
                                 sno, sname, g_strerror(errno));
-                        g_printerr("error while checking system call %lu(%s) for access: %s",
+                        g_printerr("error while checking system call %lu(%s) for access: %s\n",
                                 sno, sname, g_strerror(errno));
                         exit(-1);
                     }
@@ -1431,7 +1431,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                     if (0 > trace_set_syscall(child->pid, BAD_SYSCALL)) {
                         if (G_UNLIKELY(ESRCH != errno)) {
                             g_critical("failed to set system call: %s", g_strerror(errno));
-                            g_printerr("failed to set system call: %s", g_strerror(errno));
+                            g_printerr("failed to set system call: %s\n", g_strerror(errno));
                             exit(-1);
                         }
                         return context_remove_child(ctx, child->pid);

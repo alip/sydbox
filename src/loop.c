@@ -43,7 +43,7 @@ static int xsetup(context_t *ctx, struct tchild *child)
     if (0 > trace_setup(child->pid)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to set tracing options: %s", g_strerror(errno));
-            g_printerr("failed to set tracing options: %s", g_strerror (errno));
+            g_printerr("failed to set tracing options: %s\n", g_strerror (errno));
             exit(-1);
         }
         return context_remove_child(ctx, child->pid);
@@ -58,7 +58,7 @@ static int xsyscall(context_t *ctx, struct tchild *child)
     if (0 > trace_syscall(child->pid, 0)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i: %s", child->pid, g_strerror (errno));
-            g_printerr("failed to resume child %i: %s", child->pid, g_strerror (errno));
+            g_printerr("failed to resume child %i: %s\n", child->pid, g_strerror (errno));
             exit(-1);
         }
         return context_remove_child(ctx, child->pid);
@@ -75,7 +75,7 @@ static int xfork(context_t *ctx, struct tchild *child)
     if (G_UNLIKELY(0 > trace_geteventmsg(child->pid, &childpid))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to get the pid of the newborn child: %s", g_strerror(errno));
-            g_printerr("failed to get the pid of the newborn child: %s", g_strerror (errno));
+            g_printerr("failed to get the pid of the newborn child: %s\n", g_strerror (errno));
             exit(-1);
         }
         return context_remove_child(ctx, child->pid);
@@ -119,7 +119,7 @@ static int xgenuine(context_t * ctx, struct tchild *child, int status)
     if (G_UNLIKELY(0 > trace_syscall(child->pid, WSTOPSIG(status)))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i after genuine signal: %s", child->pid, g_strerror(errno));
-            g_printerr("failed to resume child %i after genuine signal: %s", child->pid, g_strerror(errno));
+            g_printerr("failed to resume child %i after genuine signal: %s\n", child->pid, g_strerror(errno));
             exit(-1);
         }
         return context_remove_child(ctx, child->pid);
@@ -134,7 +134,7 @@ static int xunknown(context_t *ctx, struct tchild *child, int status)
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i after unknown signal %#x: %s",
                     child->pid, WSTOPSIG(status), g_strerror(errno));
-            g_printerr("failed to resume child %i after unknown signal %#x: %s",
+            g_printerr("failed to resume child %i after unknown signal %#x: %s\n",
                     child->pid, WSTOPSIG(status), g_strerror(errno));
             exit(-1);
         }
@@ -159,7 +159,7 @@ int trace_loop(context_t *ctx)
                 break;
             else {
                 g_critical("waitpid failed: %s", g_strerror(errno));
-                g_printerr("waitpid failed: %s", g_strerror(errno));
+                g_printerr("waitpid failed: %s\n", g_strerror(errno));
                 exit(-1);
             }
         }
@@ -222,7 +222,7 @@ int trace_loop(context_t *ctx)
                 child->personality = trace_personality(child->pid);
                 if (0 > child->personality) {
                     g_critical("failed to determine personality of child %i: %s", child->pid, g_strerror(errno));
-                    g_printerr("failed to determine personality of child %i: %s", child->pid, g_strerror(errno));
+                    g_printerr("failed to determine personality of child %i: %s\n", child->pid, g_strerror(errno));
                     exit(-1);
                 }
                 g_debug("updated child %i's personality to %s mode", child->pid, dispatch_mode(child->personality));

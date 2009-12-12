@@ -132,7 +132,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (!config->colourise_output) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("main.colour not a boolean: %s", config_error->message);
+                g_printerr("main.colour not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -155,7 +155,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (!config->disallow_magic_commands && config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("main.lock not a boolean: %s", config_error->message);
+                g_printerr("main.lock not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -178,7 +178,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (!config->wait_all && config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("main.wait_all not a boolean: %s", config_error->message);
+                g_printerr("main.wait_all not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -201,7 +201,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (!config->allow_proc_pid && config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("main.allow_proc_pid not a boolean: %s", config_error->message);
+                g_printerr("main.allow_proc_pid not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -223,7 +223,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (!config->wrap_lstat && config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("main.wrap_lstat not a boolean: %s", config_error->message);
+                g_printerr("main.wrap_lstat not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -257,7 +257,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("log.level not an integer: %s", config_error->message);
+                g_printerr("log.level not an integer: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -280,7 +280,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("sandbox.path not a boolean: %s", config_error->message);
+                g_printerr("sandbox.path not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -303,7 +303,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("sandbox.exec not a boolean: %s", config_error->message);
+                g_printerr("sandbox.exec not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -326,7 +326,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("main.network not a boolean: %s", config_error->message);
+                g_printerr("main.network not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);
@@ -385,7 +385,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     if (config_error) {
         switch (config_error->code) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("net.restrict_connect not a boolean: %s", config_error->message);
+                g_printerr("net.restrict_connect not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
                 g_free(config_file);

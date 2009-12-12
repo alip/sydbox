@@ -41,7 +41,7 @@ static char *shell_expand(const char * const str)
 
     if (G_UNLIKELY(!g_spawn_sync(NULL, argv, NULL, G_SPAWN_STDERR_TO_DEV_NULL, NULL, NULL,
                     &output, NULL, &retval, &spawn_error))) {
-        g_printerr("failed to expand `%s': %s", str, spawn_error->message);
+        g_printerr("failed to expand `%s': %s\n", str, spawn_error->message);
         g_error_free(spawn_error);
     }
 
