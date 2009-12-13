@@ -18,7 +18,6 @@
  */
 
 #include <stdbool.h>
-
 #include <string.h>
 #include <sys/stat.h>
 
@@ -29,37 +28,34 @@
 
 #include <glib.h>
 
-#include "trace.h"
-#include "trace-util.h"
+#include "syd-trace.h"
+#include "syd-trace-util.h"
 
-#define ORIG_ACCUM      (8 * ORIG_RAX)
-#define ACCUM           (8 * RAX)
-static const long syscall_args[2][MAX_ARGS] = {
-    {8 * RBX, 8 * RCX, 8 * RDX, 8 * RSI, 8 * RDI, 8 * RBP},
-    {8 * RDI, 8 * RSI, 8 * RDX, 8 * R10, 8 * R8, 8 * R9}
-};
+#include <asm/ptrace_offsets.h>
+#include <asm/rse.h>
+#define ORIG_ACCUM      (PT_R15)
+#define ACCUM           (PT_R10)
 
-int trace_personality(pid_t pid)
+static int upeek_ia64(pid_t pid, int narg, long *res)
 {
-    long cs;
+    unsigned long *out0, cfm, sof, sol;
+    long rbs_end;
 
-    /* Check CS register value,
-     * On x86-64 linux this is:
-     *  0x33    for long mode (64 bit)
-     *  0x23    for compatibility mode (32 bit)
-     */
-    if (0 > upeek(pid, 8 * CS, &cs))
+    if (0 > upeek(pid, PT_AR_BSP, &rbs_end))
+        return -1;
+    if (0 > upeek(pid, PT_CFM, (long *) &cfm))
         return -1;
 
-    switch (cs) {
-        case 0x33:
-            return 1;
-        case 0x23:
-            return 0;
-        default:
-            g_assert_not_reached();
-            break;
-    }
+    sof = (cfm >> 0) & 0x7f;
+    sol = (cfm >> 7) & 0x7f;
+    out0 = ia64_rse_skip_regs((unsigned long *) rbs_end, -sof + sol);
+
+    return umoven(pid, (unsigned long) ia64_rse_skip_regs(out0, narg), (char *) res, sizeof(long));
+}
+
+inline int trace_personality(pid_t pid G_GNUC_UNUSED)
+{
+    return 0;
 }
 
 int trace_get_syscall(pid_t pid, long *scno)
@@ -107,10 +103,19 @@ int trace_get_return(pid_t pid, long *res)
 int trace_set_return(pid_t pid, long val)
 {
     int save_errno;
+    long r8, r10;
 
-    if (G_UNLIKELY(0 != ptrace(PTRACE_POKEUSER, pid, ACCUM, val))) {
+    r8 = -val;
+    r10 = val ? -1 : 0;
+    if (G_UNLIKELY(0 != ptrace(PTRACE_POKEUSER, pid, PT_R8, r8))) {
         save_errno = errno;
-        g_info("ptrace(PTRACE_POKEUSER,%i,ACCUM,%ld) failed: %s", pid, val, g_strerror(errno));
+        g_info("ptrace(PTRACE_POKEUSER,%i,PT_R8,%ld) failed: %s", pid, val, g_strerror(errno));
+        errno = save_errno;
+        return -1;
+    }
+    if (G_UNLIKELY(0 != ptrace(PTRACE_POKEUSER, pid, PT_R10, r10))) {
+        save_errno = errno;
+        g_info("ptrace(PTRACE_POKEUSER,%i,PT_R10,%ld) failed: %s", pid, val, g_strerror(errno));
         errno = save_errno;
         return -1;
     }
@@ -118,13 +123,13 @@ int trace_set_return(pid_t pid, long val)
     return 0;
 }
 
-int trace_get_arg(pid_t pid, int personality, int arg, long *res)
+int trace_get_arg(pid_t pid, int personality G_GNUC_UNUSED, int arg, long *res)
 {
     int save_errno;
 
     g_assert(arg >= 0 && arg < MAX_ARGS);
 
-    if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][arg], res))) {
+    if (G_UNLIKELY(0 > upeek_ia64(pid, arg, res))) {
         save_errno = errno;
         g_info("failed to get argument %d for child %i: %s", arg, pid, strerror(errno));
         errno = save_errno;
@@ -134,14 +139,14 @@ int trace_get_arg(pid_t pid, int personality, int arg, long *res)
     return 0;
 }
 
-char *trace_get_path(pid_t pid, int personality, int arg)
+char *trace_get_path(pid_t pid, int personality G_GNUC_UNUSED, int arg)
 {
     int save_errno;
     long addr = 0;
 
     g_assert(arg >= 0 && arg < MAX_ARGS);
 
-    if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][arg], &addr))) {
+    if (G_UNLIKELY(0 > upeek_ia64(pid, arg, &addr))) {
         save_errno = errno;
         g_info("failed to get address of argument %d: %s", arg, g_strerror(errno));
         errno = save_errno;
@@ -165,7 +170,7 @@ char *trace_get_path(pid_t pid, int personality, int arg)
     return buf;
 }
 
-int trace_fake_stat(pid_t pid, int personality)
+int trace_fake_stat(pid_t pid, int personality G_GNUC_UNUSED)
 {
     int n, m, save_errno;
     long addr = 0;
@@ -175,7 +180,7 @@ int trace_fake_stat(pid_t pid, int personality)
     } u;
     struct stat fakebuf;
 
-    if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][1], &addr))) {
+    if (G_UNLIKELY(0 > upeek_ia64(pid, 1, &addr))) {
         save_errno = errno;
         g_info("failed to get address of argument %d: %s", 1, g_strerror(errno));
         errno = save_errno;
@@ -215,12 +220,12 @@ int trace_fake_stat(pid_t pid, int personality)
     return 0;
 }
 
-int trace_decode_socketcall(pid_t pid, int personality)
+int trace_decode_socketcall(pid_t pid, int personality G_GNUC_UNUSED)
 {
     int save_errno;
     long addr;
 
-     if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][0], &addr))) {
+    if (G_UNLIKELY(0 > upeek_ia64(pid, 0, &addr))) {
         save_errno = errno;
         g_info("failed to get address of argument 0: %s", g_strerror(errno));
         errno = save_errno;
@@ -230,10 +235,11 @@ int trace_decode_socketcall(pid_t pid, int personality)
     return addr;
 }
 
-char *trace_get_addr(pid_t pid, int personality, int narg, bool decode, int *family, int *port)
+char *trace_get_addr(pid_t pid, int personality G_GNUC_UNUSED, int narg, bool decode G_GNUC_UNUSED,
+        int *family, int *port)
 {
     int save_errno;
-    long addr, addrlen, args;
+    long addr, addrlen;
     union {
         char pad[128];
         struct sockaddr sa;
@@ -243,45 +249,17 @@ char *trace_get_addr(pid_t pid, int personality, int narg, bool decode, int *fam
     } addrbuf;
     char ip[100];
 
-    if (decode) {
-        unsigned int iaddr, iaddrlen;
-
-        if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][1], &args))) {
-            save_errno = errno;
-            g_info("failed to get address of argument 1: %s", g_strerror(errno));
-            errno = save_errno;
-            return NULL;
-        }
-        args += narg * sizeof(unsigned int);
-        if (umove(pid, args, &iaddr) < 0) {
-            save_errno = errno;
-            g_info("failed to decode argument %d: %s", narg, g_strerror(errno));
-            errno = save_errno;
-            return NULL;
-        }
-        args += sizeof(unsigned int);
-        if (umove(pid, args, &iaddrlen) < 0) {
-            save_errno = errno;
-            g_info("failed to decode argument %d: %s", narg + 1, g_strerror(errno));
-            errno = save_errno;
-            return NULL;
-        }
-        addr = iaddr;
-        addrlen = iaddrlen;
+    if (G_UNLIKELY(0 > upeek_ia64(pid, narg, &addr))) {
+        save_errno = errno;
+        g_info("failed to get address of argument %d: %s", narg, g_strerror(errno));
+        errno = save_errno;
+        return NULL;
     }
-    else {
-        if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][narg], &addr))) {
-            save_errno = errno;
-            g_info("failed to get address of argument %d: %s", narg, g_strerror(errno));
-            errno = save_errno;
-            return NULL;
-        }
-        if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][narg + 1], &addrlen))) {
-            save_errno = errno;
-            g_info("failed to get address of argument %d: %s", narg + 1, g_strerror(errno));
-            errno = save_errno;
-            return NULL;
-        }
+    if (G_UNLIKELY(0 > upeek_ia64(pid, narg + 1, &addrlen))) {
+        save_errno = errno;
+        g_info("failed to get address of argument %d: %s", narg + 1, g_strerror(errno));
+        errno = save_errno;
+        return NULL;
     }
 
     if (addr == 0) {

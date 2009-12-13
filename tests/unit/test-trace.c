@@ -38,8 +38,8 @@
 
 #include <glib.h>
 
-#include "sydbox-config.h"
-#include "trace.h"
+#include "syd-config.h"
+#include "syd-trace.h"
 
 #include "test-helpers.h"
 

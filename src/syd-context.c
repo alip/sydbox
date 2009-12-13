@@ -28,11 +28,11 @@
 
 #include <glib.h>
 
-#include "children.h"
-#include "context.h"
-#include "net.h"
-#include "wrappers.h"
-#include "sydbox-log.h"
+#include "syd-children.h"
+#include "syd-context.h"
+#include "syd-log.h"
+#include "syd-net.h"
+#include "syd-wrappers.h"
 
 context_t *context_new (void)
 {

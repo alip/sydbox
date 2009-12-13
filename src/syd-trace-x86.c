@@ -27,8 +27,8 @@
 
 #include <glib.h>
 
-#include "trace.h"
-#include "trace-util.h"
+#include "syd-trace.h"
+#include "syd-trace-util.h"
 
 #define ORIG_ACCUM      (4 * ORIG_EAX)
 #define ACCUM           (4 * EAX)

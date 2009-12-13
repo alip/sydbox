@@ -30,11 +30,11 @@
 
 #include <glib.h>
 
-#include "path.h"
-#include "children.h"
-#include "trace.h"
-#include "sydbox-log.h"
-#include "sydbox-config.h"
+#include "syd-children.h"
+#include "syd-config.h"
+#include "syd-log.h"
+#include "syd-path.h"
+#include "syd-trace.h"
 
 void tchild_new(GHashTable *children, pid_t pid)
 {

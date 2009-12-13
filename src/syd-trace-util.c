@@ -47,8 +47,8 @@
 
 #include <glib.h>
 
-#include "sydbox-log.h"
-#include "trace-util.h"
+#include "syd-log.h"
+#include "syd-trace-util.h"
 
 int upeek(pid_t pid, long off, long *res)
 {

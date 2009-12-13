@@ -5,31 +5,31 @@ AM_CFLAGS = $(glib_CFLAGS)
 UNIT_TESTS = sydbox-utils children path trace
 
 # fake out libsydbox {{{
-libsydbox_SOURCES = $(top_srcdir)/src/sydbox-utils.c  \
-		    $(top_srcdir)/src/sydbox-config.c \
-		    $(top_srcdir)/src/path.c          \
-		    $(top_srcdir)/src/children.c      \
-		    $(top_srcdir)/src/trace.c         \
-		    $(top_srcdir)/src/trace-util.c    \
-		    $(top_srcdir)/src/net.c           \
-libsydbox_SOURCES += $(top_srcdir)/src/dispatch.h \
-		     $(top_srcdir)/src/dispatch-table.h
+libsydbox_SOURCES = $(top_srcdir)/src/syd-children.c \
+		    $(top_srcdir)/src/syd-config.c \
+		    $(top_srcdir)/src/syd-net.c \
+		    $(top_srcdir)/src/syd-path.c \
+		    $(top_srcdir)/src/syd-trace.c \
+		    $(top_srcdir)/src/syd-trace-util.c \
+		    $(top_srcdir)/src/syd-utils.c
+libsydbox_SOURCES+= $(top_srcdir)/src/syd-dispatch.h \
+		    $(top_srcdir)/src/syd-dispatch-table.h
 if I386
-libsydbox_SOURCES+= $(top_srcdir)/src/dispatch.c \
-		    $(top_srcdir)/src/trace-x86.c
+libsydbox_SOURCES+= $(top_srcdir)/src/syd-dispatch.c \
+		    $(top_srcdir)/src/syd-trace-x86.c
 endif
 if X86_64
-libsydbox_SOURCES+= $(top_srcdir)/src/dispatch32.c \
-		    $(top_srcdir)/src/dispatch64.c \
-		    $(top_srcdir)/src/trace-x86_64.c
+libsydbox_SOURCES+= $(top_srcdir)/src/syd-dispatch32.c \
+		    $(top_srcdir)/src/syd-dispatch64.c \
+		    $(top_srcdir)/src/syd-trace-x86_64.c
 endif
 if IA64
-libsydbox_SOURCES+= $(top_srcdir)/src/dispatch.c \
-		    $(top_srcdir)/src/trace-ia64.c
+libsydbox_SOURCES+= $(top_srcdir)/src/syd-dispatch.c \
+		    $(top_srcdir)/src/syd-trace-ia64.c
 endif
 if POWERPC
-libsydbox_SOURCES+= $(top_srcdir)/src/dispatch.c \
-		    $(top_srcdir)/src/trace-powerpc.c
+libsydbox_SOURCES+= $(top_srcdir)/src/syd-dispatch.c \
+		    $(top_srcdir)/src/syd-trace-powerpc.c
 endif
 
 AM_CFLAGS += -DDATADIR="\"$(datadir)\"" -DSYSCONFDIR="\"$(sysconfdir)\"" -I$(top_srcdir)/src

@@ -51,7 +51,7 @@
 #undef pt_all_user_regs
 #endif // defined(IA64)
 
-#include "sydbox-log.h"
+#include "syd-log.h"
 
 #define ADDR_MUL        ((64 == __WORDSIZE) ? 8 : 4)
 #define MAX_ARGS        6

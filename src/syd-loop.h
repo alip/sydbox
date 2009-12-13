@@ -20,7 +20,7 @@
 #ifndef SYDBOX_GUARD_LOOP_H
 #define SYDBOX_GUARD_LOOP_H 1
 
-#include "context.h"
+#include "syd-context.h"
 
 int trace_loop(context_t *ctx);
 

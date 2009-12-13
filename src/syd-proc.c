@@ -24,8 +24,8 @@
 
 #include <glib.h>
 
-#include "proc.h"
-#include "wrappers.h"
+#include "syd-proc.h"
+#include "syd-wrappers.h"
 
 char *pgetcwd(pid_t pid) {
     int ret;

@@ -18,7 +18,8 @@
  */
 
 #include <glib.h>
-#include <sydbox-utils.h>
+
+#include "syd-utils.h"
 
 static void
 test1 (void)

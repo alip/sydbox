@@ -61,9 +61,9 @@
 
 #include <glib.h>
 
-#include "path.h"
-#include "sydbox-config.h"
-#include "wrappers.h"
+#include "syd-config.h"
+#include "syd-path.h"
+#include "syd-wrappers.h"
 
 #ifndef __set_errno
 # define __set_errno(v) errno = (v)

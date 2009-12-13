@@ -27,10 +27,10 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
-#include "net.h"
-#include "path.h"
-#include "sydbox-log.h"
-#include "sydbox-config.h"
+#include "syd-config.h"
+#include "syd-log.h"
+#include "syd-net.h"
+#include "syd-path.h"
 
 struct sydbox_config
 {

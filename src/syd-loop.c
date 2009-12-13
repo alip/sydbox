@@ -27,15 +27,14 @@
 
 #include <glib.h>
 
-#include "dispatch.h"
-#include "loop.h"
-#include "proc.h"
-#include "trace.h"
-#include "syscall.h"
-#include "children.h"
-#include "sydbox-config.h"
-#include "sydbox-log.h"
-
+#include "syd-children.h"
+#include "syd-config.h"
+#include "syd-dispatch.h"
+#include "syd-log.h"
+#include "syd-loop.h"
+#include "syd-proc.h"
+#include "syd-syscall.h"
+#include "syd-trace.h"
 
 // Event handlers
 static int xsetup(context_t *ctx, struct tchild *child)

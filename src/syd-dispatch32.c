@@ -23,14 +23,14 @@
 
 #include <glib.h>
 
-#include "dispatch.h"
-#include "dispatch-table.h"
+#include "syd-dispatch.h"
+#include "syd-dispatch-table.h"
 
 static const struct syscall_name {
     int no;
     const char *name;
 } sysnames[] = {
-#include "syscallent32.h"
+#include "syd-syscallent32.h"
     {-1,    NULL}
 };
 

@@ -28,9 +28,9 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
-#include "sydbox-log.h"
-#include "sydbox-utils.h"
-#include "sydbox-config.h"
+#include "syd-config.h"
+#include "syd-log.h"
+#include "syd-utils.h"
 
 void sydbox_access_violation(const pid_t pid, const gchar *path, const gchar *fmt, ...)
 {

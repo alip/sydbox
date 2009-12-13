@@ -21,14 +21,14 @@
 #include "config.h"
 #endif // HAVE_CONFIG_H
 
-#include "sydbox-log.h"
-#include "sydbox-config.h"
-
-#include <glib/gstdio.h>
-
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
+
+#include <glib/gstdio.h>
+
+#include "syd-config.h"
+#include "syd-log.h"
 
 static FILE *fd;
 static bool initialized;

@@ -35,17 +35,16 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
-#include "sydbox-log.h"
-#include "sydbox-utils.h"
-#include "sydbox-config.h"
-
-#include "dispatch.h"
-#include "loop.h"
-#include "path.h"
-#include "trace.h"
-#include "children.h"
-#include "syscall.h"
-#include "wrappers.h"
+#include "syd-children.h"
+#include "syd-config.h"
+#include "syd-dispatch.h"
+#include "syd-log.h"
+#include "syd-loop.h"
+#include "syd-path.h"
+#include "syd-syscall.h"
+#include "syd-trace.h"
+#include "syd-utils.h"
+#include "syd-wrappers.h"
 
 /* pink floyd */
 #define PINK_FLOYD  "       ..uu.                               \n" \

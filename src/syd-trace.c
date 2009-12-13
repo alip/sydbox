@@ -17,7 +17,7 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "trace.h"
+#include "syd-trace.h"
 
 /* Common functions are defined here for convenience.
  */

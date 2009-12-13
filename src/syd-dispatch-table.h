@@ -20,7 +20,7 @@
 #ifndef SYDBOX_GUARD_DISPATCH_TABLE_H
 #define SYDBOX_GUARD_DISPATCH_TABLE_H 1
 
-#include "flags.h"
+#include "syd-flags.h"
 
 // System call dispatch table
 static const struct syscall_def {

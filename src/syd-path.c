@@ -24,9 +24,9 @@
 
 #include <glib.h>
 
-#include "path.h"
-#include "sydbox-log.h"
-#include "sydbox-utils.h"
+#include "syd-log.h"
+#include "syd-path.h"
+#include "syd-utils.h"
 
 static char *shell_expand(const char * const str)
 {

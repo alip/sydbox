@@ -20,8 +20,8 @@
 #include <string.h>
 #include <glib.h>
 
-#include "path.h"
-#include "sydbox-config.h"
+#include "syd-config.h"
+#include "syd-path.h"
 
 static void test1(void)
 {

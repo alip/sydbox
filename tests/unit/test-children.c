@@ -21,8 +21,8 @@
 #include <stdlib.h>
 #include <glib.h>
 
-#include "children.h"
-#include "sydbox-config.h"
+#include "syd-children.h"
+#include "syd-config.h"
 
 static void test1(void)
 {

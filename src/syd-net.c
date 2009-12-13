@@ -25,8 +25,8 @@
 
 #include <glib.h>
 
-#include "sydbox-log.h"
-#include "net.h"
+#include "syd-log.h"
+#include "syd-net.h"
 
 bool net_localhost(const char *addr)
 {

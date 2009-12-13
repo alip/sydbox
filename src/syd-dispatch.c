@@ -26,9 +26,9 @@
 
 #include <glib.h>
 
-#include "flags.h"
-#include "dispatch.h"
-#include "dispatch-table.h"
+#include "syd-flags.h"
+#include "syd-dispatch.h"
+#include "syd-dispatch-table.h"
 
 static const struct syscall_name {
     int no;

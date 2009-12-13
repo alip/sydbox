@@ -39,19 +39,18 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include "net.h"
-#include "path.h"
-#include "proc.h"
-#include "trace.h"
-#include "wrappers.h"
-#include "syscall.h"
+#include "syd-config.h"
+#include "syd-flags.h"
+#include "syd-dispatch.h"
+#include "syd-log.h"
+#include "syd-net.h"
+#include "syd-path.h"
+#include "syd-proc.h"
+#include "syd-syscall.h"
+#include "syd-trace.h"
+#include "syd-utils.h"
+#include "syd-wrappers.h"
 
-#include "sydbox-log.h"
-#include "sydbox-utils.h"
-#include "sydbox-config.h"
-
-#include "flags.h"
-#include "dispatch.h"
 
 #define BAD_SYSCALL                 0xbadca11
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET || (f) == AF_INET6)

@@ -25,8 +25,8 @@
 
 #include <glib.h>
 
-#include "children.h"
-#include "context.h"
+#include "syd-children.h"
+#include "syd-context.h"
 
 enum {
     RS_ALLOW,
