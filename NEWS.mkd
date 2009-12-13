@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* GObject isn't a dependency anymore.
 * Try hard to restore errno after ptrace errors.
 * Moved all check based unit tests to gtest. dev-libs/check isn't a dependency anymore.
 * Require automake 1.11

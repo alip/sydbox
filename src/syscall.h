@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <sysexits.h>
 
-#include <glib-object.h>
+#include <glib.h>
 
 #include "children.h"
 #include "context.h"
@@ -53,37 +53,6 @@ struct checkdata {
     gchar *addr;            // Destination address for socket calls
 };
 
-typedef struct _SystemCall {
-    GObject parent_instance;
-
-    guint no;
-    guint flags;
-} SystemCall;
-
-typedef struct _SystemCallClass {
-    GObjectClass parent_class;
-
-    void (*start_check)(SystemCall *, gpointer, gpointer, gpointer);
-    void (*flags)(SystemCall *, gpointer, gpointer, gpointer);
-    void (*magic)(SystemCall *, gpointer, gpointer, gpointer);
-    void (*resolve)(SystemCall *, gpointer, gpointer, gpointer);
-    void (*canonicalize)(SystemCall *, gpointer, gpointer, gpointer);
-    void (*check)(SystemCall *, gpointer, gpointer, gpointer);
-    void (*end_check)(SystemCall *, gpointer, gpointer, gpointer);
-} SystemCallClass;
-
-#define TYPE_SYSTEMCALL             (systemcall_get_type())
-#define SYSTEMCALL(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), TYPE_SYSTEMCALL, SystemCall))
-#define SYSTEMCALL_CLASS(cls)       (G_TYPE_CHECK_CLASS_CAST((cls), TYPE_SYSTEMCALL, SystemCallClass))
-#define IS_SYSTEMCALL(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), TYPE_SYSTEMCALL))
-#define IS_SYSTEMCALL_CLASS(cls)    (G_TYPE_CHECK_CLASS_TYPE((cls), TYPE_SYSTEMCALL))
-#define SYSTEMCALL_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), TYPE_SYSTEMCALL, SystemCallClass))
-
-GType systemcall_get_type(void);
-
-void syscall_init(void);
-void syscall_free(void);
-SystemCall *syscall_get_handler(int personality, int no);
 int syscall_handle(context_t *ctx, struct tchild *child);
 
 #endif // SYDBOX_GUARD_SYSCALL_H

@@ -133,7 +133,6 @@ static GOptionEntry entries[] =
 static void cleanup(void)
 {
     dispatch_free();
-    syscall_free();
     sydbox_config_rmfilter_all();
     if (NULL != ctx) {
         if (NULL != ctx->children)
@@ -293,7 +292,6 @@ static int sydbox_internal_main(int argc, char **argv)
     pid_t pid;
 
     dispatch_init();
-    syscall_init();
     ctx = context_new();
 
     g_atexit(cleanup);

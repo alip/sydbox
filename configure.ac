@@ -425,8 +425,6 @@ GLIB_REQUIRED=2.0
 PKG_PROG_PKG_CONFIG([0.20.0])
 PKG_CHECK_MODULES([glib], [glib-2.0 >= $GLIB_REQUIRED],,
 				  AC_MSG_ERROR([sydbox requires glib-$GLIB_REQUIRED or newer]))
-PKG_CHECK_MODULES([gobject], [gobject-2.0 >= $GLIB_REQUIRED],,
-				  AC_MSG_ERROR([sydbox requires gobject-$GLIB_REQUIRED or newer]))
 dnl }}}
 
 dnl {{{ Check for Perl
