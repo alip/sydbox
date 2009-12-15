@@ -153,7 +153,6 @@ static void sig_cleanup(int signum)
     raise(signum);
 }
 
-
 static gchar *get_username(void)
 {
     struct passwd *pwd;
@@ -163,10 +162,7 @@ static gchar *get_username(void)
     uid = geteuid();
     pwd = getpwuid(uid);
 
-    if (errno)
-        return NULL;
-
-    return g_strdup(pwd->pw_name);
+    return (errno) ? NULL : g_strdup(pwd->pw_name);
 }
 
 static gchar *get_groupname (void)
@@ -178,10 +174,7 @@ static gchar *get_groupname (void)
     gid = getegid();
     grp = getgrgid(gid);
 
-    if (errno)
-        return NULL;
-
-    return g_strdup(grp->gr_name);
+    return (errno) ? NULL : g_strdup(grp->gr_name);
 }
 
 static void G_GNUC_NORETURN sydbox_execute_child(int argc G_GNUC_UNUSED, char **argv)
