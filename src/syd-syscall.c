@@ -37,7 +37,6 @@
 #include <sys/socket.h>
 
 #include <glib.h>
-#include <glib-object.h>
 
 #include "syd-config.h"
 #include "syd-flags.h"
