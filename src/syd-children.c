@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  * Based in part upon catbox which is:
  *  Copyright (c) 2006-2007 TUBITAK/UEKAE
  *
@@ -35,6 +35,7 @@
 #include "syd-log.h"
 #include "syd-path.h"
 #include "syd-trace.h"
+#include "syd-net.h"
 
 void tchild_new(GHashTable *children, pid_t pid)
 {
@@ -48,6 +49,7 @@ void tchild_new(GHashTable *children, pid_t pid)
     child->sno = 0xbadca11;
     child->retval = -1;
     child->cwd = NULL;
+    child->bindzero = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify)netlist_free_one);
     child->sandbox = (struct tdata *) g_malloc(sizeof(struct tdata));
     child->sandbox->path = true;
     child->sandbox->exec = false;
@@ -118,6 +120,8 @@ void tchild_free_one(gpointer child_ptr)
     }
     if (G_LIKELY(NULL != child->cwd))
         g_free(child->cwd);
+    if (G_LIKELY(NULL != child->bindzero))
+        g_hash_table_destroy(child->bindzero);
     g_free(child);
 }
 

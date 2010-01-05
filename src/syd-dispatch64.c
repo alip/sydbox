@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -81,13 +81,18 @@ const char *dispatch_name64(int sno)
     return sname ? sname : UNKNOWN_SYSCALL;
 }
 
-bool dispatch_chdir64(int sno)
+inline bool dispatch_chdir64(int sno)
 {
     return IS_CHDIR(sno);
 }
 
-bool dispatch_maybind64(int sno)
+inline bool dispatch_maybind64(int sno)
 {
     return (__NR_bind == sno);
+}
+
+inline bool dispatch_maylisten64(int sno)
+{
+    return (__NR_listen == sno);
 }
 

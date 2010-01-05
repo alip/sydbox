@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -235,8 +235,25 @@ int trace_decode_socketcall(pid_t pid, int personality G_GNUC_UNUSED)
     return addr;
 }
 
-char *trace_get_addr(pid_t pid, int personality G_GNUC_UNUSED, int narg, bool decode G_GNUC_UNUSED,
-        int *family, int *port)
+bool trace_get_fd(pid_t pid, G_GNUC_UNUSED int personality,
+        G_GNUC_UNUSED bool decode, long *fd)
+{
+    int save_errno;
+
+    g_assert(fd != NULL);
+
+    if (G_UNLIKELY(0 > upeek_ia64(pid, 0, fd))) {
+        save_errno = errno;
+        g_info("failed to get address of argument 0: %s", g_strerror(errno));
+        errno = save_errno;
+        return false;
+    }
+    return true;
+}
+
+char *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
+        G_GNUC_UNUSED bool decode,
+        long *fd, int *family, int *port)
 {
     int save_errno;
     long addr, addrlen;
@@ -249,6 +266,14 @@ char *trace_get_addr(pid_t pid, int personality G_GNUC_UNUSED, int narg, bool de
     } addrbuf;
     char ip[100];
 
+    if (fd != NULL) {
+        if (G_UNLIKELY(0 > upeek_ia64(pid, 0, fd))) {
+            save_errno = errno;
+            g_info("failed to get address of argument 0: %s", g_strerror(errno));
+            errno = save_errno;
+            return NULL;
+        }
+    }
     if (G_UNLIKELY(0 > upeek_ia64(pid, narg, &addr))) {
         save_errno = errno;
         g_info("failed to get address of argument %d: %s", narg, g_strerror(errno));

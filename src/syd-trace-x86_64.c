@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -230,7 +230,40 @@ int trace_decode_socketcall(pid_t pid, int personality)
     return addr;
 }
 
-char *trace_get_addr(pid_t pid, int personality, int narg, bool decode, int *family, int *port)
+bool trace_get_fd(pid_t pid, int personality, bool decode, long *fd)
+{
+    int save_errno;
+    long args;
+
+    g_assert(fd != NULL);
+
+    if (decode) {
+        if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][1], &args))) {
+            save_errno = errno;
+            g_info("failed to get address of argument 1: %s", g_strerror(errno));
+            errno = save_errno;
+            return NULL;
+        }
+        if (umove(pid, args, fd) < 0) {
+            save_errno = errno;
+            g_info("failed to decode argument 0: %s", g_strerror(errno));
+            errno = save_errno;
+            return false;
+        }
+        return true;
+    }
+
+    if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][0], fd))) {
+        save_errno = errno;
+        g_info("failed to get address of argument 0: %s", g_strerror(errno));
+        errno = save_errno;
+        return false;
+    }
+    return true;
+}
+
+char *trace_get_addr(pid_t pid, int personality, int narg, bool decode,
+        long *fd, int *family, int *port)
 {
     int save_errno;
     long addr, addrlen, args;
@@ -252,6 +285,14 @@ char *trace_get_addr(pid_t pid, int personality, int narg, bool decode, int *fam
             errno = save_errno;
             return NULL;
         }
+        if (fd != NULL) {
+            if (umove(pid, args, fd) < 0) {
+                save_errno = errno;
+                g_info("failed to decode argument 0: %s", g_strerror(errno));
+                errno = save_errno;
+                return NULL;
+            }
+        }
         args += narg * sizeof(unsigned int);
         if (umove(pid, args, &iaddr) < 0) {
             save_errno = errno;
@@ -270,6 +311,14 @@ char *trace_get_addr(pid_t pid, int personality, int narg, bool decode, int *fam
         addrlen = iaddrlen;
     }
     else {
+        if (fd != NULL) {
+            if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][0], fd))) {
+                save_errno = errno;
+                g_info("failed to get address of argument 0: %s", g_strerror(errno));
+                errno = save_errno;
+                return NULL;
+            }
+        }
         if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][narg], &addr))) {
             save_errno = errno;
             g_info("failed to get address of argument %d: %s", narg, g_strerror(errno));

@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -89,6 +89,9 @@ static const struct syscall_def {
 #endif
 #if defined(__NR_bind)
     {__NR_bind,         BIND_CALL},
+#endif
+#if defined(__NR_listen)
+    {__NR_listen,       LISTEN_CALL},
 #endif
 #if defined(__NR_sendto)
     {__NR_sendto,       SENDTO_CALL},

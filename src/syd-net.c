@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -86,7 +86,7 @@ int netlist_new_from_string(GSList **netlist, const gchar *addr_str, bool canlog
     return -1;
 }
 
-static void netlist_free_one(struct sydbox_addr *saddr, void *userdata G_GNUC_UNUSED)
+void netlist_free_one(struct sydbox_addr *saddr, ...)
 {
     g_free(saddr->addr);
     g_free(saddr);

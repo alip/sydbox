@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -34,7 +34,7 @@ static const struct syscall_name {
     int no;
     const char *name;
 } sysnames[] = {
-#include "syscallent.h"
+#include "syd-syscallent.h"
     {-1,    NULL}
 };
 
@@ -111,6 +111,17 @@ bool dispatch_maybind(int personality G_GNUC_UNUSED, int sno)
     return (__NR_socketcall == sno);
 #elif defined(IA64)
     return (__NR_bind == sno);
+#else
+#error unsupported architecture
+#endif
+}
+
+bool dispatch_maylisten(int personality G_GNUC_UNUSED, int sno)
+{
+#if defined(I386) || defined(POWERPC)
+    return (__NR_socketcall == sno);
+#elif defined(IA64)
+    return (__NR_listen == sno);
 #else
 #error unsupported architecture
 #endif

@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -80,6 +80,7 @@ enum {
     SOCKET_SUBCALL_SOCKET = 1,
     SOCKET_SUBCALL_BIND,
     SOCKET_SUBCALL_CONNECT,
+    SOCKET_SUBCALL_LISTEN,
     SOCKET_SUBCALL_SENDTO = 11,
 };
 
@@ -179,10 +180,18 @@ int trace_fake_stat(pid_t pid, int personality);
 int trace_decode_socketcall(pid_t pid, int personality);
 
 /**
+ * Receives the file descriptor from the first argument.
+ * Decodes the network call as needed.
+ * Return true on success and false on failure and sets errno accordingly.
+ */
+bool trace_get_fd(pid_t pid, int personality, bool decode, long *fd);
+
+/**
  * Returns the destination of network calls.
  * Returns NULL on failure and sets errno accordingly.
  */
-char *trace_get_addr(pid_t pid, int personality, int narg, bool decode, int *family, int *port);
+char *trace_get_addr(pid_t pid, int personality, int narg, bool decode,
+        long *fd, int *family, int *port);
 
 #endif // SYDBOX_GUARD_TRACE_H
 

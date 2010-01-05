@@ -2,7 +2,7 @@
 
 /*
  * Copyright (c) 2009 Saleem Abdulrasool <compnerd@compnerd.org>
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -21,11 +21,11 @@
 #ifndef __PROC_H__
 #define __PROC_H__
 
-char *
-pgetcwd (pid_t pid);
+char *pgetcwd(pid_t pid);
 
-char *
-pgetdir (pid_t pid, int dfd);
+char *pgetdir(pid_t pid, int dfd);
+
+int proc_lookup_port(pid_t pid, int fd, const char *path);
 
 #endif
 

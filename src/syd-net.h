@@ -36,6 +36,12 @@ void netlist_new(GSList **netlist, int family, int port, const char *addr);
 
 int netlist_new_from_string(GSList **netlist, const gchar *addr, bool canlog);
 
+/*
+ * Note: This is a variadic function so it can be used both as a GFunc function
+ * and as a GDestroyNotify function.
+ */
+void netlist_free_one(struct sydbox_addr *saddr, ...);
+
 void netlist_free(GSList **netlist);
 
 #endif // SYDBOX_GUARD_NET_H

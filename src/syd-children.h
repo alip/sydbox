@@ -2,7 +2,7 @@
 
 /*
  * Copyright (c) 2009 Saleem Abdulrasool <compnerd@compnerd.org>
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -60,6 +60,7 @@ struct tchild
     char *cwd;               // Child's current working directory.
     unsigned long sno;       // Last system call called by child.
     long retval;             // Replaced system call will return this value.
+    GHashTable *bindzero;    // List of addresses whose port argument was zero.
     struct tdata *sandbox;   // Sandbox data */
 };
 

@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -48,8 +48,9 @@
 #define DECODE_SOCKETCALL       (1 << 24) // Decode the socketcall() system call to its subcalls
 #define CONNECT_CALL            (1 << 25) // Check if the connect() call matches the accepted connect IPs
 #define BIND_CALL               (1 << 26) // Check if the bind() call matches the accepted bind IPs
-#define SENDTO_CALL             (1 << 27) // Check if the sendto() call matches the accepted sendto IPs
-#define EXEC_CALL               (1 << 28) // Allowing the system call depends on the exec flag
+#define LISTEN_CALL             (1 << 27) // Check if the listen() call matches the accepted bind IPs
+#define SENDTO_CALL             (1 << 28) // Check if the sendto() call matches the accepted sendto IPs
+#define EXEC_CALL               (1 << 29) // Allowing the system call depends on the exec flag
 
 #endif // SYDBOX_GUARD_FLAGS_H
 
