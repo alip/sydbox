@@ -3,6 +3,9 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Make network sandboxing on by default.
+* When bind's port argument is zero, look up the actual port from /proc/net/tcp{,6}
+  after the subsequent listen call for network\_restrict\_connect.
 * GObject isn't a dependency anymore.
 * Try hard to restore errno after ptrace errors.
 * Moved all check based unit tests to gtest. dev-libs/check isn't a dependency anymore.
