@@ -11,7 +11,7 @@ TESTS = t01-chmod.bash t02-chown.bash t03-open.bash t04-creat.bash t05-lchown.ba
 	t32-magic-onoff.bash t33-magic-enabled.bash t34-magic-lock.bash t35-magic-exec_lock.bash \
 	t36-magic-write.bash t37-magic-unwrite.bash t38-magic-addfilter.bash t39-magic-rmfilter.bash \
 	t40-openat-ebadf.bash t41-openat-fileno.bash t42-magic-wrap_lstat.bash t43-exit-code.bash \
-	t44-bad-open.bash t45-sandbox-exec.bash
+	t44-bad-open.bash t45-sandbox-exec.bash t46-sandbox-network.bash
 
 EXTRA_DIST= $(TESTS)
 
@@ -27,7 +27,8 @@ check_PROGRAMS = test-lib.bash t01_chmod t01_chmod_toolong t02_chown t02_chown_t
 		 t32_magic_onoff_set_on t32_magic_onoff_set_off t32_magic_onoff_check_off \
 		 t32_magic_onoff_check_on t40_openat_ebadf t41_openat_fileno t42_magic_wrap_lstat \
 		 t43_exit_code_single t43_exit_code_signal t43_exit_code_many t44_bad_open \
-		 t45_sandbox_exec_success t45_sandbox_exec_try_exec
+		 t45_sandbox_exec_success t45_sandbox_exec_try_exec t46_sandbox_network_bind_unix \
+		 t46_sandbox_network_bind_tcp
 
 test_lib_bash_SOURCES= test-lib.bash.in
 

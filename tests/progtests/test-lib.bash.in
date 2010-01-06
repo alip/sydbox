@@ -98,6 +98,9 @@ toolong_dir="$(
 SYDBOX_LOG="${cwd}/sydbox-$$.log"
 remove_log=true
 
+bind_socket=sydbox.sock
+bind_port=23456
+
 # Files created automatically by test-lib.bash:
 # arnold.layne          (Normal file)
 # see.emily.play/       (Directory)
