@@ -78,37 +78,34 @@ char *pgetdir(pid_t pid, int dfd) {
     return NULL;
 }
 
-static int proc_lookup_inode(pid_t pid, int fd)
+static bool proc_lookup_inode(pid_t pid, int fd, unsigned *inode)
 {
-    int inode;
     char *bracket, *sock;
     char linkfd[256];
 
     snprintf(linkfd, 256, "/proc/%i/fd/%i", pid, fd);
     sock = ereadlink(linkfd);
     if (G_UNLIKELY(NULL == sock))
-        return -1;
+        return false;
 
     bracket = strchr(sock, '[');
     if (G_UNLIKELY(NULL == bracket)) {
         g_free(sock);
-        return -1;
+        return false;
     }
 
-    inode = atoi(bracket);
+    *inode = atoi(++bracket);
     g_free(sock);
-    return inode;
+    return true;
 }
 
 int proc_lookup_port(pid_t pid, int fd, const char *path)
 {
-    int myinode;
-    unsigned inode, localport;
+    unsigned inode, myinode, localport;
     char buf[4096];
     FILE *pfd;
 
-    myinode = proc_lookup_inode(pid, fd);
-    if (myinode < 0)
+    if (!proc_lookup_inode(pid, fd, &myinode))
         return -1;
 
     pfd = fopen(path, "r");
@@ -116,10 +113,10 @@ int proc_lookup_port(pid_t pid, int fd, const char *path)
         return -1;
 
     while (fgets(buf, 4096, pfd) != NULL) {
-        if (2 != sscanf(buf, "%*u: %*X:%x %*X:%*x %*x %*X:%*X %*x:%*X %*x %*u %u",
+        if (2 != sscanf(buf, "%*u: %*X:%x %*X:%*x %*x %*X:%*X %*x:%*X %*x %*u %*u %u",
                     &localport, &inode))
             continue;
-        if (inode == (unsigned)myinode) {
+        if (inode == myinode) {
             fclose(pfd);
             return localport;
         }
