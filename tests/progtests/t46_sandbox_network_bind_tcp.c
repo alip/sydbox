@@ -16,7 +16,7 @@
 
 int main(int argc, char **argv)
 {
-    int fd;
+    int fd, flag;
     struct sockaddr_in srv;
 
     if (argc < 3)
@@ -26,6 +26,9 @@ int main(int argc, char **argv)
         perror("socket");
         return EXIT_FAILURE;
     }
+
+    flag = 1;
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 
     memset(&srv, 0, sizeof(srv));
     srv.sin_family = AF_INET;

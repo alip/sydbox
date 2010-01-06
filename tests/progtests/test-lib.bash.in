@@ -98,9 +98,6 @@ toolong_dir="$(
 SYDBOX_LOG="${cwd}/sydbox-$$.log"
 remove_log=true
 
-bind_socket=sydbox.sock
-bind_port=23456
-
 # Files created automatically by test-lib.bash:
 # arnold.layne          (Normal file)
 # see.emily.play/       (Directory)
@@ -384,7 +381,7 @@ unix_server() {
 
     path="$1"
     fail="$2"
-    unlink "$path"
+    unlink "$path" 2>/dev/null
 
     perl="@PERL_PATH@"
     if [[ -z "$perl" ]]; then
