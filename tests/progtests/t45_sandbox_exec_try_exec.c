@@ -5,13 +5,15 @@
  */
 
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 int main(void)
 {
-    char **myargv = {"/bin/true", NULL};
+    char *myargv[] = {"/bin/true", NULL};
 
     execvp(myargv[0], myargv);
-    return (EACCES == errno) ? EXIT_SUCCESS : EXIT_FAILURE;
+    perror("execvp");
+    return (EACCES == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
