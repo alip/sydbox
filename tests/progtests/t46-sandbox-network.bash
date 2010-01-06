@@ -214,8 +214,8 @@ end_test
 start_test "t46-sandbox-network-local-allow-sendto (TODO)"
 end_test
 
-start_test "t46-sandbox-network-local-restrict_connect-unix"
+start_test "t46-sandbox-network-local-restrict_connect-unix (TODO)"
 end_test
 
-start_test "t46-sandbox-network-local-restrict_connect-tcp"
+start_test "t46-sandbox-network-local-restrict_connect-tcp (TODO)"
 end_test
