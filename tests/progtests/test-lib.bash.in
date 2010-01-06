@@ -353,3 +353,57 @@ write_long() {
     fi
 }
 
+tcp_server() {
+    local addr port perl
+
+    addr="$1"
+    port=$2
+    fail="$3"
+
+    perl="@PERL_PATH@"
+    if [[ -z "$perl" ]]; then
+        echo "Perl not found" > "$fail"
+        exit 1
+    fi
+
+    if ! "$perl"                                                                                          \
+        -e 'require IO::Socket;'                                                                          \
+        -e 'my $sock = IO::Socket::INET->new(Listen => 1, LocalHost => "'$addr'", LocalPort => '$port');' \
+        -e '$sock or die "no socket :$!";'                                                                \
+        -e 'my $client = $sock->accept();'                                                                \
+        -e 'close($client);'                                                                              \
+        -e 'close($sock);'
+    then
+        : > "$fail"
+        exit 1
+    fi
+}
+
+unix_server() {
+    local path perl
+
+    path="$1"
+    fail="$2"
+    if ! unlink "$path"; then
+        echo "Failed to unlink: $path" > "$fail"
+        exit 1
+    fi
+
+    perl="@PERL_PATH@"
+    if [[ -z "$perl" ]]; then
+        echo "Perl not found" > "$fail"
+        exit 1
+    fi
+
+    if ! "$perl"                                                                \
+        -e 'require IO::Socket;'                                                \
+        -e 'my $sock = IO::Socket::UNIX->new(Listen => 1, Local => "'$path'");' \
+        -e '$sock or die "no socket :$!";'                                      \
+        -e 'my $client = $sock->accept();'                                      \
+        -e 'close($client);'                                                    \
+        -e 'close($sock);'
+    then
+        : > "$fail"
+        exit 1
+    fi
+}
