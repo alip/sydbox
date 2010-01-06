@@ -839,7 +839,15 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
                     g_assert_not_reached();
             }
             data->result = RS_DENY;
-            child->retval = -ECONNREFUSED;
+            /* For bind() set errno to EADDRNOTAVAIL.
+             * For connect() and sendto() set errno to ECONNREFUSED.
+             */
+            if (sflags & BIND_CALL ||
+                    (sflags & DECODE_SOCKETCALL
+                     && data->socket_subcall == SOCKET_SUBCALL_BIND))
+                child->retval = -EADDRNOTAVAIL;
+            else
+                child->retval = -ECONNREFUSED;
         }
         return;
     }
