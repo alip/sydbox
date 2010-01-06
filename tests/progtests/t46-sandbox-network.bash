@@ -182,10 +182,29 @@ end_test
 start_test "t46-sandbox-network-deny-allow-whitelisted-sendto (TODO)"
 end_test
 
-start_test "t46-sandbox-network-local-allow-connect"
+start_test "t46-sandbox-network-local-allow-connect-unix"
+if $has_unix; then
+    sydbox -N -M 'local' -- ./t46_sandbox_network_connect_unix "$bind_socket"
+    if [[ 0 != $? ]]; then
+        die "Failed to allow connect to a Unix socket in local mode"
+    fi
+else
+    say skip "No Unix server, skipping test"
+fi
 end_test
 
-start_test "t46-sandbox-network-local-allow-sendto"
+start_test "t46-sandbox-network-local-allow-connect-tcp"
+if $has_tcp; then
+    sydbox -N -M 'local' -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
+    if [[ 0 != $? ]]; then
+        die "Failed to allow connect to a TCP socket in local mode"
+    fi
+else
+    say skip "No TCP server, skipping test"
+fi
+end_test
+
+start_test "t46-sandbox-network-local-allow-sendto (TODO)"
 end_test
 
 start_test "t46-sandbox-network-local-deny-remote-bind-tcp"
