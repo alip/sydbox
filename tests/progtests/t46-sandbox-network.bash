@@ -71,6 +71,13 @@ if [[ 0 != $? ]]; then
 fi
 end_test
 
+start_test "t46-sandbox-network-local-deny-remote-bind-tcp"
+sydbox -N -M 'local' -- ./t46_sandbox_network_bind_tcp_deny 0.0.0.0 $bind_port
+if [[ 0 == $? ]]; then
+    die "Failed to deny remote bind in local mode"
+fi
+end_test
+
 # Start a TCP server in background.
 has_tcp=false
 fail="tcp-server-failed"
@@ -158,7 +165,7 @@ end_test
 start_test "t46-sandbox-network-deny-allow-whitelisted-connect-unix"
 if $has_unix; then
     SYDBOX_NET_WHITELIST=unix://"$bind_socket" \
-    sydbox -N -M deny -- ./t46_sandbox_network_connect_unix "$bind_socket"
+    sydbox -N -M deny -- ./t46_sandbox_network_connect_unix_deny "$bind_socket"
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a Unix server by whitelisting"
     fi
@@ -170,7 +177,7 @@ end_test
 start_test "t46-sandbox-network-deny-allow-whitelisted-connect-tcp"
 if $has_tcp; then
     SYDBOX_NET_WHITELIST=inet://127.0.0.1:$bind_port \
-    sydbox -N -M deny -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
+    sydbox -N -M deny -- ./t46_sandbox_network_connect_tcp_deny '127.0.0.1' $bind_port
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a TCP server by whitelisting"
     fi
@@ -184,7 +191,7 @@ end_test
 
 start_test "t46-sandbox-network-local-allow-connect-unix"
 if $has_unix; then
-    sydbox -N -M 'local' -- ./t46_sandbox_network_connect_unix "$bind_socket"
+    sydbox -N -M 'local' -- ./t46_sandbox_network_connect_unix_deny "$bind_socket"
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a Unix socket in local mode"
     fi
@@ -195,7 +202,7 @@ end_test
 
 start_test "t46-sandbox-network-local-allow-connect-tcp"
 if $has_tcp; then
-    sydbox -N -M 'local' -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
+    sydbox -N -M 'local' -- ./t46_sandbox_network_connect_tcp_deny '127.0.0.1' $bind_port
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a TCP socket in local mode"
     fi
@@ -205,9 +212,6 @@ fi
 end_test
 
 start_test "t46-sandbox-network-local-allow-sendto (TODO)"
-end_test
-
-start_test "t46-sandbox-network-local-deny-remote-bind-tcp"
 end_test
 
 start_test "t46-sandbox-network-local-deny-remote-connect"
