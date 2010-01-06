@@ -214,21 +214,6 @@ end_test
 start_test "t46-sandbox-network-local-allow-sendto (TODO)"
 end_test
 
-start_test "t46-sandbox-network-local-deny-remote-connect"
-end_test
-
-start_test "t46-sandbox-network-local-deny-remote-sendto"
-end_test
-
-start_test "t46-sandbox-network-local-allow-whitelisted-remote-bind-tcp"
-end_test
-
-start_test "t46-sandbox-network-local-allow-whitelisted-remote-connect"
-end_test
-
-start_test "t46-sandbox-network-local-allow-whitelisted-remote-sendto"
-end_test
-
 start_test "t46-sandbox-network-local-restrict_connect-unix"
 end_test
 
