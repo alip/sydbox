@@ -15,7 +15,7 @@ fi
 end_test
 
 start_test "t46-sandbox-network-allow-bind-tcp"
-sydbox -N -M allow -- ./t46_sandbox_network_bind_tcp $bind_port
+sydbox -N -M allow -- ./t46_sandbox_network_bind_tcp '127.0.0.1' $bind_port
 if [[ 0 != $? ]]; then
     die "Failed to allow binding to TCP socket"
 fi
@@ -63,13 +63,22 @@ else
 fi
 end_test
 
-start_test "t46-sandbox-network-allow-sendto"
+start_test "t46-sandbox-network-allow-sendto (TODO)"
 end_test
 
+unlink "$bind_socket"
 start_test "t46-sandbox-network-deny-bind-unix"
+sydbox -N -M deny -- ./t46_sandbox_network_bind_unix_deny "$bind_socket"
+if [[ 0 == $? ]]; then
+    die "Failed to deny bind to a UNIX socket"
+fi
 end_test
 
 start_test "t46-sandbox-network-deny-bind-tcp"
+sydbox -N -M deny -- ./t46_sandbox_network_bind_tcp_deny '127.0.0.1' $bind_port
+if [[ 0 == $? ]]; then
+    die "Failed to deny bind to a TCP socket"
+fi
 end_test
 
 start_test "t46-sandbox-network-deny-connect"

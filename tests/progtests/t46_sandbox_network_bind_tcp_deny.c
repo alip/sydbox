@@ -4,6 +4,7 @@
  * Distributed under the terms of the GNU General Public License v2
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,5 +40,5 @@ int main(int argc, char **argv)
     }
 
     close(fd);
-    return EXIT_SUCCESS;
+    return (errno == EADDRNOTAVAIL) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
