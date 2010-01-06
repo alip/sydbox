@@ -18,7 +18,7 @@
 int main(int argc, char **argv)
 {
     int fd;
-    struct sockaddr_in srv;
+    struct sockaddr_in cli;
 
     if (argc < 3)
         return EXIT_FAILURE;
@@ -28,13 +28,13 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    memset(&srv, 0, sizeof(srv));
-    srv.sin_family = AF_INET;
-    inet_pton(AF_INET, argv[1], &(srv.sin_addr));
-    srv.sin_port = htons(atoi(argv[2]));
+    memset(&cli, 0, sizeof(cli));
+    cli.sin_family = AF_INET;
+    inet_pton(AF_INET, argv[1], &(cli.sin_addr));
+    cli.sin_port = htons(atoi(argv[2]));
 
-    bind(fd, (struct sockaddr *)&srv, sizeof(srv));
-    perror("bind");
+    connect(fd, (struct sockaddr *)&cli, sizeof(cli));
+    perror("connect");
     close(fd);
-    return (errno == EADDRNOTAVAIL) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return (errno == ECONNREFUSED) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -31,12 +31,8 @@ int main(int argc, char **argv)
     strcpy(srv.sun_path, argv[1]);
     len = strlen(srv.sun_path) + sizeof(srv.sun_family);
 
-    if (bind(fd, (struct sockaddr *)&srv, len) < 0) {
-        perror("bind");
-        close(fd);
-        return EXIT_FAILURE;
-    }
-
+    bind(fd, (struct sockaddr *)&srv, len);
+    perror("bind");
     close(fd);
     return (errno == EADDRNOTAVAIL) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

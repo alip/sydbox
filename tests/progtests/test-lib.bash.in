@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# vim: set sw=4 et sts=4 tw=80 :
-# Copyright 2009 Ali Polatel <alip@exherbo.org>
+# vim: set sw=4 et sts=4 nowrap :
+# Copyright 2009, 2010 Ali Polatel <alip@exherbo.org>
 # Distributed under the terms of the GNU General Public License v2
 
 # Check for bash
@@ -366,12 +366,12 @@ tcp_server() {
         exit 1
     fi
 
-    if ! "$perl"                                                                                          \
-        -e 'require IO::Socket;'                                                                          \
-        -e 'my $sock = IO::Socket::INET->new(Listen => 1, LocalHost => "'$addr'", LocalPort => '$port');' \
-        -e '$sock or die "no socket :$!";'                                                                \
-        -e 'my $client = $sock->accept();'                                                                \
-        -e 'close($client);'                                                                              \
+    if ! "$perl" \
+        -e 'require IO::Socket;'           \
+        -e 'my $sock = IO::Socket::INET->new(Timeout => 5, ReuseAddr => 1, Listen => 1, LocalHost => "'$addr'", LocalPort => '$port');' \
+        -e '$sock or die "no socket :$!";' \
+        -e 'my $client = $sock->accept();' \
+        -e 'close($client);'               \
         -e 'close($sock);'
     then
         : > "$fail"
@@ -384,10 +384,7 @@ unix_server() {
 
     path="$1"
     fail="$2"
-    if ! unlink "$path"; then
-        echo "Failed to unlink: $path" > "$fail"
-        exit 1
-    fi
+    unlink "$path"
 
     perl="@PERL_PATH@"
     if [[ -z "$perl" ]]; then
@@ -397,7 +394,7 @@ unix_server() {
 
     if ! "$perl"                                                                \
         -e 'require IO::Socket;'                                                \
-        -e 'my $sock = IO::Socket::UNIX->new(Listen => 1, Local => "'$path'");' \
+        -e 'my $sock = IO::Socket::UNIX->new(Timeout => 5, Listen => 1, Local => "'$path'");' \
         -e '$sock or die "no socket :$!";'                                      \
         -e 'my $client = $sock->accept();'                                      \
         -e 'close($client);'                                                    \

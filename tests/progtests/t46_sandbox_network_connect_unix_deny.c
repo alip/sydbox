@@ -12,29 +12,27 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+#include <sys/un.h>
 
 int main(int argc, char **argv)
 {
-    int fd;
-    struct sockaddr_in srv;
+    int fd, len;
+    struct sockaddr_un cli;
 
-    if (argc < 3)
+    if (argc < 2)
         return EXIT_FAILURE;
 
-    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
         perror("socket");
         return EXIT_FAILURE;
     }
 
-    memset(&srv, 0, sizeof(srv));
-    srv.sin_family = AF_INET;
-    inet_pton(AF_INET, argv[1], &(srv.sin_addr));
-    srv.sin_port = htons(atoi(argv[2]));
+    cli.sun_family = AF_UNIX;
+    strcpy(cli.sun_path, argv[1]);
+    len = strlen(cli.sun_path) + sizeof(cli.sun_family);
 
-    bind(fd, (struct sockaddr *)&srv, sizeof(srv));
-    perror("bind");
+    connect(fd, (struct sockaddr *)&cli, sizeof(cli));
+    perror("connect");
     close(fd);
-    return (errno == EADDRNOTAVAIL) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return (errno == ECONNREFUSED) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
