@@ -9,6 +9,7 @@ bind_socket="$cwd"/sydbox.sock
 bind_port=23456
 clean_files+=( "$bind_socket" )
 
+unlink "$bind_socket" 2>/dev/null
 start_test "t46-sandbox-network-allow-bind-unix"
 sydbox -N -M allow -- ./t46_sandbox_network_bind_unix "$bind_socket"
 if [[ 0 != $? ]]; then
@@ -21,52 +22,6 @@ sydbox -N -M allow -- ./t46_sandbox_network_bind_tcp '127.0.0.1' $bind_port
 if [[ 0 != $? ]]; then
     die "Failed to allow binding to TCP socket"
 fi
-end_test
-
-start_test "t46-sandbox-network-allow-connect-tcp"
-# Start a TCP server in the background.
-fail="tcp-server-failed"
-rm -f "$fail"
-clean_files+=( "$fail" )
-tcp_server '127.0.0.1' $bind_port "$fail" &
-pid=$!
-sleep 1
-if [[ -e "$fail" ]]; then
-    say skip "Failed to start TCP server: $(< $fail)"
-    say skip "Skipping test"
-else
-    sydbox -N -M allow -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
-    if [[ 0 != $? ]]; then
-        kill $pid
-        die "Failed to allow connect to a TCP server"
-    else
-        wait $pid
-    fi
-fi
-end_test
-
-start_test "t46-sandbox-network-allow-connect-unix"
-# Start a Unix server in the background.
-fail="unix-server-failed"
-clean_files+=( "$fail" )
-unix_server "$bind_socket" "$fail" &
-pid=$!
-sleep 1
-if [[ -e "$fail" ]]; then
-    say skip "Failed to start Unix server: $(< $fail)"
-    say skip "Skipping test"
-else
-    sydbox -N -M allow -- ./t46_sandbox_network_connect_unix "$bind_socket"
-    if [[ 0 != $? ]]; then
-        kill $pid
-        die "Failed to allow connect to a Unix server"
-    else
-        wait $pid
-    fi
-fi
-end_test
-
-start_test "t46-sandbox-network-allow-sendto (TODO)"
 end_test
 
 unlink "$bind_socket" 2>/dev/null
@@ -84,50 +39,19 @@ if [[ 0 == $? ]]; then
 fi
 end_test
 
-start_test "t46-sandbox-network-deny-connect-tcp"
-# Start a TCP server in the background.
-fail="tcp-server-failed"
-rm -f "$fail"
-clean_files+=( "$fail" )
-tcp_server '127.0.0.1' $bind_port "$fail" &
-pid=$!
-sleep 1
-if [[ -e "$fail" ]]; then
-    say skip "Failed to start TCP server: $(< $fail)"
-    say skip "Skipping test"
-else
-    sydbox -N -M deny -- ./t46_sandbox_network_connect_tcp_deny '127.0.0.1' $bind_port
-    if [[ 0 == $? ]]; then
-        kill $pid
-        die "Failed to deny connect to a TCP server"
-    else
-        wait $pid
-    fi
+unlink "$bind_socket" 2>/dev/null
+start_test "t46-sandbox-network-local-allow-bind-unix"
+sydbox -N -M "local" -- ./t46_sandbox_network_bind_unix "$bind_socket"
+if [[ 0 != $? ]]; then
+    die "Failed to allow binding to UNIX socket in local mode"
 fi
 end_test
 
-start_test "t46-sandbox-network-deny-connect-unix"
-# Start a Unix server in the background.
-fail="unix-server-failed"
-clean_files+=( "$fail" )
-unix_server "$bind_socket" "$fail" &
-pid=$!
-sleep 1
-if [[ -e "$fail" ]]; then
-    say skip "Failed to start Unix server: $(< $fail)"
-    say skip "Skipping test"
-else
-    sydbox -N -M deny -- ./t46_sandbox_network_connect_unix_deny "$bind_socket"
-    if [[ 0 == $? ]]; then
-        kill $!
-        die "Failed to deny connect to a Unix server"
-    else
-        wait $!
-    fi
+start_test "t46-sandbox-network-local-allow-bind-tcp"
+sydbox -N -M "local" -- ./t46_sandbox_network_bind_tcp '127.0.0.1' $bind_port
+if [[ 0 != $? ]]; then
+    die "Failed to allow binding to TCP socket in local mode"
 fi
-end_test
-
-start_test "t46-sandbox-network-deny-sendto (TODO)"
 end_test
 
 unlink "$bind_socket" 2>/dev/null
@@ -147,58 +71,115 @@ if [[ 0 != $? ]]; then
 fi
 end_test
 
-start_test "t46-sandbox-network-deny-allow-whitelisted-connect-unix"
-# Start a Unix server in the background.
+# Start a TCP server in background.
+has_tcp=false
+fail="tcp-server-failed"
+clean_files+=( "$fail" )
+start_test "t46-sandbox-network-allow-connect-tcp"
+tcp_server 127.0.0.1 $bind_port "$fail" &
+tcp_pid=$!
+sleep 1
+if [[ -e "$fail" ]]; then
+    say skip "Failed to start TCP server: $(< $fail)"
+else
+    has_tcp=true
+fi
+
+# Start a Unix server in background.
+has_unix=false
 fail="unix-server-failed"
 clean_files+=( "$fail" )
 unix_server "$bind_socket" "$fail" &
-pid=$!
+unix_pid=$!
 sleep 1
 if [[ -e "$fail" ]]; then
     say skip "Failed to start Unix server: $(< $fail)"
-    say skip "Skipping test"
 else
+    has_unix=true
+fi
+
+shutdown() {
+    send_tcp_server 127.0.0.1 $bind_port "QUIT"
+    send_unix_server "$bind_socket" "QUIT"
+    wait $tcp_pid $unix_pid
+}
+trap 'shutdown' EXIT
+
+start_test "t46-sandbox-network-allow-connect-unix"
+if $has_unix; then
+    sydbox -N -M allow -- ./t46_sandbox_network_connect_unix "$bind_socket"
+    if [[ 0 != $? ]]; then
+        die "Failed to allow connect to a Unix socket"
+    fi
+else
+    say skip "No Unix server, skipping test"
+fi
+end_test
+
+start_test "t46-sandbox-network-allow-connect-tcp"
+if $has_tcp; then
+    sydbox -N -M allow -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
+    if [[ 0 != $? ]]; then
+        die "Failed to allow connect to a TCP socket"
+    fi
+else
+    say skip "No TCP server, skipping test"
+fi
+end_test
+
+start_test "t46-sandbox-network-allow-sendto (TODO)"
+end_test
+
+start_test "t46-sandbox-network-deny-connect-unix"
+if $has_unix; then
+    sydbox -N -M deny -- ./t46_sandbox_network_connect_unix_deny "$bind_socket"
+    if [[ 0 == $? ]]; then
+        die "Failed to deny connect to a Unix server"
+    fi
+else
+    say skip "No Unix server, skipping test"
+fi
+end_test
+
+start_test "t46-sandbox-network-deny-connect-tcp"
+if $has_tcp; then
+    sydbox -N -M deny -- ./t46_sandbox_network_connect_tcp_deny '127.0.0.1' $bind_port
+    if [[ 0 == $? ]]; then
+        die "Failed to deny connect to a TCP server"
+    fi
+else
+    say skip "No TCP server, skipping test"
+fi
+end_test
+
+start_test "t46-sandbox-network-deny-sendto (TODO)"
+end_test
+
+start_test "t46-sandbox-network-deny-allow-whitelisted-connect-unix"
+if $has_unix; then
     SYDBOX_NET_WHITELIST=unix://"$bind_socket" \
     sydbox -N -M deny -- ./t46_sandbox_network_connect_unix "$bind_socket"
     if [[ 0 != $? ]]; then
-        kill $pid
         die "Failed to allow connect to a Unix server by whitelisting"
-    else
-        wait $pid
     fi
+else
+    say skip "No Unix server, skipping test"
 fi
 end_test
 
 start_test "t46-sandbox-network-deny-allow-whitelisted-connect-tcp"
-# Start a TCP server in the background.
-fail="tcp-server-failed"
-rm -f "$fail"
-clean_files+=( "$fail" )
-tcp_server '127.0.0.1' $bind_port "$fail" &
-pid=$!
-sleep 1
-if [[ -e "$fail" ]]; then
-    say skip "Failed to start TCP server: $(< $fail)"
-    say skip "Skipping test"
-else
+if $has_tcp; then
     SYDBOX_NET_WHITELIST=inet://127.0.0.1:$bind_port \
     sydbox -N -M deny -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
     if [[ 0 != $? ]]; then
-        kill $pid
         die "Failed to allow connect to a TCP server by whitelisting"
-    else
-        wait $pid
     fi
+else
+    say skip "No TCP server, skipping test"
 fi
 end_test
 
-start_test "t46-sandbox-network-deny-allow-whitelisted-sendto"
-end_test
-
-start_test "t46-sandbox-network-local-allow-bind-unix"
-end_test
-
-start_test "t46-sandbox-network-local-allow-bind-tcp"
+start_test "t46-sandbox-network-deny-allow-whitelisted-sendto (TODO)"
 end_test
 
 start_test "t46-sandbox-network-local-allow-connect"

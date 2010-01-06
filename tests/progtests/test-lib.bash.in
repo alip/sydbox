@@ -363,13 +363,19 @@ tcp_server() {
         exit 1
     fi
 
-    if ! "$perl" \
-        -e 'require IO::Socket;'           \
-        -e 'my $sock = IO::Socket::INET->new(Timeout => 5, ReuseAddr => 1, Listen => 1, LocalHost => "'$addr'", LocalPort => '$port');' \
-        -e '$sock or die "no socket :$!";' \
-        -e 'my $client = $sock->accept();' \
-        -e 'close($client);'               \
-        -e 'close($sock);'
+    if ! "$perl"                                        \
+        -e 'require IO::Socket;'                        \
+        -e 'my $sock = IO::Socket::INET->new(ReuseAddr => 1, Listen => 1, LocalHost => "'$addr'", LocalPort => '$port');' \
+        -e '$sock or die "no socket :$!";'              \
+        -e 'my($client, $buffer);'                      \
+        -e 'while ($client = $sock->accept()) {'        \
+        -e '    while (defined($buffer = <$client>)) {' \
+        -e '        if ($buffer =~ /^QUIT$/) {'         \
+        -e '            exit(0);'                       \
+        -e '        }'                                  \
+        -e '        close($client);'                    \
+        -e '    }'                                      \
+        -e '}'
     then
         : > "$fail"
         exit 1
@@ -389,15 +395,54 @@ unix_server() {
         exit 1
     fi
 
-    if ! "$perl"                                                                \
-        -e 'require IO::Socket;'                                                \
+    if ! "$perl"                                        \
+        -e 'require IO::Socket;'                        \
         -e 'my $sock = IO::Socket::UNIX->new(Timeout => 5, Listen => 1, Local => "'$path'");' \
-        -e '$sock or die "no socket :$!";'                                      \
-        -e 'my $client = $sock->accept();'                                      \
-        -e 'close($client);'                                                    \
-        -e 'close($sock);'
+        -e '$sock or die "no socket :$!";'              \
+        -e 'my($client, $buffer);'                      \
+        -e 'while ($client = $sock->accept()) {'        \
+        -e '    while (defined($buffer = <$client>)) {' \
+        -e '        if ($buffer =~ /^QUIT$/) {'         \
+        -e '            exit(0);'                       \
+        -e '        }'                                  \
+        -e '        close($client);'                    \
+        -e '    }'                                      \
+        -e '}'
     then
         : > "$fail"
         exit 1
     fi
+}
+
+send_tcp_server() {
+    local addr port msg perl
+
+    addr="$1"
+    port=$2
+    msg="$3"
+    perl="@PERL_PATH@"
+    [[ -z "$perl" ]] && return 1
+
+    "$perl" \
+        -e 'require IO::Socket;'            \
+        -e 'my $sock = IO::Socket::INET->new(PeerAddr => "'$addr'", PeerPort => '$port');' \
+        -e '$sock or die "no socket :$!";'  \
+        -e 'print $sock "'$msg'\n";'        \
+        -e 'close($sock);'
+}
+
+send_unix_server() {
+    local path msg perl
+
+    path="$1"
+    msg="$2"
+    perl="@PERL_PATH@"
+    [[ -z "$perl" ]] && return 1
+
+    "$perl" \
+        -e 'require IO::Socket;'            \
+        -e 'my $sock = IO::Socket::UNIX->new(Peer => "'$path'");' \
+        -e '$sock or die "no socket :$!";'  \
+        -e 'print $sock "'$msg'\n";'        \
+        -e 'close($sock);'
 }
