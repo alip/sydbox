@@ -831,10 +831,12 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
                     sydbox_access_violation(child->pid, NULL, "%s{family=AF_INET addr=%s port=%d}",
                             sname, data->addr, data->port);
                     break;
+#if HAVE_IPV6
                 case AF_INET6:
                     sydbox_access_violation(child->pid, NULL, "%s{family=AF_INET6 addr=%s port=%d}",
                             sname, data->addr, data->port);
                     break;
+#endif /* HAVE_IPV6 */
                 default:
                     g_assert_not_reached();
             }

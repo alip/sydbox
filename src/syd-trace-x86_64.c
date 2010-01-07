@@ -272,7 +272,9 @@ char *trace_get_addr(pid_t pid, int personality, int narg, bool decode,
         struct sockaddr sa;
         struct sockaddr_un sa_un;
         struct sockaddr_in sa_in;
+#if HAVE_IPV6
         struct sockaddr_in6 sa6;
+#endif /* HAVE_IPV6 */
     } addrbuf;
     char ip[100];
 
@@ -370,6 +372,7 @@ char *trace_get_addr(pid_t pid, int personality, int narg, bool decode,
                 return NULL;
             }
             return g_strdup(ip);
+#if HAVE_IPV6
         case AF_INET6:
             if (port != NULL)
                 *port = ntohs(addrbuf.sa6.sin6_port);
@@ -380,6 +383,7 @@ char *trace_get_addr(pid_t pid, int personality, int narg, bool decode,
                 return NULL;
             }
             return g_strdup(ip);
+#endif /* HAVE_IPV6 */
         default:
             return g_strdup("OTHER");
     }

@@ -17,6 +17,10 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <stdbool.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -262,7 +266,9 @@ char *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
         struct sockaddr sa;
         struct sockaddr_un sa_un;
         struct sockaddr_in sa_in;
+#ifdef HAVE_IPV6
         struct sockaddr_in6 sa6;
+#endif /* HAVE_IPV6 */
     } addrbuf;
     char ip[100];
 
@@ -324,6 +330,7 @@ char *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
                 return NULL;
             }
             return g_strdup(ip);
+#if HAVE_IPV6
         case AF_INET6:
             if (port != NULL)
                 *port = ntohs(addrbuf.sa6.sin6_port);
@@ -334,6 +341,7 @@ char *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
                 return NULL;
             }
             return g_strdup(ip);
+#endif /* HAVE_IPV6 */
         default:
             return g_strdup("OTHER");
     }

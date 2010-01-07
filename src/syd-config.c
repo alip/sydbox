@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  * Copyright (c) 2009 Saleem Abdulrasool <compnerd@compnerd.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
@@ -17,6 +17,10 @@
  * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -471,9 +475,11 @@ static inline void print_netlist_entry(gpointer data, gpointer userdata G_GNUC_U
         case AF_INET:
             g_fprintf(stderr, "\t{family=AF_INET addr=%s port=%d}\n", saddr->addr, saddr->port);
             break;
+#if HAVE_IPV6
         case AF_INET6:
             g_fprintf(stderr, "\t{family=AF_INET6 addr=%s port=%d}\n", saddr->addr, saddr->port);
             break;
+#endif /* HAVE_IPV6 */
         default:
             g_assert_not_reached();
     }

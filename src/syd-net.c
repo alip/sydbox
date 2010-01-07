@@ -69,6 +69,7 @@ int netlist_new_from_string(GSList **netlist, const gchar *addr_str, bool canlog
         g_free(addr);
         return 0;
     }
+#if HAVE_IPV6
     else if (0 == strncmp(addr_str, "inet6://", 8)) {
         addr = g_strdup(addr_str + 8);
         port = strrchr(addr, ':');
@@ -83,6 +84,7 @@ int netlist_new_from_string(GSList **netlist, const gchar *addr_str, bool canlog
         g_free(addr);
         return 0;
     }
+#endif /* HAVE_IPV6 */
     return -1;
 }
 
