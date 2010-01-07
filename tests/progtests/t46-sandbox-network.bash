@@ -111,7 +111,7 @@ shutdown() {
     send_unix_server "$bind_socket" "QUIT"
     wait $tcp_pid $unix_pid
 }
-trap 'shutdown' INT QUIT TERM EXIT
+trap 'shutdown' INT TERM EXIT
 
 start_test "t46-sandbox-network-allow-connect-unix"
 if $has_unix; then
@@ -216,12 +216,16 @@ start_test "t46-sandbox-network-local-allow-sendto (TODO)"
 end_test
 
 unlink "$bind_socket2" 2>/dev/null
-start_test "t46-sandbox-network-local-restrict_connect-unix"
+start_test "t46-sandbox-network-local-restrict_connect-allow-unix"
 sydbox -N -M 'local' -R -- ./t46_sandbox_network_bind_connect_unix "$bind_socket2"
 if [[ 0 != $? ]]; then
     die "restrict_connect didn't allow access to Unix socket"
 fi
 end_test
 
-start_test "t46-sandbox-network-local-restrict_connect-tcp (TODO)"
+start_test "t46-sandbox-network-local-restrict_connect-allow-tcp"
+sydbox -N -M 'local' -R -- ./t46_sandbox_network_bind_connect_tcp 127.0.0.1 $(($bind_port + 1))
+if [[ 0 != $? ]]; then
+    die "restrict connect didn't allow access to TCP socket"
+fi
 end_test

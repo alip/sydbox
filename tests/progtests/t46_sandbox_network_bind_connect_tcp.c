@@ -11,21 +11,23 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/wait.h>
 
 int main(int argc, char **argv)
 {
     pid_t pid;
     int len, fd, status;
-    struct sockaddr_un addr;
+    struct sockaddr_in addr;
 
-    if (argc < 2)
+    if (argc < 3)
         return EXIT_FAILURE;
 
-    addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, argv[1]);
-    len = strlen(addr.sun_path) + sizeof(addr.sun_family);
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    inet_pton(AF_INET, argv[1], &(addr.sin_addr));
+    addr.sin_port = htons(atoi(argv[2]));
 
     if ((pid = fork()) < 0) {
         perror("fork");
@@ -34,12 +36,12 @@ int main(int argc, char **argv)
     else if (0 == pid) { /* child */
         sleep(1);
 
-        if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+        if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             perror("socket");
             return EXIT_FAILURE;
         }
 
-        if (connect(fd, (struct sockaddr *)&addr, len) < 0) {
+        if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
             perror("connect");
             close(fd);
             return EXIT_FAILURE;
@@ -48,12 +50,12 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
     /* parent */
-    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket");
         return EXIT_FAILURE;
     }
 
-    if (bind(fd, (struct sockaddr *)&addr, len) < 0) {
+    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("bind");
         close(fd);
         kill(pid, SIGTERM);
