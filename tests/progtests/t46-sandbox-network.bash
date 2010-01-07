@@ -111,7 +111,7 @@ shutdown() {
     send_unix_server "$bind_socket" "QUIT"
     wait $tcp_pid $unix_pid
 }
-trap 'cleanup ; shutdown' INT TERM EXIT
+trap 'shutdown ; cleanup' INT TERM EXIT
 
 start_test "t46-sandbox-network-allow-connect-unix"
 if $has_unix; then
