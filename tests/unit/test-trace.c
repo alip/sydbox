@@ -1,7 +1,7 @@
 /* vim: set et ts=4 sts=4 sw=4 fdm=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -579,6 +579,59 @@ static void test14(void)
     }
 }
 
+static void test15(void)
+{
+    int ret, status;
+    pid_t pid;
+    struct stat buf;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+        if (stat("/dev/sydbox", &buf) < 0) {
+            g_printerr("stat() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        if (buf.st_rdev == 259) /* /dev/null */
+            _exit(EXIT_SUCCESS);
+        g_printerr("buf.st_rdev=%d\n", buf.st_rdev);
+        _exit(EXIT_FAILURE);
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child and it will stop at the next system call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Fake the stat argument and deny the system call */
+        XFAIL_IF(0 > trace_fake_stat(pid, CHECK_PERSONALITY), "trace_fake_stat() failed: %s\n", g_strerror(errno));
+        XFAIL_IF(0 > trace_set_syscall(pid, 0xbadca11), "failed to deny stat: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the end of stat() call */
+        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+        XFAIL_IF(0 > trace_set_return(pid, 0), "trace_set_return() failed: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will exit */
+        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFEXITED(status), "child didn't exit");
+        XFAIL_UNLESS(WEXITSTATUS(status) == EXIT_SUCCESS, "failed to fake stat argument");
+    }
+}
+
 static void no_log(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
 {
 }
@@ -610,6 +663,8 @@ int main(int argc, char **argv)
     g_test_add_func("/trace/path/get/second", test12);
     g_test_add_func("/trace/path/get/third", test13);
     g_test_add_func("/trace/path/get/fourth", test14);
+
+    g_test_add_func("/trace/stat/fake", test15);
 
     return g_test_run();
 }
