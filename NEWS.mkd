@@ -9,7 +9,6 @@ every change, see git log.
 * GObject isn't a dependency anymore.
 * Try hard to restore errno after ptrace errors.
 * Moved all check based unit tests to gtest. dev-libs/check isn't a dependency anymore.
-* Require automake 1.11
 
 ### 0.3
 * Set errno correctly when a file descriptor doesn't exist.

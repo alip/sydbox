@@ -435,8 +435,8 @@ dnl {{{ Check for Perl
 AC_PATH_PROG([PERL], perl)
 dnl }}}
 
-dnl {{{ Use AM_SILENT_RULES
-AM_SILENT_RULES(yes)
+dnl {{{ Use AM_SILENT_RULES if available
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 dnl }}}
 
 dnl {{{ output
