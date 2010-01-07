@@ -592,7 +592,7 @@ static void test14(void)
 
 static void test15(void)
 {
-    int ret, status;
+    int status;
     pid_t pid;
     struct stat buf;
 
@@ -645,7 +645,7 @@ static void test15(void)
 
 static void test16(void)
 {
-    int fd, ret, status;
+    int fd, status;
     int pfd[2];
     char strfd[16];
     pid_t pid;
@@ -669,15 +669,16 @@ static void test16(void)
         write(pfd[1], strfd, 16);
         close(pfd[1]);
 
-        if (0 > trace_me()) {
-            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
-            _exit(EXIT_FAILURE);
-        }
-        kill(getpid(), SIGSTOP);
         addr.sun_family = AF_UNIX;
         strcpy(addr.sun_path, "/dev/null");
         len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+
+        kill(getpid(), SIGSTOP);
         connect(fd, (struct sockaddr *)&addr, len);
         close(fd);
         pause();
@@ -705,8 +706,83 @@ static void test16(void)
         /* Check the fd argument */
         XFAIL_IF(!trace_get_fd(pid, CHECK_PERSONALITY, DECODE_SOCKETCALL, (long *)&fd),
                 "failed to get file descriptor: %s\n", g_strerror(errno));
-        XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d real:%d\n", fd, realfd);
+        XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
 
+        trace_kill(pid);
+    }
+}
+
+static void test17(void)
+{
+    int status, pfd[2];
+    pid_t pid;
+    char strfd[16];
+    struct sockaddr_un addr;
+
+    if (0 > pipe(pfd))
+        XFAIL("pipe() failed: %s\n", g_strerror(errno));
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        int fd, len;
+        struct sockaddr_un addr;
+
+        close(pfd[0]);
+        if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+            g_printerr("socket() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        snprintf(strfd, 16, "%i", fd);
+        write(pfd[1], strfd, 16);
+        close(pfd[1]);
+
+        addr.sun_family = AF_UNIX;
+        strcpy(addr.sun_path, "/dev/null");
+        len = strlen(addr.sun_path) + sizeof(addr.sun_family);
+
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+
+        kill(getpid(), SIGSTOP);
+        connect(fd, (struct sockaddr *)&addr, len);
+        close(fd);
+        pause();
+    }
+    else { // parent
+        int fd, realfd, family, port;
+        char *path;
+
+        close(pfd[1]);
+        read(pfd[0], strfd, 16);
+        realfd = atoi(strfd);
+        close(pfd[0]);
+
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, until the connect() call. */
+        for (unsigned int i = 0; i < 2; i++) {
+            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            waitpid(pid, &status, 0);
+            XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+        }
+
+        /* Check the address. */
+        path = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd, &family, &port);
+        XFAIL_IF(NULL == path, "trace_get_addr() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(path, "/dev/null", 10),
+                "wrong address got:`%s' expected:`/dev/null'", path);
+        XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
+        XFAIL_UNLESS(family == AF_UNIX, "wrong family got:%d expected:%d\n", family, AF_UNIX);
+        XFAIL_UNLESS(port == -1, "wrong port got:%d expected:-1\n", port);
+
+        g_free(path);
         trace_kill(pid);
     }
 }
@@ -746,6 +822,7 @@ int main(int argc, char **argv)
     g_test_add_func("/trace/stat/fake", test15);
 
     g_test_add_func("/trace/socket/fd", test16);
+    g_test_add_func("/trace/socket/addr/unix", test17);
 
     return g_test_run();
 }
