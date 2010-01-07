@@ -862,6 +862,81 @@ static void test18(void)
     }
 }
 
+#if HAVE_IPV6
+static void test19(void)
+{
+    int status, pfd[2];
+    pid_t pid;
+    char strfd[16];
+
+    if (0 > pipe(pfd))
+        XFAIL("pipe() failed: %s\n", g_strerror(errno));
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        int fd;
+        struct sockaddr_in6 addr;
+
+        close(pfd[0]);
+        if ((fd = socket(AF_INET6, SOCK_STREAM, 0)) < 0) {
+            g_printerr("socket() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        snprintf(strfd, 16, "%i", fd);
+        write(pfd[1], strfd, 16);
+        close(pfd[1]);
+
+        addr.sin6_family = AF_INET6;
+        inet_pton(AF_INET6, "::1", &(addr.sin6_addr));
+        addr.sin6_port = htons(23456);
+
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+
+        kill(getpid(), SIGSTOP);
+        connect(fd, (struct sockaddr *)&addr, sizeof(addr));
+        close(fd);
+        pause();
+    }
+    else { // parent
+        int fd, realfd, family, port;
+        char *ip;
+
+        close(pfd[1]);
+        read(pfd[0], strfd, 16);
+        realfd = atoi(strfd);
+        close(pfd[0]);
+
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, until the connect() call. */
+        for (unsigned int i = 0; i < 2; i++) {
+            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            waitpid(pid, &status, 0);
+            XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+        }
+
+        /* Check the address. */
+        ip = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd, &family, &port);
+        XFAIL_IF(NULL == ip, "trace_get_addr() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(ip, "::1", 4),
+                "wrong address got:`%s' expected:`::1'", ip);
+        XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
+        XFAIL_UNLESS(family == AF_INET6, "wrong family got:%d expected:%d\n", family, AF_INET6);
+        XFAIL_UNLESS(port == 23456, "wrong port got:%d expected:23456\n", port);
+
+        g_free(ip);
+        trace_kill(pid);
+    }
+}
+#endif /* HAVE_IPV6 */
 
 static void no_log(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
 {
@@ -900,6 +975,9 @@ int main(int argc, char **argv)
     g_test_add_func("/trace/socket/fd", test16);
     g_test_add_func("/trace/socket/addr/unix", test17);
     g_test_add_func("/trace/socket/addr/inet", test18);
+#if HAVE_IPV6
+    g_test_add_func("/trace/socket/addr/inet6", test19);
+#endif /* HAVE_IPV6 */
 
     return g_test_run();
 }
