@@ -1,5 +1,9 @@
 CLEANFILES = *.log test-lib.bash
 
+AM_CFLAGS= -DDATADIR=\"$(datadir)\" -DSYSCONFDIR=\"$(sysconfdir)\" \
+	   -DGIT_HEAD=\"$(GIT_HEAD)\" \
+	   $(glib_CFLAGS) @SYDBOX_CFLAGS@
+
 TESTS = t01-chmod.bash t02-chown.bash t03-open.bash t04-creat.bash t05-lchown.bash \
 	t06-link.bash t07-mkdir.bash t08-mknod.bash t09-access.bash \
 	t10-rename-first.bash t11-rename-second.bash t12-rmdir.bash t13-symlink.bash \

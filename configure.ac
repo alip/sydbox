@@ -379,6 +379,10 @@ if test x"$ac_cv_have_proc_self" = x"yes"; then
 fi
 dnl }}}
 
+dnl {{{ Check for large file support
+AC_SYS_LARGEFILE
+dnl }}}
+
 dnl {{{ Extra CFLAGS
 SYDBOX_CFLAGS=
 WANTED_CFLAGS="-pedantic -Wall -W -Wextra -Wbad-function-cast -Wcast-align -Wcast-qual -Wfloat-equal -Wformat=2 -Wformat-security -Wformat-nonliteral -Winit-self -Winline -Wlogical-op -Wmissing-prototypes -Wmissing-declarations -Wmissing-format-attribute -Wmissing-noreturn -Wpointer-arith -Wredundant-decls -Wshadow -Wswitch-default -Wunused -Wvla"
