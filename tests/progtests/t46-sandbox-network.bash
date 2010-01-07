@@ -226,6 +226,20 @@ end_test
 start_test "t46-sandbox-network-local-restrict_connect-allow-tcp"
 sydbox -N -M 'local' -R -- ./t46_sandbox_network_bind_connect_tcp 127.0.0.1 $(($bind_port + 1))
 if [[ 0 != $? ]]; then
-    die "restrict connect didn't allow access to TCP socket"
+    die "restrict_connect didn't allow access to TCP socket"
+fi
+end_test
+
+start_test "t46-sandbox-network-local-restrict_connect-deny-unix"
+sydbox -N -M 'local' -R -- ./t46_sandbox_network_connect_unix_deny "$bind_socket"
+if [[ 0 == $? ]]; then
+    die "restrict_connect allowed access to non-parent Unix socket"
+fi
+end_test
+
+start_test "t46-sandbox-network-local-restrict_connect-deny-tcp"
+sydbox -N -M 'local' -R -- ./t46_sandbox_network_connect_tcp_deny 127.0.0.1 $bind_port
+if [[ 0 == $? ]]; then
+    die "restrict_connect allowed access to non-parent TCP socket"
 fi
 end_test
