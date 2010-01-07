@@ -19,6 +19,9 @@ TESTS = t01-chmod.bash t02-chown.bash t03-open.bash t04-creat.bash t05-lchown.ba
 	t36-magic-write.bash t37-magic-unwrite.bash t38-magic-addfilter.bash t39-magic-rmfilter.bash \
 	t40-openat-ebadf.bash t41-openat-fileno.bash t42-magic-wrap_lstat.bash t43-exit-code.bash \
 	t44-bad-open.bash t45-sandbox-exec.bash t46-sandbox-network.bash
+if WANT_IPV6
+TESTS += t47-sandbox-network-ipv6.bash
+endif
 
 EXTRA_DIST= $(TESTS)
 
@@ -40,6 +43,9 @@ check_PROGRAMS = test-lib.bash t01_chmod t01_chmod_toolong t02_chown t02_chown_t
 		 t46_sandbox_network_bind_tcp_deny t46_sandbox_network_connect_tcp_deny \
 		 t46_sandbox_network_connect_unix_deny t46_sandbox_network_bind_connect_unix \
 		 t46_sandbox_network_bind_connect_tcp
+if WANT_IPV6
+check_PROGRAMS+= t47_sandbox_network_bind_ipv6 t47_sandbox_network_bind_ipv6_deny
+endif
 
 test_lib_bash_SOURCES= test-lib.bash.in
 

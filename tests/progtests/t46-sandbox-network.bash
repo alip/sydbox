@@ -83,7 +83,6 @@ end_test
 has_tcp=false
 fail="tcp-server-failed"
 clean_files+=( "$fail" )
-start_test "t46-sandbox-network-allow-connect-tcp"
 tcp_server 0.0.0.0 $bind_port "$fail" &
 tcp_pid=$!
 sleep 1
