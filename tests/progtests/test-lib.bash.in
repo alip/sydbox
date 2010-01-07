@@ -154,7 +154,7 @@ cleanup() {
     kill_long >>"${SYDBOX_LOG}" 2>&1
     $remove_log && rm -f "${SYDBOX_LOG}" 2>&1
 }
-trap 'cleanup' EXIT
+trap 'cleanup' INT QUIT TERM EXIT
 
 kill_long() {
     local perl
