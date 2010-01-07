@@ -17,7 +17,7 @@
 
 int main(int argc, char **argv)
 {
-    int fd;
+    int fd, save_errno;
     struct sockaddr_in srv;
 
     if (argc < 3)
@@ -34,7 +34,8 @@ int main(int argc, char **argv)
     srv.sin_port = htons(atoi(argv[2]));
 
     bind(fd, (struct sockaddr *)&srv, sizeof(srv));
+    save_errno = errno;
     perror("bind");
     close(fd);
-    return (errno == EADDRNOTAVAIL) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return (save_errno == EADDRNOTAVAIL) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

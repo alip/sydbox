@@ -16,7 +16,7 @@
 
 int main(int argc, char **argv)
 {
-    int fd, len;
+    int fd, len, save_errno;
     struct sockaddr_un srv;
 
     if (argc < 2)
@@ -32,7 +32,8 @@ int main(int argc, char **argv)
     len = strlen(srv.sun_path) + sizeof(srv.sun_family);
 
     bind(fd, (struct sockaddr *)&srv, len);
+    save_errno = errno;
     perror("bind");
     close(fd);
-    return (errno == EADDRNOTAVAIL) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return (save_errno == EADDRNOTAVAIL) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -11,9 +11,12 @@
 
 int main(void)
 {
+    int save_errno;
+
     char *myargv[] = {"/bin/true", NULL};
 
     execvp(myargv[0], myargv);
+    save_errno = errno;
     perror("execvp");
-    return (EACCES == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return (EACCES == save_errno) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

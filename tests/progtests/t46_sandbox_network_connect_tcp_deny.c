@@ -17,7 +17,7 @@
 
 int main(int argc, char **argv)
 {
-    int fd;
+    int fd, save_errno;
     struct sockaddr_in cli;
 
     if (argc < 3)
@@ -34,7 +34,8 @@ int main(int argc, char **argv)
     cli.sin_port = htons(atoi(argv[2]));
 
     connect(fd, (struct sockaddr *)&cli, sizeof(cli));
+    save_errno = errno;
     perror("connect");
     close(fd);
-    return (errno == ECONNREFUSED) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return (save_errno == ECONNREFUSED) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

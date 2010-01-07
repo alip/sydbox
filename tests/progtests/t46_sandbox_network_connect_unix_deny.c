@@ -16,7 +16,7 @@
 
 int main(int argc, char **argv)
 {
-    int fd, len;
+    int fd, len, save_errno;
     struct sockaddr_un cli;
 
     if (argc < 2)
@@ -32,7 +32,8 @@ int main(int argc, char **argv)
     len = strlen(cli.sun_path) + sizeof(cli.sun_family);
 
     connect(fd, (struct sockaddr *)&cli, sizeof(cli));
+    save_errno = errno;
     perror("connect");
     close(fd);
-    return (errno == ECONNREFUSED) ? EXIT_FAILURE : EXIT_SUCCESS;
+    return (save_errno == ECONNREFUSED) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
