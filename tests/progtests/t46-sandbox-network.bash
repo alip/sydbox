@@ -6,8 +6,9 @@
 no_create_files=1
 . test-lib.bash
 bind_socket="$cwd"/sydbox.sock
+bind_socket2="$cwd"/sydbox2.sock
 bind_port=23456
-clean_files+=( "$bind_socket" )
+clean_files+=( "$bind_socket" "$bind_socket2" )
 
 unlink "$bind_socket" 2>/dev/null
 start_test "t46-sandbox-network-allow-bind-unix"
@@ -214,7 +215,12 @@ end_test
 start_test "t46-sandbox-network-local-allow-sendto (TODO)"
 end_test
 
-start_test "t46-sandbox-network-local-restrict_connect-unix (TODO)"
+unlink "$bind_socket2" 2>/dev/null
+start_test "t46-sandbox-network-local-restrict_connect-unix"
+sydbox -N -M 'local' -R -- ./t46_sandbox_network_bind_connect_unix "$bind_socket2"
+if [[ 0 != $? ]]; then
+    die "restrict_connect didn't allow access to Unix socket"
+fi
 end_test
 
 start_test "t46-sandbox-network-local-restrict_connect-tcp (TODO)"
