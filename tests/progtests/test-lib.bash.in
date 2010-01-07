@@ -88,11 +88,12 @@ end_test() {
 
 # Global variables
 cwd="$(readlink -f .)"
+dir_count=@DIR_COUNT@
 long_dir=$(printf '%200s' ' ' | tr ' ' x)
 toolong_dir="$(
-    for ((i=1; i <= 64; i++)); do
+    for ((i=1; i <= $dir_count; i++)); do
         printf "$long_dir"
-        [[ $i != 64 ]] && printf /
+        [[ $i != $dir_count ]] && printf /
     done)"
 
 SYDBOX_LOG="${cwd}/sydbox-$$.log"
@@ -181,7 +182,7 @@ mkdir_long() {
 
     if ! "$perl"                                                \
         -e 'my $dir = '$long_dir';'                             \
-        -e 'foreach my $i (1..64) {'                            \
+        -e 'foreach my $i (1..'$dir_count') {'                  \
         -e '    mkdir($dir, 0700) && chdir($dir) or die "$!" '  \
         -e '}'
     then
@@ -201,15 +202,15 @@ lstat_long() {
         exit 0
     fi
 
-    "$perl"                                 \
-        -e 'my $dir = '$long_dir';'         \
-        -e 'foreach my $i (1..64) {'        \
-        -e '    chdir($dir) or exit(127)'   \
-        -e '}'                              \
-        -e 'if (!lstat("'$fname'")) {'      \
-        -e '    exit(1)'                    \
-        -e '} else {'                       \
-        -e '    exit(0)'                    \
+    "$perl"                                     \
+        -e 'my $dir = '$long_dir';'             \
+        -e 'foreach my $i (1..'$dir_count') {'  \
+        -e '    chdir($dir) or exit(127)'       \
+        -e '}'                                  \
+        -e 'if (!lstat("'$fname'")) {'          \
+        -e '    exit(1)'                        \
+        -e '} else {'                           \
+        -e '    exit(0)'                        \
         -e '}'
 }
 
@@ -233,7 +234,7 @@ mkstemp_long() {
     tempfile=$("$perl"                                                  \
         -e 'use File::Temp qw/ :mktemp  /;'                             \
         -e 'my $dir = '$long_dir';'                                     \
-        -e 'foreach my $i (1..64) {'                                    \
+        -e 'foreach my $i (1..'$dir_count') {'                          \
         -e '    mkdir($dir, 0700) && chdir($dir) or die "$!" '          \
         -e '}'                                                          \
         -e '($fh, $file) = mkstemps("'$template'", "syd") or die "$!";' \
@@ -263,7 +264,7 @@ mkdtemp_long() {
     if ! "$perl"                                                \
         -e 'use File::Temp qw/ :mktemp  /;'                     \
         -e 'my $dir = '$long_dir';'                             \
-        -e 'foreach my $i (1..64) {'                            \
+        -e 'foreach my $i (1..'$dir_count') {'                  \
         -e '    mkdir($dir, 0700) && chdir($dir) or die "$!" '  \
         -e '}'                                                  \
         -e '$tmpdir = mkdtemp("'$template'") or die "$!";'      \
@@ -288,7 +289,7 @@ perm_long() {
     "$perl" \
         -e "use Fcntl ':mode';"                             \
         -e 'my $dir = '$long_dir';'                         \
-        -e 'foreach my $i (1..64) {'                        \
+        -e 'foreach my $i (1..'$dir_count') {'              \
         -e '    chdir($dir) or die "$!"'                    \
         -e '}'                                              \
         -e '($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,' \
@@ -310,7 +311,7 @@ read_long() {
     if ! "$perl"                                        \
         -e 'my $dir = '$long_dir';'                     \
         -e 'my $data;'                                  \
-        -e 'foreach my $i (1..64) {'                    \
+        -e 'foreach my $i (1..'$dir_count') {'          \
         -e '    chdir($dir) or die "$!"'                \
         -e '}'                                          \
         -e 'open(TEMPFILE, "'$fname'") or die "$!";'    \
@@ -338,7 +339,7 @@ write_long() {
 
     if ! "$perl"                                                \
         -e 'my $dir = '$long_dir';'                             \
-        -e 'foreach my $i (1..64) {'                            \
+        -e 'foreach my $i (1..'$dir_count') {'                  \
         -e '    mkdir($dir, 0700) && chdir($dir) or die "$!"'   \
         -e '}'                                                  \
         -e 'open(TEMPFILE, ">'$fname'") or die "$!";'           \

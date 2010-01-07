@@ -11,7 +11,9 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char **argv) {
     char *long_dir, *fname;
@@ -23,13 +25,19 @@ int main(int argc, char **argv) {
         fname = argv[2];
     }
 
-    for (int i = 0; i < 64; i++) {
-        if (0 > chdir(long_dir))
+    for (int i = 0; i < DIR_COUNT; i++) {
+        if (0 > chdir(long_dir)) {
+            fprintf(stderr, "chdir(%i): %s\n", i, strerror(errno));
             return EXIT_FAILURE;
+        }
     }
 
-    if (0 > chmod(fname, 0000))
-        return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;
+    if (0 > chmod(fname, 0000)) {
+        if (EPERM == errno)
+            return EXIT_FAILURE;
+        perror("chmod");
+        return EXIT_SUCCESS;
+    }
     else
         return EXIT_SUCCESS;
 }

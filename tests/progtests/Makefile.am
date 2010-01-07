@@ -1,7 +1,10 @@
 CLEANFILES = *.log test-lib.bash
 
+# The size of the long directory tree we create
+DIR_COUNT=64
+
 AM_CFLAGS= -DDATADIR=\"$(datadir)\" -DSYSCONFDIR=\"$(sysconfdir)\" \
-	   -DGIT_HEAD=\"$(GIT_HEAD)\" \
+	   -DGIT_HEAD=\"$(GIT_HEAD)\" -DDIR_COUNT=$(DIR_COUNT) \
 	   $(glib_CFLAGS) @SYDBOX_CFLAGS@
 
 TESTS = t01-chmod.bash t02-chown.bash t03-open.bash t04-creat.bash t05-lchown.bash \
@@ -44,6 +47,7 @@ test-lib.bash: test-lib.bash.in
 	$(SED) \
 		-e "s:@TOP_BUILDDIR@:$(top_builddir):" \
 		-e "s:@PERL_PATH@:$(PERL):" \
+		-e "s:@DIR_COUNT@:$(DIR_COUNT):" \
 		$< > $@
 
 check-valgrind:

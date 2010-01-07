@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     char *long_dir = argv[2];
     char *fname = argv[3];
 
-    for (int i = 0; i < 64; i++) {
+    for (int i = 0; i < DIR_COUNT; i++) {
         if (0 > chdir(long_dir))
             return EXIT_FAILURE;
     }
