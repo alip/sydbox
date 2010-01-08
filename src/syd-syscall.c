@@ -777,6 +777,7 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
 
     if (child->sandbox->network &&
             IS_NET_CALL(sflags) &&
+            data->addr != NULL &&
             IS_SUPPORTED_FAMILY(data->addr->family)) {
 
         violation = true;
