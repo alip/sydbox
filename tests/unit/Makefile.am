@@ -2,7 +2,7 @@ include $(top_srcdir)/tests/gtest.mk
 
 AM_CFLAGS = $(glib_CFLAGS)
 
-UNIT_TESTS = sydbox-utils children path trace
+UNIT_TESTS = sydbox-utils children path trace net
 
 # fake out libsydbox {{{
 libsydbox_SOURCES = $(top_srcdir)/src/syd-children.c \
@@ -51,3 +51,5 @@ path_LDADD = $(glib_LIBS)
 trace_SOURCES = $(libsydbox_SOURCES) test-helpers.h test-trace.c
 trace_LDADD = $(glib_LIBS)
 
+net_SOURCES= $(libsydbox_SOURCES) test-helpers.h test-net.c
+net_LDADD= $(glib_LIBS)

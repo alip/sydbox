@@ -11,71 +11,34 @@ bind_port=23456
 clean_files+=( "$bind_socket" "$bind_socket2" )
 
 unlink "$bind_socket" 2>/dev/null
-start_test "t46-sandbox-network-allow-bind-unix"
-sydbox -N -M allow -- ./t46_sandbox_network_bind_unix "$bind_socket"
-if [[ 0 != $? ]]; then
-    die "Failed to allow binding to UNIX socket"
-fi
-end_test
-
-start_test "t46-sandbox-network-allow-bind-tcp"
-sydbox -N -M allow -- ./t46_sandbox_network_bind_tcp '127.0.0.1' $bind_port
-if [[ 0 != $? ]]; then
-    die "Failed to allow binding to TCP socket"
-fi
-end_test
-
-unlink "$bind_socket" 2>/dev/null
 start_test "t46-sandbox-network-deny-bind-unix"
-sydbox -N -M deny -- ./t46_sandbox_network_bind_unix_deny "$bind_socket"
+sydbox -N -- ./t46_sandbox_network_bind_unix_deny "$bind_socket"
 if [[ 0 == $? ]]; then
     die "Failed to deny bind to a UNIX socket"
 fi
 end_test
 
 start_test "t46-sandbox-network-deny-bind-tcp"
-sydbox -N -M deny -- ./t46_sandbox_network_bind_tcp_deny '127.0.0.1' $bind_port
+sydbox -N -- ./t46_sandbox_network_bind_tcp_deny '127.0.0.1' $bind_port
 if [[ 0 == $? ]]; then
     die "Failed to deny bind to a TCP socket"
 fi
 end_test
 
 unlink "$bind_socket" 2>/dev/null
-start_test "t46-sandbox-network-local-allow-bind-unix"
-sydbox -N -M "local" -- ./t46_sandbox_network_bind_unix "$bind_socket"
-if [[ 0 != $? ]]; then
-    die "Failed to allow binding to UNIX socket in local mode"
-fi
-end_test
-
-start_test "t46-sandbox-network-local-allow-bind-tcp"
-sydbox -N -M "local" -- ./t46_sandbox_network_bind_tcp '127.0.0.1' $bind_port
-if [[ 0 != $? ]]; then
-    die "Failed to allow binding to TCP socket in local mode"
-fi
-end_test
-
-unlink "$bind_socket" 2>/dev/null
 start_test "t46-sandbox-network-deny-allow-whitelisted-bind-unix"
 SYDBOX_NET_WHITELIST=unix://"$bind_socket" \
-sydbox -N -M deny -- ./t46_sandbox_network_bind_unix "$bind_socket"
+sydbox -N -- ./t46_sandbox_network_bind_unix "$bind_socket"
 if [[ 0 != $? ]]; then
     die "Failed to allow bind to Unix socket by whitelisting"
 fi
 end_test
 
 start_test "t46-sandbox-network-deny-allow-whitelisted-bind-tcp"
-SYDBOX_NET_WHITELIST=inet://127.0.0.1:$bind_port \
-sydbox -N -M deny -- ./t46_sandbox_network_bind_tcp 127.0.0.1 $bind_port
+SYDBOX_NET_WHITELIST=inet://127.0.0.1@$bind_port \
+sydbox -N -- ./t46_sandbox_network_bind_tcp 127.0.0.1 $bind_port
 if [[ 0 != $? ]]; then
     die "Failed to allow bind to TCP socket by whitelisting"
-fi
-end_test
-
-start_test "t46-sandbox-network-local-deny-remote-bind-tcp"
-sydbox -N -M 'local' -- ./t46_sandbox_network_bind_tcp_deny 0.0.0.0 $bind_port
-if [[ 0 == $? ]]; then
-    die "Failed to deny remote bind in local mode"
 fi
 end_test
 
@@ -112,34 +75,9 @@ shutdown() {
 }
 trap 'shutdown ; cleanup' INT TERM EXIT
 
-start_test "t46-sandbox-network-allow-connect-unix"
-if $has_unix; then
-    sydbox -N -M allow -- ./t46_sandbox_network_connect_unix "$bind_socket"
-    if [[ 0 != $? ]]; then
-        die "Failed to allow connect to a Unix socket"
-    fi
-else
-    say skip "No Unix server, skipping test"
-fi
-end_test
-
-start_test "t46-sandbox-network-allow-connect-tcp"
-if $has_tcp; then
-    sydbox -N -M allow -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
-    if [[ 0 != $? ]]; then
-        die "Failed to allow connect to a TCP socket"
-    fi
-else
-    say skip "No TCP server, skipping test"
-fi
-end_test
-
-start_test "t46-sandbox-network-allow-sendto (TODO)"
-end_test
-
 start_test "t46-sandbox-network-deny-connect-unix"
 if $has_unix; then
-    sydbox -N -M deny -- ./t46_sandbox_network_connect_unix_deny "$bind_socket"
+    sydbox -N -- ./t46_sandbox_network_connect_unix_deny "$bind_socket"
     if [[ 0 == $? ]]; then
         die "Failed to deny connect to a Unix server"
     fi
@@ -150,7 +88,7 @@ end_test
 
 start_test "t46-sandbox-network-deny-connect-tcp"
 if $has_tcp; then
-    sydbox -N -M deny -- ./t46_sandbox_network_connect_tcp_deny '127.0.0.1' $bind_port
+    sydbox -N -- ./t46_sandbox_network_connect_tcp_deny '127.0.0.1' $bind_port
     if [[ 0 == $? ]]; then
         die "Failed to deny connect to a TCP server"
     fi
@@ -165,7 +103,7 @@ end_test
 start_test "t46-sandbox-network-deny-allow-whitelisted-connect-unix"
 if $has_unix; then
     SYDBOX_NET_WHITELIST=unix://"$bind_socket" \
-    sydbox -N -M deny -- ./t46_sandbox_network_connect_unix "$bind_socket"
+    sydbox -N -- ./t46_sandbox_network_connect_unix "$bind_socket"
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a Unix server by whitelisting"
     fi
@@ -176,8 +114,8 @@ end_test
 
 start_test "t46-sandbox-network-deny-allow-whitelisted-connect-tcp"
 if $has_tcp; then
-    SYDBOX_NET_WHITELIST=inet://127.0.0.1:$bind_port \
-    sydbox -N -M deny -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
+    SYDBOX_NET_WHITELIST=inet://127.0.0.1@$bind_port \
+    sydbox -N -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a TCP server by whitelisting"
     fi
@@ -187,58 +125,4 @@ fi
 end_test
 
 start_test "t46-sandbox-network-deny-allow-whitelisted-sendto (TODO)"
-end_test
-
-start_test "t46-sandbox-network-local-allow-connect-unix"
-if $has_unix; then
-    sydbox -N -M 'local' -- ./t46_sandbox_network_connect_unix "$bind_socket"
-    if [[ 0 != $? ]]; then
-        die "Failed to allow connect to a Unix socket in local mode"
-    fi
-else
-    say skip "No Unix server, skipping test"
-fi
-end_test
-
-start_test "t46-sandbox-network-local-allow-connect-tcp"
-if $has_tcp; then
-    sydbox -N -M 'local' -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
-    if [[ 0 != $? ]]; then
-        die "Failed to allow connect to a TCP socket in local mode"
-    fi
-else
-    say skip "No TCP server, skipping test"
-fi
-end_test
-
-start_test "t46-sandbox-network-local-allow-sendto (TODO)"
-end_test
-
-unlink "$bind_socket2" 2>/dev/null
-start_test "t46-sandbox-network-local-restrict_connect-allow-unix"
-sydbox -N -M 'local' -R -- ./t46_sandbox_network_bind_connect_unix "$bind_socket2"
-if [[ 0 != $? ]]; then
-    die "restrict_connect didn't allow access to Unix socket"
-fi
-end_test
-
-start_test "t46-sandbox-network-local-restrict_connect-allow-tcp"
-sydbox -N -M 'local' -R -- ./t46_sandbox_network_bind_connect_tcp 127.0.0.1 $(($bind_port + 1))
-if [[ 0 != $? ]]; then
-    die "restrict_connect didn't allow access to TCP socket"
-fi
-end_test
-
-start_test "t46-sandbox-network-local-restrict_connect-deny-unix"
-sydbox -N -M 'local' -R -- ./t46_sandbox_network_connect_unix_deny "$bind_socket"
-if [[ 0 == $? ]]; then
-    die "restrict_connect allowed access to non-parent Unix socket"
-fi
-end_test
-
-start_test "t46-sandbox-network-local-restrict_connect-deny-tcp"
-sydbox -N -M 'local' -R -- ./t46_sandbox_network_connect_tcp_deny 127.0.0.1 $bind_port
-if [[ 0 == $? ]]; then
-    die "restrict_connect allowed access to non-parent TCP socket"
-fi
 end_test

@@ -754,8 +754,8 @@ static void test17(void)
         pause();
     }
     else { // parent
-        int fd, realfd, family, port;
-        char *path;
+        int fd, realfd;
+        struct sydbox_addr *addr;
 
         close(pfd[1]);
         read(pfd[0], strfd, 16);
@@ -775,15 +775,15 @@ static void test17(void)
         }
 
         /* Check the address. */
-        path = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd, &family, &port);
-        XFAIL_IF(NULL == path, "trace_get_addr() failed: %s\n", g_strerror(errno));
-        XFAIL_UNLESS(0 == strncmp(path, "/dev/null", 10),
-                "wrong address got:`%s' expected:`/dev/null'", path);
+        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd);
+        XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/dev/null", 10),
+                "wrong address got:`%s' expected:`/dev/null'", addr->u.sun_path);
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
-        XFAIL_UNLESS(family == AF_UNIX, "wrong family got:%d expected:%d\n", family, AF_UNIX);
-        XFAIL_UNLESS(port == -1, "wrong port got:%d expected:-1\n", port);
+        XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family got:%d expected:%d\n", addr->family, AF_UNIX);
+        XFAIL_UNLESS(addr->port[0] == -1, "wrong port got:%d expected:-1\n", addr->port[0]);
 
-        g_free(path);
+        g_free(addr);
         trace_kill(pid);
     }
 }
@@ -828,8 +828,9 @@ static void test18(void)
         pause();
     }
     else { // parent
-        int fd, realfd, family, port;
-        char *ip;
+        int fd, realfd;
+        struct sydbox_addr *addr;
+        char ip[100] = { 0 };
 
         close(pfd[1]);
         read(pfd[0], strfd, 16);
@@ -849,15 +850,17 @@ static void test18(void)
         }
 
         /* Check the address. */
-        ip = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd, &family, &port);
-        XFAIL_IF(NULL == ip, "trace_get_addr() failed: %s\n", g_strerror(errno));
+        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd);
+        XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
+        XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sin_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
+                    g_strerror(errno));
         XFAIL_UNLESS(0 == strncmp(ip, "127.0.0.1", 10),
                 "wrong address got:`%s' expected:`127.0.0.1'", ip);
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
-        XFAIL_UNLESS(family == AF_INET, "wrong family got:%d expected:%d\n", family, AF_INET);
-        XFAIL_UNLESS(port == 23456, "wrong port got:%d expected:23456\n", port);
+        XFAIL_UNLESS(addr->family == AF_INET, "wrong family got:%d expected:%d\n", addr->family, AF_INET);
+        XFAIL_UNLESS(addr->port[0] == 23456, "wrong port got:%d expected:23456\n", addr->port[0]);
 
-        g_free(ip);
+        g_free(addr);
         trace_kill(pid);
     }
 }
@@ -903,8 +906,9 @@ static void test19(void)
         pause();
     }
     else { // parent
-        int fd, realfd, family, port;
-        char *ip;
+        int fd, realfd;
+        struct sydbox_addr *addr;
+        char ip[100] = { 0 };
 
         close(pfd[1]);
         read(pfd[0], strfd, 16);
@@ -924,15 +928,17 @@ static void test19(void)
         }
 
         /* Check the address. */
-        ip = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd, &family, &port);
+        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd);
         XFAIL_IF(NULL == ip, "trace_get_addr() failed: %s\n", g_strerror(errno));
+        XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sin6_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
+                    g_strerror(errno));
         XFAIL_UNLESS(0 == strncmp(ip, "::1", 4),
                 "wrong address got:`%s' expected:`::1'", ip);
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
-        XFAIL_UNLESS(family == AF_INET6, "wrong family got:%d expected:%d\n", family, AF_INET6);
-        XFAIL_UNLESS(port == 23456, "wrong port got:%d expected:23456\n", port);
+        XFAIL_UNLESS(addr->family == AF_INET6, "wrong family got:%d expected:%d\n", addr->family, AF_INET6);
+        XFAIL_UNLESS(addr->port[0] == 23456, "wrong port got:%d expected:23456\n", addr->port[0]);
 
-        g_free(ip);
+        g_free(addr);
         trace_kill(pid);
     }
 }

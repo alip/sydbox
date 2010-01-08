@@ -14,6 +14,13 @@ sydbox.1: sydbox.1.xml
 
 sysconf_DATA = sydbox.conf
 
+if WANT_IPV6
+paludis.conf: paludis-ipv6.conf
+	cat $< > $@
+else
+paludis.conf: paludis-noipv6.conf
+	cat $< > $@
+endif
+
 sydsharedir= $(datadir)/sydbox
 sydshare_DATA= paludis.conf
-

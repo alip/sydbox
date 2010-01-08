@@ -37,20 +37,18 @@ enum {
 };
 
 struct checkdata {
-    gint result;            // Check result
-    gint save_errno;        // errno when the result is RS_ERROR
+    gint result;                // Check result
+    gint save_errno;            // errno when the result is RS_ERROR
 
-    bool resolve;           // true if the system call resolves paths
-    glong open_flags;       // flags argument of open()/openat()
-    glong access_flags;     // flags argument of access()/faccessat()
-    gchar *dirfdlist[2];    // dirfd arguments (resolved)
-    gchar *pathlist[4];     // Path arguments
-    gchar *rpathlist[4];    // Path arguments (canonicalized)
+    bool resolve;               // true if the system call resolves paths
+    glong open_flags;           // flags argument of open()/openat()
+    glong access_flags;         // flags argument of access()/faccessat()
+    gchar *dirfdlist[2];        // dirfd arguments (resolved)
+    gchar *pathlist[4];         // Path arguments
+    gchar *rpathlist[4];        // Path arguments (canonicalized)
 
-    int socket_subcall;     // Socketcall() subcall
-    int family;             // Family of destination address (AF_UNIX, AF_INET etc.)
-    int port;               // Port of destination address
-    gchar *addr;            // Destination address for socket calls
+    int socket_subcall;         // Socketcall() subcall
+    struct sydbox_addr *addr;   // Destination address of socket call
 };
 
 int syscall_handle(context_t *ctx, struct tchild *child);

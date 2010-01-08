@@ -36,6 +36,8 @@ gprof*
 
 data/sydbox.1
 data/sydbox.1.xml
+data/paludis.conf
+
 src/sydbox
 src/syd-syscallent.h
 src/syd-syscallent32.h
@@ -57,3 +59,4 @@ tests/unit/children
 tests/unit/path
 tests/unit/sydbox-utils
 tests/unit/trace
+tests/unit/net

@@ -52,6 +52,7 @@
 #endif // defined(IA64)
 
 #include "syd-log.h"
+#include "syd-net.h"
 
 #define ADDR_MUL        ((64 == __WORDSIZE) ? 8 : 4)
 #define MAX_ARGS        6
@@ -190,8 +191,8 @@ bool trace_get_fd(pid_t pid, int personality, bool decode, long *fd);
  * Returns the destination of network calls.
  * Returns NULL on failure and sets errno accordingly.
  */
-char *trace_get_addr(pid_t pid, int personality, int narg, bool decode,
-        long *fd, int *family, int *port);
+struct sydbox_addr *trace_get_addr(pid_t pid, int personality, int narg,
+        bool decode, long *fd);
 
 #endif // SYDBOX_GUARD_TRACE_H
 

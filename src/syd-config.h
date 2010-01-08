@@ -34,20 +34,13 @@
 #define ENV_DISABLE_PATH            "SYDBOX_DISABLE_PATH"
 #define ENV_EXEC                    "SYDBOX_EXEC"
 #define ENV_NET                     "SYDBOX_NET"
-#define ENV_NET_MODE                "SYDBOX_NET_MODE"
-#define ENV_NET_RESTRICT_CONNECT    "SYDBOX_NET_RESTRICT_CONNECT"
+#define ENV_NET_WHITELIST_BIND      "SYDBOX_NET_WHITELIST_BIND"
 #define ENV_NET_WHITELIST           "SYDBOX_NET_WHITELIST"
 #define ENV_NO_COLOUR               "SYDBOX_NO_COLOUR"
 #define ENV_NO_CONFIG               "SYDBOX_NO_CONFIG"
 #define ENV_LOCK                    "SYDBOX_LOCK"
 #define ENV_NO_WAIT                 "SYDBOX_EXIT_WITH_ELDEST"
 #define ENV_NOWRAP_LSTAT            "SYDBOX_NOWRAP_LSTAT"
-
-enum {
-    SYDBOX_NETWORK_ALLOW,
-    SYDBOX_NETWORK_DENY,
-    SYDBOX_NETWORK_LOCAL,
-};
 
 /**
  * sydbox_config_load:
@@ -143,13 +136,13 @@ bool sydbox_config_get_sandbox_network(void);
 
 void sydbox_config_set_sandbox_network(bool on);
 
-bool sydbox_config_get_network_restrict_connect(void);
+bool sydbox_config_get_network_deny_remote(void);
 
-void sydbox_config_set_network_restrict_connect(bool on);
+void sydbox_config_set_network_deny_remote(bool on);
 
-int sydbox_config_get_network_mode(void);
+bool sydbox_config_get_network_whitelist_bind(void);
 
-void sydbox_config_set_network_mode(int state);
+void sydbox_config_set_network_whitelist_bind(bool on);
 
 /**
  * sydbox_config_get_colourise_output:

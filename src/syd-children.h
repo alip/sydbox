@@ -45,11 +45,11 @@ struct tdata
     bool path;                      // Whether path sandboxing is enabled for child.
     bool exec;                      // Whether execve(2) sandboxing is enabled for child.
     bool network;                   // Whether network sandboxing is enabled for child.
-    int network_mode;               // Mode of network sandboxing.
-    bool network_restrict_connect;  // Whether connect() requests are restricted.
+    bool network_whitelist_bind;    // Whether bind() addresses are whitelisted.
     int lock;                       // Whether magic commands are locked for the child.
     GSList *write_prefixes;
     GSList *exec_prefixes;
+    GSList *net_whitelist;
 };
 
 struct tchild

@@ -20,29 +20,37 @@
 #ifndef SYDBOX_GUARD_NET_H
 #define SYDBOX_GUARD_NET_H 1
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
+#include <limits.h>
 #include <stdbool.h>
+#include <netinet/in.h>
 
 #include <glib.h>
 
 struct sydbox_addr {
     int family;
-    int port;
-    char *addr;
+    int netmask;
+    int port[2];
+
+    union {
+        char sun_path[PATH_MAX];
+        struct in_addr sin_addr;
+#if HAVE_IPV6
+        struct in6_addr sin6_addr;
+#endif /* HAVE_IPV6 */
+    } u;
 };
 
-bool net_localhost(const char *addr);
+bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr2);
 
-void netlist_new(GSList **netlist, int family, int port, const char *addr);
+struct sydbox_addr *address_dup(const struct sydbox_addr *src);
 
-int netlist_new_from_string(GSList **netlist, const gchar *addr, bool canlog);
+bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle);
 
-/*
- * Note: This is a variadic function so it can be used both as a GFunc function
- * and as a GDestroyNotify function.
- */
-void netlist_free_one(struct sydbox_addr *saddr, ...);
-
-void netlist_free(GSList **netlist);
+struct sydbox_addr *address_from_string(const gchar *addr, bool canlog);
 
 #endif // SYDBOX_GUARD_NET_H
 

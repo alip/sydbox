@@ -255,9 +255,9 @@ bool trace_get_fd(pid_t pid, G_GNUC_UNUSED int personality,
     return true;
 }
 
-char *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
+struct sydbox_addr *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
         G_GNUC_UNUSED bool decode,
-        long *fd, int *family, int *port)
+        long *fd)
 {
     int save_errno;
     long addr, addrlen;
@@ -270,7 +270,7 @@ char *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
         struct sockaddr_in6 sa6;
 #endif /* HAVE_IPV6 */
     } addrbuf;
-    char ip[100];
+    struct sydbox_addr *saddr;
 
     if (fd != NULL) {
         if (G_UNLIKELY(0 > upeek_ia64(pid, 0, fd))) {
@@ -293,12 +293,10 @@ char *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
         return NULL;
     }
 
+    saddr = g_new0(struct sydbox_addr, 1);
     if (addr == 0) {
-        if (family != NULL)
-            *family = -1;
-        if (port != NULL)
-            *port = -1;
-        return g_strdup("NULL");
+        saddr->family = -1;
+        return saddr;
     }
     if (addrlen < 2 || (unsigned long)addrlen > sizeof(addrbuf))
         addrlen = sizeof(addrbuf);
@@ -312,38 +310,30 @@ char *trace_get_addr(pid_t pid, G_GNUC_UNUSED int personality, int narg,
     }
     addrbuf.pad[sizeof(addrbuf.pad) - 1] = '\0';
 
-    if (family != NULL)
-        *family = addrbuf.sa.sa_family;
-    if (port != NULL)
-        *port = -1;
+    saddr->family = addrbuf.sa.sa_family;
 
     switch (addrbuf.sa.sa_family) {
         case AF_UNIX:
-            return g_strdup(addrbuf.sa_un.sun_path);
+            saddr->port[0] = -1;
+            saddr->port[1] = -1;
+            strncpy(saddr->u.sun_path, addrbuf.sa_un.sun_path, PATH_MAX);
+            saddr->u.sun_path[PATH_MAX - 1] = '\0';
+            break;
         case AF_INET:
-            if (port != NULL)
-                *port = ntohs(addrbuf.sa_in.sin_port);
-            if (!inet_ntop(AF_INET, &addrbuf.sa_in.sin_addr, ip, sizeof(ip))) {
-                save_errno = errno;
-                g_info("inet_ntop() failed: %s", g_strerror(errno));
-                errno = save_errno;
-                return NULL;
-            }
-            return g_strdup(ip);
+            saddr->port[0] = ntohs(addrbuf.sa_in.sin_port);
+            saddr->port[1] = saddr->port[0];
+            memcpy(&saddr->u.sin_addr, &addrbuf.sa_in.sin_addr, sizeof(struct in_addr));
+            break;
 #if HAVE_IPV6
         case AF_INET6:
-            if (port != NULL)
-                *port = ntohs(addrbuf.sa6.sin6_port);
-            if (!inet_ntop(AF_INET6, &addrbuf.sa6.sin6_addr, ip, sizeof(ip))) {
-                save_errno = errno;
-                g_info("inet_ntop() failed: %s", g_strerror(errno));
-                errno = save_errno;
-                return NULL;
-            }
-            return g_strdup(ip);
+            saddr->port[0] = ntohs(addrbuf.sa6.sin6_port);
+            saddr->port[1] = saddr->port[0];
+            memcpy(&saddr->u.sin6_addr, &addrbuf.sa6.sin6_addr, sizeof(struct in6_addr));
+            break;
 #endif /* HAVE_IPV6 */
         default:
-            return g_strdup("OTHER");
+            break;
     }
+    return saddr;
 }
 

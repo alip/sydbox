@@ -49,16 +49,16 @@ void tchild_new(GHashTable *children, pid_t pid)
     child->sno = 0xbadca11;
     child->retval = -1;
     child->cwd = NULL;
-    child->bindzero = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify)netlist_free_one);
+    child->bindzero = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
     child->sandbox = (struct tdata *) g_malloc(sizeof(struct tdata));
     child->sandbox->path = true;
     child->sandbox->exec = false;
     child->sandbox->network = false;
-    child->sandbox->network_mode = SYDBOX_NETWORK_ALLOW;
-    child->sandbox->network_restrict_connect = false;
+    child->sandbox->network_whitelist_bind = false;
     child->sandbox->lock = LOCK_UNSET;
     child->sandbox->write_prefixes = NULL;
     child->sandbox->exec_prefixes = NULL;
+    child->sandbox->net_whitelist = NULL;
 
     if (sydbox_config_get_allow_proc_pid()) {
         /* Allow /proc/%d which is needed for processes to work reliably.
@@ -89,8 +89,7 @@ void tchild_inherit(struct tchild *child, struct tchild *parent)
     child->sandbox->path = parent->sandbox->path;
     child->sandbox->exec = parent->sandbox->exec;
     child->sandbox->network = parent->sandbox->network;
-    child->sandbox->network_mode = parent->sandbox->network_mode;
-    child->sandbox->network_restrict_connect = parent->sandbox->network_restrict_connect;
+    child->sandbox->network_whitelist_bind = parent->sandbox->network_whitelist_bind;
     child->sandbox->lock = parent->sandbox->lock;
     // Copy path lists
     walk = parent->sandbox->write_prefixes;
@@ -103,7 +102,12 @@ void tchild_inherit(struct tchild *child, struct tchild *parent)
         pathnode_new(&(child->sandbox->exec_prefixes), walk->data, 0);
         walk = g_slist_next(walk);
     }
-
+    // Copy network whitelist
+    walk = parent->sandbox->net_whitelist;
+    while (NULL != walk) {
+        child->sandbox->net_whitelist = g_slist_prepend(child->sandbox->net_whitelist, address_dup(walk->data));
+        walk = g_slist_next(walk);
+    }
     child->flags &= ~TCHILD_NEEDINHERIT;
 }
 
@@ -116,6 +120,10 @@ void tchild_free_one(gpointer child_ptr)
             pathnode_free(&(child->sandbox->write_prefixes));
         if (G_LIKELY(NULL != child->sandbox->exec_prefixes))
             pathnode_free(&(child->sandbox->exec_prefixes));
+        if (G_LIKELY(NULL != child->sandbox->net_whitelist)) {
+            g_slist_foreach(child->sandbox->net_whitelist, (GFunc)g_free, NULL);
+            g_slist_free(child->sandbox->net_whitelist);
+        }
         g_free(child->sandbox);
     }
     if (G_LIKELY(NULL != child->cwd))
