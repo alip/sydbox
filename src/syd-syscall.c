@@ -52,10 +52,11 @@
 #include "syd-wrappers.h"
 
 #define BAD_SYSCALL                 0xbadca11
-#define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET || (f) == AF_INET6)
 #if HAVE_IPV6
+#define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET || (f) == AF_INET6)
 #define IS_NET_FAMILY(f)            ((f) == AF_INET || (f) == AF_INET6)
 #else
+#define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET)
 #define IS_NET_FAMILY(f)            ((f) == AF_INET)
 #endif /* HAVE_IPV6 */
 #define IS_NET_CALL(fl)             ((fl) & (BIND_CALL | CONNECT_CALL | SENDTO_CALL | DECODE_SOCKETCALL))
