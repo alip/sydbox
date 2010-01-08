@@ -647,7 +647,8 @@ static void test15(void)
 
 static void test16(void)
 {
-    int fd, status;
+    int status;
+    long fd;
     int pfd[2];
     char strfd[16];
     pid_t pid;
@@ -706,7 +707,7 @@ static void test16(void)
         }
 
         /* Check the fd argument */
-        XFAIL_IF(!trace_get_fd(pid, CHECK_PERSONALITY, DECODE_SOCKETCALL, (long *)&fd),
+        XFAIL_IF(!trace_get_fd(pid, CHECK_PERSONALITY, DECODE_SOCKETCALL, &fd),
                 "failed to get file descriptor: %s\n", g_strerror(errno));
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
 
@@ -754,7 +755,7 @@ static void test17(void)
         pause();
     }
     else { // parent
-        int fd, realfd;
+        long fd, realfd;
         struct sydbox_addr *addr;
 
         close(pfd[1]);
@@ -775,7 +776,7 @@ static void test17(void)
         }
 
         /* Check the address. */
-        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd);
+        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, &fd);
         XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
         XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/dev/null", 10),
                 "wrong address got:`%s' expected:`/dev/null'", addr->u.sun_path);
@@ -828,7 +829,7 @@ static void test18(void)
         pause();
     }
     else { // parent
-        int fd, realfd;
+        long fd, realfd;
         struct sydbox_addr *addr;
         char ip[100] = { 0 };
 
@@ -850,7 +851,7 @@ static void test18(void)
         }
 
         /* Check the address. */
-        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd);
+        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, &fd);
         XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
         XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sin_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
                     g_strerror(errno));
@@ -906,7 +907,7 @@ static void test19(void)
         pause();
     }
     else { // parent
-        int fd, realfd;
+        long fd, realfd;
         struct sydbox_addr *addr;
         char ip[100] = { 0 };
 
@@ -928,7 +929,7 @@ static void test19(void)
         }
 
         /* Check the address. */
-        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, (long *)&fd);
+        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, &fd);
         XFAIL_IF(NULL == ip, "trace_get_addr() failed: %s\n", g_strerror(errno));
         XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sin6_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
                     g_strerror(errno));
