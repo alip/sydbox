@@ -22,6 +22,8 @@
 
 #include <glib.h>
 
+#include "syd-children.h"
+
 /**
  * ANSI_:
  * @ANSI_NORMAL: reset style
@@ -38,16 +40,17 @@
 
 /**
  * sydbox_access_violation:
- * @pid: process id of the process being traced
+ * @child: the traced child
  * @path: path that caused the access violation if any.
  * @fmt: format string (as with printf())
  * @varargs: parameters to be used with @fmt
  *
  * Raise an access violation.
  *
- * Since: 0.1_alpha
+ * Since: 0.5
  **/
-void sydbox_access_violation(const pid_t pid, const gchar *path, const gchar *fmt, ...) G_GNUC_PRINTF (3, 4);
+G_GNUC_PRINTF(3, 4)
+void sydbox_access_violation(struct tchild *child, const gchar *path, const gchar *fmt, ...);
 
 /**
  * sydbox_compress_path:

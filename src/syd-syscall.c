@@ -188,7 +188,7 @@ static bool syscall_handle_net(struct tchild *child, struct checkdata *data)
 /* Initial callback for system call handler.
  * Updates struct checkdata with path and dirfd information.
  */
-static void syscall_check_start(context_t *ctx, struct tchild *child, struct checkdata *data)
+static void syscall_check_start(G_GNUC_UNUSED context_t *ctx, struct tchild *child, struct checkdata *data)
 {
     g_debug("starting check for system call %lu(%s), child %i", sno, sname, child->pid);
 
@@ -218,9 +218,15 @@ static void syscall_check_start(context_t *ctx, struct tchild *child, struct che
         if (!g_path_is_absolute(data->pathlist[3]) && !syscall_get_dirfd(child, 2, data))
             return;
     }
+#if 0
     if (!ctx->before_initial_execve && child->sandbox->exec && sflags & EXEC_CALL) {
+#endif
+    if (sflags & EXEC_CALL) {
         if (!syscall_get_path(child->pid, child->personality, 0, data))
             return;
+        if ((data->sargv = trace_get_argv_as_string(child->pid, child->personality, 1)) == NULL)
+            return;
+        g_string_printf(child->lastexec, "execve(\"%s\", [%s])", data->pathlist[0], data->sargv);
     }
     if (child->sandbox->network) {
         if (!syscall_handle_net(child, data))
@@ -778,19 +784,19 @@ static void syscall_handle_path(struct tchild *child, struct checkdata *data, in
 
         switch (narg) {
             case 0:
-                sydbox_access_violation(child->pid, path, "%s(\"%s\", %s)",
+                sydbox_access_violation(child, path, "%s(\"%s\", %s)",
                                         sname, path, MODE_STRING(sflags));
                 break;
             case 1:
-                sydbox_access_violation(child->pid, path, "%s(?, \"%s\", %s)",
+                sydbox_access_violation(child, path, "%s(?, \"%s\", %s)",
                                         sname, path, MODE_STRING(sflags));
                 break;
             case 2:
-                sydbox_access_violation(child->pid, path, "%s(?, ?, \"%s\", %s)",
+                sydbox_access_violation(child, path, "%s(?, ?, \"%s\", %s)",
                                         sname, path, MODE_STRING(sflags));
                 break;
             case 3:
-                sydbox_access_violation(child->pid, path, "%s(?, ?, ?, \"%s\", %s)",
+                sydbox_access_violation(child, path, "%s(?, ?, ?, \"%s\", %s)",
                                         sname, path, MODE_STRING(sflags));
                 break;
             default:
@@ -841,18 +847,18 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
         if (violation) {
             switch (data->addr->family) {
                 case AF_UNIX:
-                    sydbox_access_violation(child->pid, NULL, "%s{family=AF_UNIX path=%s}",
+                    sydbox_access_violation(child, NULL, "%s{family=AF_UNIX path=%s}",
                             sname, data->addr->u.sun_path);
                     break;
                 case AF_INET:
                     inet_ntop(AF_INET, &data->addr->u.sin_addr, ip, sizeof(ip));
-                    sydbox_access_violation(child->pid, NULL, "%s{family=AF_INET addr=%s port=%d}",
+                    sydbox_access_violation(child, NULL, "%s{family=AF_INET addr=%s port=%d}",
                             sname, ip, data->addr->port[0]);
                     break;
 #if HAVE_IPV6
                 case AF_INET6:
                     inet_ntop(AF_INET6, &data->addr->u.sin6_addr, ip, sizeof(ip));
-                    sydbox_access_violation(child->pid, NULL, "%s{family=AF_INET6 addr=%s port=%d}",
+                    sydbox_access_violation(child, NULL, "%s{family=AF_INET6 addr=%s port=%d}",
                             sname, ip, data->addr->port[0]);
                     break;
 #endif /* HAVE_IPV6 */
@@ -872,8 +878,8 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
         g_debug("checking `%s' for exec access", data->rpathlist[0]);
         int allow_exec = pathlist_check(child->sandbox->exec_prefixes, data->rpathlist[0]);
         if (!allow_exec) {
-            sydbox_access_violation(child->pid, data->rpathlist[0],
-                    "execve(\"%s\", argv[], envp[])", data->rpathlist[0]);
+            sydbox_access_violation(child, data->rpathlist[0],
+                    "execve(\"%s\", [%s])", data->rpathlist[0], data->sargv);
             data->result = RS_DENY;
             child->retval = -EACCES;
         }
@@ -925,8 +931,8 @@ static void syscall_check_finalize(context_t *ctx, struct tchild *child, struct 
         g_free(data->rpathlist[i]);
     }
 
-    if (data->addr != NULL)
-        g_free(data->addr);
+    g_free(data->sargv);
+    g_free(data->addr);
 }
 
 /* BAD_SYSCALL handler for system calls.

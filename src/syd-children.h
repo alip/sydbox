@@ -58,6 +58,7 @@ struct tchild
     char *cwd;               // Child's current working directory.
     unsigned long sno;       // Last system call called by child.
     long retval;             // Replaced system call will return this value.
+    GString *lastexec;       // Last execve() arguments converted to string (used for debugging)
     GHashTable *bindzero;    // List of addresses whose port argument was zero.
     struct tdata *sandbox;   // Sandbox data
 };

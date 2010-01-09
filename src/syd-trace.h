@@ -170,6 +170,12 @@ int trace_get_arg(pid_t pid, int personality, int arg, long *res);
 char *trace_get_path(pid_t pid, int personality, int arg);
 
 /**
+ * Convert the argv[] array at the requested position to a string.
+ * Used for debugging purposes.
+ */
+char *trace_get_argv_as_string(pid_t pid, int personality, int arg);
+
+/**
  * Fake the stat buffer.
  * Returns 0 on success, -1 on failure and sets errno accordingly.
  */

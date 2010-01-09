@@ -28,11 +28,12 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
+#include "syd-children.h"
 #include "syd-config.h"
 #include "syd-log.h"
 #include "syd-utils.h"
 
-void sydbox_access_violation(const pid_t pid, const gchar *path, const gchar *fmt, ...)
+void sydbox_access_violation(struct tchild *child, const gchar *path, const gchar *fmt, ...)
 {
     va_list args;
     time_t now = time(NULL);
@@ -52,16 +53,21 @@ void sydbox_access_violation(const pid_t pid, const gchar *path, const gchar *fm
     }
 
     g_fprintf(stderr, PACKAGE "@%lu: %sAccess Violation!%s\n", now,
-              sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
-              sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
+            sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
     g_fprintf(stderr, PACKAGE "@%lu: %sChild Process ID: %s%i%s\n", now,
-              sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
-              sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
-              pid,
-              sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
+            sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
+            child->pid,
+            sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+    g_fprintf(stderr, PACKAGE "@%lu: %sLast Exec: %s%s%s\n", now,
+            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
+            sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
+            child->lastexec->str,
+            sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
     g_fprintf(stderr, PACKAGE "@%lu: %sReason: %s", now,
-              sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
-              sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "");
+            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
+            sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "");
 
     va_start(args, fmt);
     g_vfprintf(stderr, fmt, args);

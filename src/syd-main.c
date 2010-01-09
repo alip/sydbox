@@ -197,7 +197,7 @@ static void G_GNUC_NORETURN sydbox_execute_child(int argc G_GNUC_UNUSED, char **
     _exit(-1);
 }
 
-static int sydbox_execute_parent(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED, pid_t pid)
+static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
 {
     int status, retval;
     struct sigaction new_action, old_action;
@@ -259,6 +259,14 @@ static int sydbox_execute_parent(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUS
         exit(-1);
     }
     eldest->flags &= ~TCHILD_NEEDINHERIT;
+
+    /* Construct the lastexec string for the initial exec */
+    int i;
+    const char *sep;
+    g_string_printf(eldest->lastexec, "execvp(\"%s\", [", argv[0]);
+    for (sep = "", i = 0; i < argc; sep = ", ", i++)
+        g_string_append_printf(eldest->lastexec, "%s\"%s\"", sep, argv[i]);
+    g_string_append(eldest->lastexec, "])");
 
     g_info ("child %i is ready to go, resuming", pid);
     if (0 > trace_syscall(pid, 0)) {

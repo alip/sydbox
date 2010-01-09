@@ -49,6 +49,7 @@ void tchild_new(GHashTable *children, pid_t pid)
     child->sno = 0xbadca11;
     child->retval = -1;
     child->cwd = NULL;
+    child->lastexec = g_string_new("");
     child->bindzero = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
     child->sandbox = (struct tdata *) g_malloc(sizeof(struct tdata));
     child->sandbox->path = true;
@@ -83,6 +84,7 @@ void tchild_inherit(struct tchild *child, struct tchild *parent)
         child->cwd = g_strdup(parent->cwd);
     }
 
+    child->lastexec = g_string_new(parent->lastexec->str);
     child->personality = parent->personality;
     child->sandbox->path = parent->sandbox->path;
     child->sandbox->exec = parent->sandbox->exec;
@@ -115,6 +117,8 @@ void tchild_free_one(gpointer child_ptr)
     }
     if (G_LIKELY(NULL != child->cwd))
         g_free(child->cwd);
+    if (G_LIKELY(NULL != child->lastexec))
+        g_string_free(child->lastexec, TRUE);
     if (G_LIKELY(NULL != child->bindzero))
         g_hash_table_destroy(child->bindzero);
     g_free(child);

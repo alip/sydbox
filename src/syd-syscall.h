@@ -43,6 +43,7 @@ struct checkdata {
     bool resolve;               // true if the system call resolves paths
     glong open_flags;           // flags argument of open()/openat()
     glong access_flags;         // flags argument of access()/faccessat()
+    gchar *sargv;               // argv[] list of execve() call stringified
     gchar *dirfdlist[2];        // dirfd arguments (resolved)
     gchar *pathlist[4];         // Path arguments
     gchar *rpathlist[4];        // Path arguments (canonicalized)

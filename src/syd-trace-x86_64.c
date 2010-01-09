@@ -165,6 +165,59 @@ char *trace_get_path(pid_t pid, int personality, int arg)
     return buf;
 }
 
+char *trace_get_argv_as_string(pid_t pid, int personality, int arg)
+{
+    int save_errno;
+    char *s;
+    const char *sep;
+    long addr;
+    union {
+        unsigned int p32;
+        unsigned long p64;
+        char data[sizeof(long)];
+    } cp;
+    GString *res;
+
+    if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][arg], &addr))) {
+        save_errno = errno;
+        g_info("failed to get address of argument %d: %s", arg, g_strerror(errno));
+        errno = save_errno;
+        return NULL;
+    }
+
+    res = g_string_new("");
+    cp.p64 = 1;
+    for (sep = "";;sep = ", ") {
+        if (umoven(pid, addr, cp.data, (personality == 0) ? 4 : 8) < 0) {
+            g_string_append_printf(res, "%#lx", addr);
+            return g_string_free(res, FALSE);
+        }
+        if (personality == 0) /* 32 bit */
+            cp.p64 = cp.p32;
+        if (cp.p64 == 0)
+            break;
+
+        g_string_append(res, sep);
+
+        s = (char *)g_malloc(sizeof(char) * 256);
+        s[255] = '\0';
+        if (umovestr(pid, cp.p64, s, 256) < 0) {
+            g_string_append_printf(res, "%#lx", cp.p64);
+            g_free(s);
+            break;
+        }
+        g_string_append_c(res, '"');
+        g_string_append(res, s);
+        g_string_append_c(res, '"');
+        g_free(s);
+
+        addr += (personality == 0) ? 4 : 8;
+    }
+    if (cp.p64)
+        g_string_append_printf(res, "%s...", sep);
+    return g_string_free(res, FALSE);
+}
+
 int trace_fake_stat(pid_t pid, int personality)
 {
     int n, m, save_errno;
