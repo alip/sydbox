@@ -292,7 +292,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     char *path = data->pathlist[0];
     const char *rpath;
     char *rpath_sanitized;
-    GSList *walk;
+    GSList *walk, *whitelist;
     struct sydbox_addr *addr;
 
     g_debug("checking if stat(\"%s\") is magic", path);
@@ -408,26 +408,61 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
         sydbox_config_rmfilter(rpath);
         g_info("approved rmfilter(\"%s\") for child %i", rpath, child->pid);
     }
-    else if (path_magic_net_whitelist(path)) {
+    else if (path_magic_net_whitelist_bind(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_NET_WHITELIST_LEN;
+        rpath = path + CMD_NET_WHITELIST_BIND_LEN;
         if ((addr = address_from_string(rpath, true)) == NULL)
             g_warning("malformed whitelist address `%s'", rpath);
-        else
-            child->sandbox->net_whitelist = g_slist_prepend(child->sandbox->net_whitelist, addr);
+        else {
+            whitelist = sydbox_config_get_network_whitelist_bind();
+            whitelist = g_slist_prepend(whitelist, addr);
+            sydbox_config_set_network_whitelist_bind(whitelist);
+        }
     }
-    else if (path_magic_net_unwhitelist(path)) {
+    else if (path_magic_net_unwhitelist_bind(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_NET_UNWHITELIST_LEN;
+        rpath = path + CMD_NET_UNWHITELIST_BIND_LEN;
         if ((addr = address_from_string(rpath, false)) == NULL)
             g_warning("malformed whitelist address `%s'", rpath);
         else {
-            for (walk = child->sandbox->net_whitelist; walk != NULL; walk = g_slist_next(walk)) {
+            whitelist = sydbox_config_get_network_whitelist_bind();
+            for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
                 if (address_cmp(walk->data, addr)) {
-                    child->sandbox->net_whitelist = g_slist_remove_link(child->sandbox->net_whitelist, walk);
+                    whitelist = g_slist_remove_link(whitelist, walk);
+                    sydbox_config_set_network_whitelist_bind(whitelist);
                     g_free(walk->data);
                     g_slist_free(walk);
-                    g_info("approved unwhitelist(\"%s\") for child %i", rpath, child->pid);
+                    g_info("approved unwhitelist/bind(\"%s\") for child %i", rpath, child->pid);
+                    break;
+                }
+            }
+        }
+    }
+    else if (path_magic_net_whitelist_connect(path)) {
+        data->result = RS_MAGIC;
+        rpath = path + CMD_NET_WHITELIST_CONNECT_LEN;
+        if ((addr = address_from_string(rpath, true)) == NULL)
+            g_warning("malformed whitelist address `%s'", rpath);
+        else {
+            whitelist = sydbox_config_get_network_whitelist_connect();
+            whitelist = g_slist_prepend(whitelist, addr);
+            sydbox_config_set_network_whitelist_connect(whitelist);
+        }
+    }
+    else if (path_magic_net_unwhitelist_connect(path)) {
+        data->result = RS_MAGIC;
+        rpath = path + CMD_NET_UNWHITELIST_CONNECT_LEN;
+        if ((addr = address_from_string(rpath, false)) == NULL)
+            g_warning("malformed whitelist address `%s'", rpath);
+        else {
+            whitelist = sydbox_config_get_network_whitelist_connect();
+            for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
+                if (address_cmp(walk->data, addr)) {
+                    whitelist = g_slist_remove_link(whitelist, walk);
+                    sydbox_config_set_network_whitelist_connect(whitelist);
+                    g_free(walk->data);
+                    g_slist_free(walk);
+                    g_info("approved unwhitelist/connect(\"%s\") for child %i", rpath, child->pid);
                 }
             }
         }
@@ -767,9 +802,9 @@ static void syscall_handle_path(struct tchild *child, struct checkdata *data, in
 
 static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata *data)
 {
-    bool violation;
+    bool isbind, violation;
     char ip[100] = { 0 };
-    GSList *walk;
+    GSList *whitelist, *walk;
     struct sydbox_addr *addr;
 
     if (G_UNLIKELY(RS_ALLOW != data->result))
@@ -780,8 +815,14 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
             data->addr != NULL &&
             IS_SUPPORTED_FAMILY(data->addr->family)) {
 
+        isbind = ((sflags & BIND_CALL) ||
+            ((sflags & DECODE_SOCKETCALL) && data->socket_subcall == SOCKET_SUBCALL_BIND));
+        whitelist = isbind
+            ? sydbox_config_get_network_whitelist_bind()
+            : sydbox_config_get_network_whitelist_connect();
+
         violation = true;
-        for (walk = child->sandbox->net_whitelist; walk != NULL; walk = g_slist_next(walk)) {
+        for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
             addr = (struct sydbox_addr *)walk->data;
             if (address_has(addr, data->addr)) {
                 /* Check port range for NET_FAMILY. */
@@ -822,12 +863,7 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
             /* For bind() set errno to EADDRNOTAVAIL.
              * For connect() and sendto() set errno to ECONNREFUSED.
              */
-            if (sflags & BIND_CALL ||
-                    (sflags & DECODE_SOCKETCALL
-                     && data->socket_subcall == SOCKET_SUBCALL_BIND))
-                child->retval = -EADDRNOTAVAIL;
-            else
-                child->retval = -ECONNREFUSED;
+            child->retval = isbind ? -EADDRNOTAVAIL : -ECONNREFUSED;
         }
         return;
     }
@@ -1002,6 +1038,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
 {
     int subcall;
     long fd, retval;
+    GSList *whitelist;
     struct sydbox_addr *addr;
 
     if (0 > trace_get_return(child->pid, &retval)) {
@@ -1068,8 +1105,12 @@ static int syscall_handle_bind(struct tchild *child, int flags)
             g_hash_table_insert(child->bindzero, GINT_TO_POINTER(fd), addr);
             return 0;
         }
-        child->sandbox->net_whitelist = g_slist_prepend(child->sandbox->net_whitelist, addr);
+        whitelist = sydbox_config_get_network_whitelist_connect();
+        whitelist = g_slist_prepend(whitelist, addr);
+        sydbox_config_set_network_whitelist_connect(whitelist);
     }
+    else
+        g_free(addr);
     return 0;
 }
 
@@ -1081,6 +1122,7 @@ static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUS
     bool ret;
     int subcall;
     long fd;
+    GSList *whitelist;
     struct sydbox_addr *addr;
 
     if (flags & DECODE_SOCKETCALL) {
@@ -1122,14 +1164,19 @@ static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUS
 
     if (addr->family == AF_INET)
         addr->port[0] = proc_lookup_port(child->pid, fd, "/proc/net/tcp");
+#if HAVE_IPV6
     else if (addr->family == AF_INET6)
         addr->port[0] = proc_lookup_port(child->pid, fd, "/proc/net/tcp6");
+#endif /* HAVE_IPV6 */
     else
         g_assert_not_reached();
 
     addr->port[1] = addr->port[0];
-    if (addr->port[0] > 0)
-        child->sandbox->net_whitelist = g_slist_prepend(child->sandbox->net_whitelist, addr);
+    if (addr->port[0] > 0) {
+        whitelist = sydbox_config_get_network_whitelist_connect();
+        whitelist = g_slist_prepend(whitelist, address_dup(addr));
+        sydbox_config_set_network_whitelist_connect(whitelist);
+    }
     else
         g_debug("Looking up fd:%ld from /proc/net/tcp%s failed",
                 fd, (addr->family == AF_INET) ? "" : "6");
@@ -1315,7 +1362,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
             if (0 > syscall_handle_chdir(child))
                 return context_remove_child(ctx, child->pid);
         }
-        else if (child->sandbox->network && child->sandbox->network_whitelist_bind) {
+        else if (child->sandbox->network && sydbox_config_get_network_auto_whitelist_bind()) {
             if (dispatch_maybind(child->personality, sno)) {
                 flags = dispatch_lookup(child->personality, sno);
                 if (0 > syscall_handle_bind(child, flags))

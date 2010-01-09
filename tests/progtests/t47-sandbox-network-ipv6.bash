@@ -15,7 +15,7 @@ fi
 end_test
 
 start_test "t47-sandbox-network-ipv6-deny-whitelisted-bind"
-SYDBOX_NET_WHITELIST=inet6://::1@$bind_port \
+SYDBOX_NET_WHITELIST_BIND=inet6://::1@$bind_port \
 sydbox -N -- ./t47_sandbox_network_bind_ipv6 '::1' $bind_port
 if [[ 0 != $? ]]; then
     die "Failed to allow binding to an IPV6 address by whitelisting"

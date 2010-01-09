@@ -159,14 +159,24 @@ inline bool path_magic_rmfilter(const char *path)
     return (0 == strncmp(path, CMD_RMFILTER, CMD_RMFILTER_LEN));
 }
 
-inline bool path_magic_net_whitelist(const char *path)
+inline bool path_magic_net_whitelist_bind(const char *path)
 {
-    return (0 == strncmp(path, CMD_NET_WHITELIST, CMD_NET_WHITELIST_LEN));
+    return (0 == strncmp(path, CMD_NET_WHITELIST_BIND, CMD_NET_WHITELIST_BIND_LEN));
 }
 
-inline bool path_magic_net_unwhitelist(const char *path)
+inline bool path_magic_net_unwhitelist_bind(const char *path)
 {
-    return (0 == strncmp(path, CMD_NET_UNWHITELIST, CMD_NET_UNWHITELIST_LEN));
+    return (0 == strncmp(path, CMD_NET_UNWHITELIST_BIND, CMD_NET_UNWHITELIST_BIND_LEN));
+}
+
+inline bool path_magic_net_whitelist_connect(const char *path)
+{
+    return (0 == strncmp(path, CMD_NET_WHITELIST_CONNECT, CMD_NET_WHITELIST_CONNECT_LEN));
+}
+
+inline bool path_magic_net_unwhitelist_connect(const char *path)
+{
+    return (0 == strncmp(path, CMD_NET_UNWHITELIST_CONNECT, CMD_NET_UNWHITELIST_CONNECT_LEN));
 }
 
 int pathnode_new(GSList **pathlist, const char *path, int sanitize)

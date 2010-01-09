@@ -78,13 +78,9 @@ The ordering of option precedence is configuration file, environment variables, 
 *--sandbox-network*::
     Enable network sandboxing
 
-*-M*::
-*--network-mode*::
-    Network sandboxing mode, one of: allow, deny, local
-
-*-R*::
-*--network-restrict-connect*::
-    Restrict connections for network mode local
+*-B*::
+*--network-whitelist-bind*::
+    Automatically whitelist bind() addresses
 
 *-X*::
 *--exit-with-eldest*::
@@ -126,23 +122,26 @@ This variable controls the behaviour of sydbox with regards to network access.
 If it is set, sydbox will deny network connections. This is equivalent to *-N*
 option.
 
-SYDBOX_NET_MODE
-~~~~~~~~~~~~~~~
-This variable controls the behaviour the network sandboxing mode of sydbox.
-Possible values are allow, deny and local. This is equivalent to *-M* option.
-
-SYDBOX_NET_RESTRICT_CONNECT
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This variable controls the behaviour of network sandboxing when the network
-sandboxing mode is local. This is equivalent to *-R* option.
-
-SYDBOX_NET_WHITELIST
-~~~~~~~~~~~~~~~~~~~~
-This variable is a semicolon delimited list of whitelisted network connections.
+SYDBOX_NET_WHITELIST_BIND
+~~~~~~~~~~~~~~~~~~~~~~~~~
+This variable is a semicolon delimited list of whitelisted network connections for the bind() system call.
 The values can be in one of the following forms:
+
 - unix:///path/to/socket
-- inet://ipv4_address:port
-- inet6://ipv6_address:port
+- inet://ipv4_address/NETMASK@PORT_RANGE
+- inet6://ipv6_address/NETMASK@PORT_RANGE
+
+where /NETMASK can be omitted and PORT_RANGE can either be a number or two numbers in the form BEGIN-END.
+
+SYDBOX_NET_WHITELIST_CONNECT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This variable is a semicolon delimited list of whitelisted network connections for the connect() system call.
+The address format is the same as SYDBOX_NET_WHITELIST_BIND.
+
+SYDBOX_NET_AUTO_WHITELIST_BIND
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This variable, if specified, makes sydbox automatically add bind() calls to the connect() whitelist.
+This is equivalent to *-B* option.
 
 SYDBOX_CONFIG
 ~~~~~~~~~~~~~~
@@ -193,18 +192,18 @@ according to the command. Currently there's one type of magic commands:
   * */dev/sydbox/nowrap/lstat*      stat'ing this path disables the lstat() wrapper for too long paths.
   * */dev/sydbox/sandbox/exec*      stat'ing this path turns on execve(2) sandboxing.
   * */dev/sydbox/sandunbox/exec*    stat'ing this path turns off execve(2) sandboxing.
+  * */dev/sydbox/sandbox/net*       stat'ing this path turns on network sandboxing.
+  * */dev/sydbox/sandunbox/net*     stat'ing this path turns off network sandboxing.
   * */dev/sydbox/write/PATH*        stat'ing this path adds *PATH* to the list of write allowed paths.
   * */dev/sydbox/unwrite/PATH*      stat'ing this path removes *PATH* from the list of write allowed paths.
   * */dev/sydbox/addexec/PATH*      stat'ing this path adds *PATH* to the list of execve(2) allowed paths.
   * */dev/sydbox/rmexec/PATH*       stat'ing this path removes *PATH* from the list of execve(2) allowed paths.
   * */dev/sydbox/addfilter/PATTERN* stat'ing this path adds *PATTERN* to the list of violation filter patterns.
   * */dev/sydbox/rmfilter/PATTERN*  stat'ing this path removes *PATTERN* from the list of violation filter patterns.
-  * */dev/sydbox/net/allow*         stat'ing this path allows access to network.
-  * */dev/sydbox/net/deny*          stat'ing this path denies access to network.
-  * */dev/sydbox/net/local*         stat'ing this path restricts network access to local connections.
-  * */dev/sydbox/net/restrict/connect*   stat'ing this path restricts connect access to addresses bind'ed by parents.
-  * */dev/sydbox/net/unrestrict/connect* stat'ing this path unrestricts connect access to addresses bind'ed by parents.
-  * */dev/sydbox/net/whitelist/ADDR*     stat'ing this path adds the given address to the network whitelist.
+  * */dev/sydbox/net/whitelist/bind/ADDR*   stat'ing this path adds the given address to the bind() whitelist.
+  * */dev/sydbox/net/unwhitelist/bind/ADDR* stat'ing this path removes the given address from the bind() whitelist.
+  * */dev/sydbox/net/whitelist/connect/ADDR*   stat'ing this path adds the given address to the connect() whitelist.
+  * */dev/sydbox/net/unwhitelist/connect/ADDR* stat'ing this path removes the given address from the connect() whitelist.
   * */dev/sydbox*                   stat'ing this path succeeds if magic commands are allowed.
   * */dev/sydbox/enabled*           stat'ing this path succeeds if path sandboxing is on, fails otherwise.
 

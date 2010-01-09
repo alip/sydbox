@@ -85,7 +85,7 @@ static gboolean dump;
 static gboolean disable_sandbox_path;
 static gboolean sandbox_exec;
 static gboolean sandbox_net;
-static gboolean network_whitelist_bind;
+static gboolean network_auto_whitelist_bind;
 static gboolean lock;
 static gboolean colour;
 static gboolean version;
@@ -116,7 +116,7 @@ static GOptionEntry entries[] =
         "Enable execve(2) sandboxing",    NULL },
     { "sandbox-network",        'N', 0, G_OPTION_ARG_NONE,                         &sandbox_net,
         "Enable network sandboxing",      NULL },
-    { "network-whitelist-bind", 'B', 0, G_OPTION_ARG_NONE,                         &network_whitelist_bind,
+    { "network-whitelist-bind", 'B', 0, G_OPTION_ARG_NONE,                         &network_auto_whitelist_bind,
         "Automatically whitelist bind() addresses", NULL},
     { "exit-with-eldest",       'X', 0, G_OPTION_ARG_NONE,                         &nowait,
         "Finish tracing when eldest child exits", NULL},
@@ -130,6 +130,7 @@ static void cleanup(void)
 {
     dispatch_free();
     sydbox_config_rmfilter_all();
+    sydbox_config_rmwhitelist_all();
     if (NULL != ctx) {
         if (NULL != ctx->children)
             g_hash_table_foreach(ctx->children, tchild_kill_one, NULL);
@@ -248,11 +249,9 @@ static int sydbox_execute_parent(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUS
     eldest->sandbox->path = sydbox_config_get_sandbox_path();
     eldest->sandbox->exec = sydbox_config_get_sandbox_exec();
     eldest->sandbox->network = sydbox_config_get_sandbox_network();
-    eldest->sandbox->network_whitelist_bind = sydbox_config_get_network_whitelist_bind();
     eldest->sandbox->lock = sydbox_config_get_disallow_magic_commands() ? LOCK_SET : LOCK_UNSET;
     eldest->sandbox->write_prefixes = sydbox_config_get_write_prefixes();
     eldest->sandbox->exec_prefixes = sydbox_config_get_exec_prefixes();
-    eldest->sandbox->net_whitelist = sydbox_config_get_network_whitelist();
     eldest->cwd = egetcwd();
     if (NULL == eldest->cwd) {
         g_critical("failed to get current working directory: %s", g_strerror(errno));
@@ -325,10 +324,10 @@ static int sydbox_internal_main(int argc, char **argv)
     else if (g_getenv(ENV_NET))
         sydbox_config_set_sandbox_network(true);
 
-    if (network_whitelist_bind)
-        sydbox_config_set_network_whitelist_bind(true);
-    else if (g_getenv(ENV_NET_WHITELIST_BIND))
-        sydbox_config_set_network_whitelist_bind(true);
+    if (network_auto_whitelist_bind)
+        sydbox_config_set_network_auto_whitelist_bind(true);
+    else if (g_getenv(ENV_NET_AUTO_WHITELIST_BIND))
+        sydbox_config_set_network_auto_whitelist_bind(true);
 
     if (lock)
         sydbox_config_set_disallow_magic_commands(true);

@@ -34,8 +34,9 @@
 #define ENV_DISABLE_PATH            "SYDBOX_DISABLE_PATH"
 #define ENV_EXEC                    "SYDBOX_EXEC"
 #define ENV_NET                     "SYDBOX_NET"
+#define ENV_NET_AUTO_WHITELIST_BIND "SYDBOX_NET_AUTO_WHITELIST_BIND"
 #define ENV_NET_WHITELIST_BIND      "SYDBOX_NET_WHITELIST_BIND"
-#define ENV_NET_WHITELIST           "SYDBOX_NET_WHITELIST"
+#define ENV_NET_WHITELIST_CONNECT   "SYDBOX_NET_WHITELIST_CONNECT"
 #define ENV_NO_COLOUR               "SYDBOX_NO_COLOUR"
 #define ENV_NO_CONFIG               "SYDBOX_NO_CONFIG"
 #define ENV_LOCK                    "SYDBOX_LOCK"
@@ -140,9 +141,9 @@ bool sydbox_config_get_network_deny_remote(void);
 
 void sydbox_config_set_network_deny_remote(bool on);
 
-bool sydbox_config_get_network_whitelist_bind(void);
+bool sydbox_config_get_network_auto_whitelist_bind(void);
 
-void sydbox_config_set_network_whitelist_bind(bool on);
+void sydbox_config_set_network_auto_whitelist_bind(bool on);
 
 /**
  * sydbox_config_get_colourise_output:
@@ -196,15 +197,21 @@ GSList *sydbox_config_get_exec_prefixes(void);
 
 GSList *sydbox_config_get_filters(void);
 
-GSList *sydbox_config_get_network_whitelist(void);
+GSList *sydbox_config_get_network_whitelist_bind(void);
 
-void sydbox_config_set_network_whitelist(GSList *whitelist);
+void sydbox_config_set_network_whitelist_bind(GSList *whitelist);
+
+GSList *sydbox_config_get_network_whitelist_connect(void);
+
+void sydbox_config_set_network_whitelist_connect(GSList *whitelist);
 
 void sydbox_config_addfilter(const gchar *filter);
 
 int sydbox_config_rmfilter(const gchar *filter);
 
 void sydbox_config_rmfilter_all(void);
+
+void sydbox_config_rmwhitelist_all(void);
 
 #endif // SYDBOX_GUARD_CONFIG_H
 

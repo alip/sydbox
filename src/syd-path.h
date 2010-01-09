@@ -67,10 +67,14 @@
 #define CMD_ADDFILTER_LEN               (CMD_PATH_LEN + 10)
 #define CMD_RMFILTER                    CMD_PATH"rmfilter/"
 #define CMD_RMFILTER_LEN                (CMD_PATH_LEN + 9)
-#define CMD_NET_WHITELIST               CMD_PATH"net/whitelist/"
-#define CMD_NET_WHITELIST_LEN           (CMD_PATH_LEN + 14)
-#define CMD_NET_UNWHITELIST             CMD_PATH"net/unwhitelist/"
-#define CMD_NET_UNWHITELIST_LEN         (CMD_PATH_LEN + 16)
+#define CMD_NET_WHITELIST_BIND          CMD_PATH"net/whitelist/bind/"
+#define CMD_NET_WHITELIST_BIND_LEN      (CMD_PATH_LEN + 19)
+#define CMD_NET_UNWHITELIST_BIND        CMD_PATH"net/unwhitelist/bind/"
+#define CMD_NET_UNWHITELIST_BIND_LEN    (CMD_PATH_LEN + 21)
+#define CMD_NET_WHITELIST_CONNECT       CMD_PATH"net/whitelist/connect/"
+#define CMD_NET_WHITELIST_CONNECT_LEN   (CMD_PATH_LEN + 19)
+#define CMD_NET_UNWHITELIST_CONNECT     CMD_PATH"net/unwhitelist/connect/"
+#define CMD_NET_UNWHITELIST_CONNECT_LEN (CMD_PATH_LEN + 21)
 
 bool path_magic_dir(const char *path);
 
@@ -120,9 +124,13 @@ bool path_magic_net_deny(const char *path);
 
 bool path_magic_net_local(const char *path);
 
-bool path_magic_net_whitelist(const char *path);
+bool path_magic_net_whitelist_bind(const char *path);
 
-bool path_magic_net_unwhitelist(const char *path);
+bool path_magic_net_unwhitelist_bind(const char *path);
+
+bool path_magic_net_whitelist_connect(const char *path);
+
+bool path_magic_net_unwhitelist_connect(const char *path);
 
 int pathnode_new(GSList **pathlist, const char *path, int sanitize);
 

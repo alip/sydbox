@@ -364,12 +364,14 @@ struct sydbox_addr *trace_get_addr(pid_t pid, int personality, int narg,
         case AF_INET:
             saddr->port[0] = ntohs(addrbuf.sa_in.sin_port);
             saddr->port[1] = saddr->port[0];
+            saddr->netmask = 32;
             memcpy(&saddr->u.sin_addr, &addrbuf.sa_in.sin_addr, sizeof(struct in_addr));
             break;
 #if HAVE_IPV6
         case AF_INET6:
             saddr->port[0] = ntohs(addrbuf.sa6.sin6_port);
             saddr->port[1] = saddr->port[0];
+            saddr->netmask = 64;
             memcpy(&saddr->u.sin6_addr, &addrbuf.sa6.sin6_addr, sizeof(struct in6_addr));
             break;
 #endif /* HAVE_IPV6 */

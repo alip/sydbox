@@ -27,7 +27,7 @@ end_test
 
 unlink "$bind_socket" 2>/dev/null
 start_test "t46-sandbox-network-deny-allow-whitelisted-bind-unix"
-SYDBOX_NET_WHITELIST=unix://"$bind_socket" \
+SYDBOX_NET_WHITELIST_BIND=unix://"$bind_socket" \
 sydbox -N -- ./t46_sandbox_network_bind_unix "$bind_socket"
 if [[ 0 != $? ]]; then
     die "Failed to allow bind to Unix socket by whitelisting"
@@ -35,7 +35,7 @@ fi
 end_test
 
 start_test "t46-sandbox-network-deny-allow-whitelisted-bind-tcp"
-SYDBOX_NET_WHITELIST=inet://127.0.0.1@$bind_port \
+SYDBOX_NET_WHITELIST_BIND=inet://127.0.0.1@$bind_port \
 sydbox -N -- ./t46_sandbox_network_bind_tcp 127.0.0.1 $bind_port
 if [[ 0 != $? ]]; then
     die "Failed to allow bind to TCP socket by whitelisting"
@@ -102,7 +102,7 @@ end_test
 
 start_test "t46-sandbox-network-deny-allow-whitelisted-connect-unix"
 if $has_unix; then
-    SYDBOX_NET_WHITELIST=unix://"$bind_socket" \
+    SYDBOX_NET_WHITELIST_CONNECT=unix://"$bind_socket" \
     sydbox -N -- ./t46_sandbox_network_connect_unix "$bind_socket"
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a Unix server by whitelisting"
@@ -114,7 +114,7 @@ end_test
 
 start_test "t46-sandbox-network-deny-allow-whitelisted-connect-tcp"
 if $has_tcp; then
-    SYDBOX_NET_WHITELIST=inet://127.0.0.1@$bind_port \
+    SYDBOX_NET_WHITELIST_CONNECT=inet://127.0.0.1@$bind_port \
     sydbox -N -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a TCP server by whitelisting"
