@@ -25,7 +25,7 @@ char *pgetcwd(pid_t pid);
 
 char *pgetdir(pid_t pid, int dfd);
 
-int proc_lookup_port(pid_t pid, int fd, const char *path);
+int proc_lookup_port(pid_t pid, int fd, int af);
 
 #endif
 

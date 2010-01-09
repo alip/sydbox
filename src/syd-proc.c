@@ -21,13 +21,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <netinet/in.h>
 
 #include <glib.h>
 
 #include "syd-proc.h"
 #include "syd-wrappers.h"
 
-char *pgetcwd(pid_t pid) {
+char *pgetcwd(pid_t pid)
+{
     int ret;
     char *cwd;
     char linkcwd[64];
@@ -99,7 +101,7 @@ static bool proc_lookup_inode(pid_t pid, int fd, unsigned *inode)
     return true;
 }
 
-int proc_lookup_port(pid_t pid, int fd, const char *path)
+int proc_lookup_port(pid_t pid, int fd, int af)
 {
     unsigned inode, myinode, localport;
     char buf[4096];
@@ -108,7 +110,17 @@ int proc_lookup_port(pid_t pid, int fd, const char *path)
     if (!proc_lookup_inode(pid, fd, &myinode))
         return -1;
 
-    pfd = fopen(path, "r");
+    if (af == AF_INET)
+        pfd = fopen("/proc/net/tcp", "r");
+#if HAVE_IPV6
+    else if (af == AF_INET6)
+        pfd = fopen("/proc/net/tcp6", "r");
+#endif /* HAVE_IPV6 */
+    else {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (G_UNLIKELY(NULL == pfd))
         return -1;
 

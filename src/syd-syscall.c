@@ -1168,15 +1168,7 @@ static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUS
         return 0;
     }
 
-    if (addr->family == AF_INET)
-        addr->port[0] = proc_lookup_port(child->pid, fd, "/proc/net/tcp");
-#if HAVE_IPV6
-    else if (addr->family == AF_INET6)
-        addr->port[0] = proc_lookup_port(child->pid, fd, "/proc/net/tcp6");
-#endif /* HAVE_IPV6 */
-    else
-        g_assert_not_reached();
-
+    addr->port[0] = proc_lookup_port(child->pid, fd, addr->family);
     addr->port[1] = addr->port[0];
     if (addr->port[0] > 0) {
         whitelist = sydbox_config_get_network_whitelist_connect();
@@ -1184,8 +1176,7 @@ static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUS
         sydbox_config_set_network_whitelist_connect(whitelist);
     }
     else
-        g_debug("Looking up fd:%ld from /proc/net/tcp%s failed",
-                fd, (addr->family == AF_INET) ? "" : "6");
+        g_debug("Looking up fd:%ld failed: %s", fd, g_strerror(errno));
 
     g_hash_table_remove(child->bindzero, GINT_TO_POINTER(fd));
     return 0;
