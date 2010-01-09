@@ -27,7 +27,6 @@
 #endif // HAVE_CONFIG_H
 
 #define IS_CHDIR(_sno)      (__NR_chdir == (_sno) || __NR_fchdir == (_sno))
-#define IS_CLONE(_sno)      (__NR_clone == (_sno))
 #define UNKNOWN_SYSCALL     "unknown"
 
 #if defined(I386) || defined(IA64) || defined(POWERPC)
@@ -81,10 +80,6 @@ bool dispatch_maylisten64(int sno);
 #else
 #error unsupported architecture
 #endif
-
-#if defined(POWERPC)
-bool dispatch_clone(int personality, int sno);
-#endif // defined(POWERPC)
 
 #endif // SYDBOX_GUARD_DISPATCH_H
 

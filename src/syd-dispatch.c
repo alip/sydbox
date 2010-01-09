@@ -127,10 +127,3 @@ bool dispatch_maylisten(int personality G_GNUC_UNUSED, int sno)
 #endif
 }
 
-#if defined(POWERPC)
-bool dispatch_clone(int personality G_GNUC_UNUSED, int sno)
-{
-    return IS_CLONE(sno);
-}
-#endif // defined(POWERPC)
-

@@ -67,7 +67,7 @@ static int xsyscall(context_t *ctx, struct tchild *child)
 
 static int xfork(context_t *ctx, struct tchild *child)
 {
-    pid_t childpid;
+    unsigned long childpid;
     struct tchild *newchild;
 
     // Get new child's pid
@@ -79,19 +79,8 @@ static int xfork(context_t *ctx, struct tchild *child)
         }
         return context_remove_child(ctx, child->pid);
     }
-    else {
-#if defined(POWERPC)
-        /* Special case for POWERPC.
-         * GETEVENTMSG doesn't work reliably on this architecture as it seems.
-         * Instead we use a hack in syscall.c
-         */
-        if (childpid == 0) {
-            g_debug("PTRACE_GETEVENTMSG returned 0 as pid, ignoring!");
-            return 0;
-        }
-#endif // defined(POWERPC)
-        g_debug("the newborn child's pid is %i", childpid);
-    }
+    else
+        g_debug("the newborn child's pid is %ld", childpid);
 
     newchild = tchild_find(ctx->children, childpid);
     if (NULL == newchild) {

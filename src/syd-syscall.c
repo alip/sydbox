@@ -1185,56 +1185,6 @@ static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUS
     return 0;
 }
 
-#if defined(POWERPC)
-/* clone(2) handler for POWERPC because PTRACE_GETEVENTMSG doesn't work
- * reliably on this architecture.
- */
-static int syscall_handle_clone(context_t *ctx, struct tchild *child)
-{
-    long retval;
-    struct tchild *newchild;
-
-    if (0 > trace_get_return(child->pid, &retval)) {
-        if (G_UNLIKELY(ESRCH != errno)) {
-            /* Error getting return code using ptrace()
-             * child is still alive, hence the error is fatal.
-             */
-            g_critical("failed to get return code: %s", g_strerror(errno));
-            g_printerr("failed to get return code: %s\n", g_strerror(errno));
-            exit(-1);
-        }
-        // Child is dead.
-        return -1;
-    }
-
-    if (retval < 0) {
-        /* clone() failed, no child is born. */
-        return 0;
-    }
-
-    newchild = tchild_find(ctx->children, retval);
-    if (NULL != newchild) {
-        if (newchild->flags & TCHILD_NEEDINHERIT)
-            tchild_inherit(newchild, child);
-    }
-    else {
-        tchild_new(ctx->children, retval);
-        newchild = tchild_find(ctx->children, retval);
-        tchild_inherit(newchild, child);
-    }
-
-    if (0 > trace_syscall(newchild->pid, 0)) {
-        if (G_UNLIKELY(ESRCH != errno)) {
-            g_critical("failed to resume child %i: %s", child->pid, g_strerror (errno));
-            g_printerr("failed to resume child %i: %s\n", child->pid, g_strerror (errno));
-            exit(-1);
-        }
-        context_remove_child(ctx, newchild->pid);
-    }
-    return 0;
-}
-#endif // defined(POWERPC)
-
 /* Main syscall handler
  */
 int syscall_handle(context_t *ctx, struct tchild *child)
@@ -1362,12 +1312,6 @@ int syscall_handle(context_t *ctx, struct tchild *child)
             if (0 > syscall_handle_chdir(child))
                 return context_remove_child(ctx, child->pid);
         }
-#if defined(POWERPC)
-        else if (dispatch_clone(child->personality, sno)) {
-            if (0 > syscall_handle_clone(ctx, child))
-                return context_remove_child(ctx, child->pid);
-        }
-#endif // defined(POWERPC)
         else if (child->sandbox->network && sydbox_config_get_network_auto_whitelist_bind()) {
             if (dispatch_maybind(child->personality, sno)) {
                 flags = dispatch_lookup(child->personality, sno);
