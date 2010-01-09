@@ -1,13 +1,12 @@
 ## Sydbox TODO list
 
-  - Libification, compnerd started this in [libsydbox](http://github.com/alip/sydbox/tree/libsydbox) branch.
+  - Libification, compnerd started this in libsydbox branch.
 
 ### Unit tests
   - We could always use more unit and/or program tests.
 
 ### Network support
   - Network blacklisting.
-  - Detection of `bind()` ports when the port argument is 0.
   - Sandbox `sendmsg()` calls, currently we sandbox `connect()`, `bind()` and `sendto()`.
 
 ### Porting
