@@ -679,7 +679,7 @@ static void syscall_check_canonicalize(context_t *ctx, struct tchild *child, str
     if (!ctx->before_initial_execve && child->sandbox->exec && sflags & EXEC_CALL) {
         g_debug("canonicalizing `%s' for system call %lu(%s), child %i", data->pathlist[0],
                 sno, sname, child->pid);
-        data->rpathlist[0] = syscall_resolvepath(child, data, 0, true);
+        data->rpathlist[0] = syscall_resolvepath(child, data, 0, false);
         if (NULL == data->rpathlist[0])
             return;
         else
