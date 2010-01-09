@@ -1097,7 +1097,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
     }
 
     if (IS_SUPPORTED_FAMILY(addr->family)) {
-        if (addr->port == 0) {
+        if (addr->port[0] == 0) {
             /* Special case for binding to port zero.
              * We'll check /proc/net/tcp after the subsequent listen() call to
              * find out the actual port number.
@@ -1318,7 +1318,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                 if (0 > syscall_handle_bind(child, flags))
                     return context_remove_child(ctx, child->pid);
             }
-            if (dispatch_maylisten(child->personality, sno)) {
+            if (g_hash_table_size(child->bindzero) > 0 && dispatch_maylisten(child->personality, sno)) {
                 flags = dispatch_lookup(child->personality, sno);
                 if (0 > syscall_handle_listen(child, flags))
                     return context_remove_child(ctx, child->pid);
