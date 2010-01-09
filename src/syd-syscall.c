@@ -1362,6 +1362,12 @@ int syscall_handle(context_t *ctx, struct tchild *child)
             if (0 > syscall_handle_chdir(child))
                 return context_remove_child(ctx, child->pid);
         }
+#if defined(POWERPC)
+        else if (dispatch_clone(child->personality, sno)) {
+            if (0 > syscall_handle_clone(ctx, child))
+                return context_remove_child(ctx, child->pid);
+        }
+#endif // defined(POWERPC)
         else if (child->sandbox->network && sydbox_config_get_network_auto_whitelist_bind()) {
             if (dispatch_maybind(child->personality, sno)) {
                 flags = dispatch_lookup(child->personality, sno);
@@ -1374,12 +1380,6 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                     return context_remove_child(ctx, child->pid);
             }
         }
-#if defined(POWERPC)
-        else if (dispatch_clone(child->personality, sno)) {
-            if (0 > syscall_handle_clone(ctx, child))
-                return context_remove_child(ctx, child->pid);
-        }
-#endif // defined(POWERPC)
     }
     child->flags ^= TCHILD_INSYSCALL;
     return 0;
