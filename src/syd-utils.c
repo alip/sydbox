@@ -60,6 +60,11 @@ void sydbox_access_violation(struct tchild *child, const gchar *path, const gcha
             sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
             child->pid,
             sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+    g_fprintf(stderr, PACKAGE "@%lu: %sChild CWD: %s%s%s\n", now,
+            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
+            sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
+            child->cwd,
+            sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
     g_fprintf(stderr, PACKAGE "@%lu: %sLast Exec: %s%s%s\n", now,
             sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
             sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
