@@ -15,20 +15,37 @@ sydbox_SOURCES = syd-children.c syd-config.c syd-context.c syd-log.c \
 		 syd-utils.c syd-wrappers.c syd-main.c
 sydbox_LDADD= $(glib_LIBS)
 
-# dispatch.c
+SPARSE=sparse
+SPARSE_CPPFLAGS= $(DEFAULT_INCLUDES) \
+		 -Wbitwise -Wcast-to-as -Wdefault-bitfield-sign \
+		 -Wparen-string -Wptr-subtraction-blows \
+		 -Wreturn-void -Wshadow -Wtypesign -Wundef \
+		 -I$(shell $(CC) -print-file-name=include) \
+		 -I$(shell $(CC) -print-file-name=include-fixed)
+
 noinst_HEADERS+= syd-dispatch.h syd-dispatch-table.h
 if I386
 sydbox_SOURCES+= syd-dispatch.c syd-trace-x86.c
+SPARSE_CPPFLAGS+= -D__i386__=1
 endif
 if X86_64
 sydbox_SOURCES+= syd-dispatch32.c syd-dispatch64.c syd-trace-x86_64.c
+SPARSE_CPPFLAGS+= -D__x86_64__=1
 endif
 if IA64
 sydbox_SOURCES+= syd-dispatch.c syd-trace-ia64.c
+SPARSE_CPPFLAGS+= -D__ia64__=1
 endif
 if POWERPC
 sydbox_SOURCES+= syd-dispatch.c syd-trace-powerpc.c
+SPARSE_CPPFLAGS+= -D__powerpc64__=1
 endif
+
+sparse-check:
+	for src in $(sydbox_SOURCES); \
+	do \
+		$(SPARSE) -DHAVE_CONFIG_H -I.. -I. $(CFLAGS) $(AM_CFLAGS) $(SPARSE_CPPFLAGS) $$src || exit 1; \
+	done
 
 nodist_sydbox_SOURCES=
 BUILT_SOURCES=
