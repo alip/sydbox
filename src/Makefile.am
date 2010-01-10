@@ -1,9 +1,9 @@
 CLEANFILES= gmon.out *.gcda *.gcno *.gcov
 EXTRA_DIST=
 
-AM_CFLAGS= -DDATADIR=\"$(datadir)\" -DSYSCONFDIR=\"$(sysconfdir)\" \
-	   -DGIT_HEAD=\"$(GIT_HEAD)\" \
-	   $(glib_CFLAGS) @SYDBOX_CFLAGS@
+DEFS+= -DDATADIR=\"$(datadir)\" -DSYSCONFDIR=\"$(sysconfdir)\" \
+       -DGIT_HEAD=\"$(GIT_HEAD)\"
+AM_CFLAGS= $(glib_CFLAGS) @SYDBOX_CFLAGS@
 bin_PROGRAMS = sydbox
 noinst_HEADERS= syd-children.h syd-config.h syd-context.h syd-flags.h \
 		syd-log.h syd-log.h syd-loop.h syd-net.h syd-path.h \
@@ -44,7 +44,7 @@ endif
 sparse-check:
 	for src in $(sydbox_SOURCES); \
 	do \
-		$(SPARSE) -DHAVE_CONFIG_H -I.. -I. $(CFLAGS) $(AM_CFLAGS) $(SPARSE_CPPFLAGS) $$src || exit 1; \
+		$(SPARSE) $(DEFS) $(SPARSE_CPPFLAGS) $(glib_CFLAGS) $$src || exit 1; \
 	done
 
 nodist_sydbox_SOURCES=
