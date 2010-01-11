@@ -28,6 +28,8 @@ int main(int argc, char **argv) {
         mode = W_OK;
     else if (T_EXEC == t)
         mode = X_OK;
+    else
+        abort();
 
     if (0 > access("arnold.layne", mode))
         return (EPERM == errno) ? EXIT_FAILURE : EXIT_SUCCESS;

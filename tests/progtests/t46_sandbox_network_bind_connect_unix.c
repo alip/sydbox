@@ -21,7 +21,8 @@
 int main(int argc, char **argv)
 {
     pid_t pid;
-    int len, fd, status;
+    int fd, status;
+    socklen_t len;
     struct sockaddr_un addr;
 
     if (argc < 2)
