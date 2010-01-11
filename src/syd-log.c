@@ -36,7 +36,6 @@ static bool initialized;
 static inline void sydbox_log_output (const gchar *log_domain,
         GLogLevelFlags log_level, const gchar *message)
 {
-    gchar *output;
     const gchar *prefix;
 
     g_return_if_fail(initialized);
@@ -67,17 +66,12 @@ static inline void sydbox_log_output (const gchar *log_domain,
             break;
     }
 
-
-    output = g_strdup_printf("%s (%s%i@%lu) %s: %s\n",
-                             log_domain ? log_domain : "**",
-                             fd ? "" : PACKAGE":",
-                             getpid(), (gulong) time(NULL),
-                             prefix, message);
-
-    g_fprintf(fd ? fd : stderr, "%s", output);
+    g_fprintf(fd ? fd : stderr, "%s (%s%i@%lu) %s: %s\n",
+            log_domain ? log_domain : "**",
+            fd ? "" : PACKAGE":",
+            getpid(), (gulong) time(NULL),
+            prefix, message);
     fflush(fd ? fd : stderr);
-
-    g_free(output);
 }
 
 static void sydbox_log_handler(const gchar *log_domain, GLogLevelFlags log_level,
