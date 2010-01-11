@@ -3,6 +3,17 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.5
+* New configure switch --disable-ipv6 disables IPV6 support for network sandboxing
+* Fix problems on ppc64
+* Remove allow, deny and local network sandboxing modes.
+* Whitelist addresses can be specified in CIDR notation.
+* Added --network-whitelist-bind command line option to white list bind addresses
+* Split network whitelist into two whitelists, one for bind(), one for connect(), sendto etc.
+* Display the last execve in access violation output
+* Display child's current working directory in access violation output
+* Miscellaneous performance fixes
+
 ### 0.4
 * Make network sandboxing on by default.
 * When bind's port argument is zero, look up the actual port from /proc/net/tcp{,6}
