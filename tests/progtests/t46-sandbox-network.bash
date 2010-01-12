@@ -18,6 +18,13 @@ if [[ 0 == $? ]]; then
 fi
 end_test
 
+start_test "t46-sandbox-network-deny-bind-unix-abstract"
+sydbox -N -- ./t46_sandbox_network_bind_unix_abstract_deny "$bind_socket"
+if [[ 0 == $? ]]; then
+    die "Failed to deny bind to an abstract UNIX socket"
+fi
+end_test
+
 start_test "t46-sandbox-network-deny-bind-tcp"
 sydbox -N -- ./t46_sandbox_network_bind_tcp_deny '127.0.0.1' $bind_port
 if [[ 0 == $? ]]; then
@@ -31,6 +38,14 @@ SYDBOX_NET_WHITELIST_BIND=unix://"$bind_socket" \
 sydbox -N -- ./t46_sandbox_network_bind_unix "$bind_socket"
 if [[ 0 != $? ]]; then
     die "Failed to allow bind to Unix socket by whitelisting"
+fi
+end_test
+
+start_test "t46-sandbox-network-deny-allow-whitelisted-bind-unix-abstract"
+SYDBOX_NET_WHITELIST_BIND=unix-abstract://"$bind_socket" \
+sydbox -N -- ./t46_sandbox_network_bind_unix_abstract "$bind_socket"
+if [[ 0 != $? ]]; then
+    die "Failed to allow bind to an abstract UNIX socket by whitelisting"
 fi
 end_test
 

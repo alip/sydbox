@@ -38,8 +38,9 @@ check_PROGRAMS = test-lib.bash t01_chmod t01_chmod_toolong t02_chown t02_chown_t
 		 t32_magic_onoff_check_on t40_openat_ebadf t41_openat_fileno t42_magic_wrap_lstat \
 		 t43_exit_code_single t43_exit_code_signal t43_exit_code_many t44_bad_open \
 		 t45_sandbox_exec_success t45_sandbox_exec_try_exec t46_sandbox_network_bind_unix \
-		 t46_sandbox_network_bind_tcp t46_sandbox_network_connect_tcp \
-		 t46_sandbox_network_connect_unix t46_sandbox_network_bind_unix_deny \
+		 t46_sandbox_network_bind_unix_abstract t46_sandbox_network_bind_tcp \
+		 t46_sandbox_network_connect_tcp t46_sandbox_network_connect_unix \
+		 t46_sandbox_network_bind_unix_deny t46_sandbox_network_bind_unix_abstract_deny \
 		 t46_sandbox_network_bind_tcp_deny t46_sandbox_network_connect_tcp_deny \
 		 t46_sandbox_network_connect_unix_deny t46_sandbox_network_bind_connect_unix \
 		 t46_sandbox_network_bind_connect_tcp
