@@ -847,8 +847,8 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
         if (violation) {
             switch (data->addr->family) {
                 case AF_UNIX:
-                    sydbox_access_violation(child, NULL, "%s{family=AF_UNIX path=%s}",
-                            sname, data->addr->u.sun_path);
+                    sydbox_access_violation(child, NULL, "%s{family=AF_UNIX path=%s abstract=%s}",
+                            sname, data->addr->u.sun_path, data->addr->abstract ? "true" : "false");
                     break;
                 case AF_INET:
                     inet_ntop(AF_INET, &data->addr->u.sin_addr, ip, sizeof(ip));

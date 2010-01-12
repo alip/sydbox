@@ -34,6 +34,7 @@ struct sydbox_addr {
     int family;
     int netmask;
     int port[2];
+    bool abstract;
 
     union {
         char sun_path[PATH_MAX];

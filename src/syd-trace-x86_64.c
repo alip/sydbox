@@ -411,8 +411,14 @@ struct sydbox_addr *trace_get_addr(pid_t pid, int personality, int narg,
         case AF_UNIX:
             saddr->port[0] = -1;
             saddr->port[1] = -1;
-            strncpy(saddr->u.sun_path, addrbuf.sa_un.sun_path, PATH_MAX);
-            saddr->u.sun_path[PATH_MAX - 1] = '\0';
+            if (addrlen == 2)
+                saddr->u.sun_path[0] = '\0';
+            else if (addrbuf.sa_un.sun_path[0] != '\0')
+                strncpy(saddr->u.sun_path, addrbuf.sa_un.sun_path, strlen(addrbuf.sa_un.sun_path) + 1);
+            else {
+                saddr->abstract = true;
+                strncpy(saddr->u.sun_path, addrbuf.sa_un.sun_path + 1, strlen(addrbuf.sa_un.sun_path + 1) + 1);
+            }
             break;
         case AF_INET:
             saddr->port[0] = ntohs(addrbuf.sa_in.sin_port);

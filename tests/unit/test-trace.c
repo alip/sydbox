@@ -780,6 +780,7 @@ static void test17(void)
         XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
         XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/dev/null", 10),
                 "wrong address got:`%s' expected:`/dev/null'", addr->u.sun_path);
+        XFAIL_UNLESS(addr->abstract == false, "non-abstract socket marked abstract");
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
         XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family got:%d expected:%d\n", addr->family, AF_UNIX);
         XFAIL_UNLESS(addr->port[0] == -1, "wrong port got:%d expected:-1\n", addr->port[0]);
@@ -790,6 +791,82 @@ static void test17(void)
 }
 
 static void test18(void)
+{
+    int status, pfd[2];
+    pid_t pid;
+    char strfd[16];
+
+    if (0 > pipe(pfd))
+        XFAIL("pipe() failed: %s\n", g_strerror(errno));
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        int fd, len;
+        struct sockaddr_un addr;
+
+        close(pfd[0]);
+        if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+            g_printerr("socket() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        snprintf(strfd, 16, "%i", fd);
+        write(pfd[1], strfd, 16);
+        close(pfd[1]);
+
+        addr.sun_family = AF_UNIX;
+        strcpy(addr.sun_path, "X/dev/null");
+        len = strlen(addr.sun_path) + sizeof(addr.sun_family);
+        addr.sun_path[0] = '\0';
+
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+
+        kill(getpid(), SIGSTOP);
+        connect(fd, (struct sockaddr *)&addr, len);
+        close(fd);
+        pause();
+    }
+    else { // parent
+        long fd, realfd;
+        struct sydbox_addr *addr;
+
+        close(pfd[1]);
+        read(pfd[0], strfd, 16);
+        realfd = atoi(strfd);
+        close(pfd[0]);
+
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, until the connect() call. */
+        for (unsigned int i = 0; i < 2; i++) {
+            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            waitpid(pid, &status, 0);
+            XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+        }
+
+        /* Check the address. */
+        addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, &fd);
+        XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/dev/null", 10),
+                "wrong address got:`%s' expected:`/dev/null'", addr->u.sun_path);
+        XFAIL_UNLESS(addr->abstract == true, "abstract socket marked non-abstract");
+        XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
+        XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family got:%d expected:%d\n", addr->family, AF_UNIX);
+        XFAIL_UNLESS(addr->port[0] == -1, "wrong port got:%d expected:-1\n", addr->port[0]);
+
+        g_free(addr);
+        trace_kill(pid);
+    }
+}
+
+static void test19(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -867,7 +944,7 @@ static void test18(void)
 }
 
 #if HAVE_IPV6
-static void test19(void)
+static void test20(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -981,9 +1058,10 @@ int main(int argc, char **argv)
 
     g_test_add_func("/trace/socket/fd", test16);
     g_test_add_func("/trace/socket/addr/unix", test17);
-    g_test_add_func("/trace/socket/addr/inet", test18);
+    g_test_add_func("/trace/socket/addr/unix-abstract", test18);
+    g_test_add_func("/trace/socket/addr/inet", test19);
 #if HAVE_IPV6
-    g_test_add_func("/trace/socket/addr/inet6", test19);
+    g_test_add_func("/trace/socket/addr/inet6", test20);
 #endif /* HAVE_IPV6 */
 
     return g_test_run();

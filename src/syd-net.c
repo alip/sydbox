@@ -27,6 +27,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fnmatch.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <arpa/inet.h>
@@ -49,6 +50,8 @@ bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr
 
     switch (addr1->family) {
         case AF_UNIX:
+            if (addr1->abstract != addr2->abstract)
+                return false;
             return (0 == strncmp(addr1->u.sun_path, addr2->u.sun_path, PATH_MAX));
         case AF_INET:
             return (0 == memcmp(&addr1->u.sin_addr, &addr2->u.sin_addr, sizeof(struct in_addr)));
@@ -99,7 +102,9 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
 
     switch (needle->family) {
         case AF_UNIX:
-            return (0 == strncmp(needle->u.sun_path, haystack->u.sun_path, strlen(haystack->u.sun_path) + 1));
+            if (haystack->abstract != needle->abstract)
+                return false;
+            return (0 == fnmatch(haystack->u.sun_path, needle->u.sun_path, FNM_PATHNAME));
         case AF_INET:
             ptr = (unsigned char *)&needle->u.sin_addr;
             b = (unsigned char *)&haystack->u.sin_addr;
@@ -141,12 +146,23 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
 
     if (0 == strncmp(src, "unix://", 7)) {
         saddr->family = AF_UNIX;
+        saddr->abstract = false;
         saddr->port[0] = -1;
         saddr->port[1] = -1;
         strncpy(saddr->u.sun_path, src + 7, PATH_MAX);
         saddr->u.sun_path[PATH_MAX - 1] = '\0';
         if (canlog)
             g_info("New whitelist address {family=AF_UNIX path=%s}", saddr->u.sun_path);
+    }
+    else if (0 == strncmp(src, "unix-abstract://", 16)) {
+        saddr->family = AF_UNIX;
+        saddr->abstract = true;
+        saddr->port[0] = -1;
+        saddr->port[1] = -1;
+        strncpy(saddr->u.sun_path, src + 16, PATH_MAX);
+        saddr->u.sun_path[PATH_MAX - 1] = '\0';
+        if (canlog)
+            g_info("New whitelist address {family=AF_UNIX path=@%s}", saddr->u.sun_path);
     }
     else if (0 == strncmp(src, "inet://", 7)) {
         saddr->family = AF_INET;

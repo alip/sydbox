@@ -54,6 +54,7 @@ static void test2(void)
     addr = address_from_string("unix:///dev/null", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid unix address\n");
     XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family, got:%d expected:%d\n", addr->family, AF_UNIX);
+    XFAIL_UNLESS(addr->abstract == false, "non-abstract address marked abstract");
     XFAIL_UNLESS(addr->port[0] == -1, "wrong port[0], got:%d expected:-1\n", addr->port[0]);
     XFAIL_UNLESS(addr->port[1] == -1, "wrong port[1], got:%d expected:-1\n", addr->port[1]);
     XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/dev/null", 10), "wrong path got:`%s' expected:/dev/null\n",
@@ -62,6 +63,22 @@ static void test2(void)
 }
 
 static void test3(void)
+{
+    struct sydbox_addr *addr;
+
+    addr = address_from_string("unix-abstract:///tmp/.X11-unix/X0", false);
+    XFAIL_IF(addr == NULL, "returned NULL for valid unix address\n");
+    XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family, got:%d expected:%d\n", addr->family, AF_UNIX);
+    XFAIL_UNLESS(addr->abstract == true, "abstract address marked non-abstract");
+    XFAIL_UNLESS(addr->port[0] == -1, "wrong port[0], got:%d expected:-1\n", addr->port[0]);
+    XFAIL_UNLESS(addr->port[1] == -1, "wrong port[1], got:%d expected:-1\n", addr->port[1]);
+    XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/tmp/.X11-unix/X0", 10),
+            "wrong path got:`%s' expected:/tmp/.X11-unix/X0\n",
+            addr->u.sun_path);
+    g_free(addr);
+}
+
+static void test4(void)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr;
@@ -79,7 +96,7 @@ static void test3(void)
 }
 
 #if HAVE_IPV6
-static void test4(void)
+static void test5(void)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr;
@@ -97,7 +114,7 @@ static void test4(void)
 }
 #endif /* HAVE_IPV6 */
 
-static void test5(void)
+static void test6(void)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr;
@@ -115,7 +132,7 @@ static void test5(void)
 }
 
 #if HAVE_IPV6
-static void test6(void)
+static void test7(void)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr;
@@ -134,7 +151,7 @@ static void test6(void)
 }
 #endif /* HAVE_IPV6 */
 
-static void test7(void)
+static void test8(void)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr;
@@ -152,7 +169,7 @@ static void test7(void)
 }
 
 #if HAVE_IPV6
-static void test8(void)
+static void test9(void)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr;
@@ -170,7 +187,7 @@ static void test8(void)
 }
 #endif /* HAVE_IPV6 */
 
-static void test9(void)
+static void test10(void)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr;
@@ -188,7 +205,7 @@ static void test9(void)
 }
 
 #if HAVE_IPV6
-static void test10(void)
+static void test11(void)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr;
@@ -206,7 +223,7 @@ static void test10(void)
 }
 #endif /* HAVE_IPV6 */
 
-void test11(void)
+void test12(void)
 {
     struct sydbox_addr *haystack, *needle;
 
@@ -245,25 +262,26 @@ int main(int argc, char **argv)
 
     g_test_add_func("/net/address_from_string/invalid", test1);
     g_test_add_func("/net/address_from_string/unix", test2);
-    g_test_add_func("/net/address_from_string/inet", test3);
+    g_test_add_func("/net/address_from_string/unix-abstract", test3);
+    g_test_add_func("/net/address_from_string/inet", test4);
 #if HAVE_IPV6
-    g_test_add_func("/net/address_from_string/inet6", test4);
+    g_test_add_func("/net/address_from_string/inet6", test5);
 #endif /* HAVE_IPV6 */
-    g_test_add_func("/net/address_from_string/inet/range", test5);
+    g_test_add_func("/net/address_from_string/inet/range", test6);
 #if HAVE_IPV6
-    g_test_add_func("/net/address_from_string/inet6/range", test6);
+    g_test_add_func("/net/address_from_string/inet6/range", test7);
 #endif /* HAVE_IPV6 */
-    g_test_add_func("/net/address_from_string/inet/netmask", test7);
+    g_test_add_func("/net/address_from_string/inet/netmask", test8);
 #if HAVE_IPV6
-    g_test_add_func("/net/address_from_string/inet6/netmask", test8);
+    g_test_add_func("/net/address_from_string/inet6/netmask", test9);
 #endif /* HAVE_IPV6 */
-    g_test_add_func("/net/address_from_string/inet/netmask/range", test9);
+    g_test_add_func("/net/address_from_string/inet/netmask/range", test10);
 #if HAVE_IPV6
-    g_test_add_func("/net/address_from_string/inet6/netmask/range", test10);
+    g_test_add_func("/net/address_from_string/inet6/netmask/range", test11);
 #endif /* HAVE_IPV6 */
 
-    g_test_add_func("/net/has_address/inet", test11);
-    /* TODO: g_test_add_func("/net/has_address/inet6", test12); */
+    g_test_add_func("/net/has_address/inet", test12);
+    /* TODO: g_test_add_func("/net/has_address/inet6", test13); */
 
     return g_test_run();
 }
