@@ -3,6 +3,10 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.6.1
+* Fixed net/whitelist/connect magic command
+* Made exact/pattern distinction clear for unix sockets
+
 ### 0.6
 * Fixed handling of abstract UNIX sockets
 * Added `unix-abstract://` whitelist prefix to white list abstract UNIX sockets
