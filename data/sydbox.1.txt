@@ -127,7 +127,8 @@ SYDBOX_NET_WHITELIST_BIND
 This variable is a semicolon delimited list of whitelisted network connections for the bind() system call.
 The values can be in one of the following forms:
 
-- unix:///path/to/socket
+- unix://FNMATCH_PATTERN
+- unix-abstract://FNMATCH_PATTERN
 - inet://ipv4_address/NETMASK@PORT_RANGE
 - inet6://ipv6_address/NETMASK@PORT_RANGE
 
