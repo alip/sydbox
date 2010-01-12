@@ -32,15 +32,26 @@
 
 struct sydbox_addr {
     int family;
-    int netmask;
-    int port[2];
-    bool abstract;
 
     union {
-        char sun_path[PATH_MAX];
-        struct in_addr sin_addr;
+        struct {
+            bool abstract;
+            bool exact;
+            char sun_path[PATH_MAX];
+        } saun;
+
+        struct {
+            int netmask;
+            int port[2];
+            struct in_addr sin_addr;
+        } sa;
+
 #if HAVE_IPV6
-        struct in6_addr sin6_addr;
+        struct {
+            int netmask;
+            int port[2];
+            struct in6_addr sin6_addr;
+        } sa6;
 #endif /* HAVE_IPV6 */
     } u;
 };

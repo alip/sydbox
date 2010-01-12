@@ -54,10 +54,8 @@
 #define BAD_SYSCALL                 0xbadca11
 #if HAVE_IPV6
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET || (f) == AF_INET6)
-#define IS_NET_FAMILY(f)            ((f) == AF_INET || (f) == AF_INET6)
 #else
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET)
-#define IS_NET_FAMILY(f)            ((f) == AF_INET)
 #endif /* HAVE_IPV6 */
 #define IS_NET_CALL(fl)             ((fl) & (BIND_CALL | CONNECT_CALL | SENDTO_CALL | DECODE_SOCKETCALL))
 #define NET_RESTRICTED_CALL(fl)     ((fl) & (CONNECT_CALL | SENDTO_CALL))
@@ -832,12 +830,25 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
             addr = (struct sydbox_addr *)walk->data;
             if (address_has(addr, data->addr)) {
                 /* Check port range for NET_FAMILY. */
-                if (IS_NET_FAMILY(data->addr->family)) {
-                    if (data->addr->port[0] >= addr->port[0] && data->addr->port[0] <= addr->port[1])
+                switch (addr->family) {
+                    case AF_UNIX:
                         violation = false;
+                        break;
+                    case AF_INET:
+                        if (data->addr->u.sa.port[0] >= addr->u.sa.port[0] &&
+                                data->addr->u.sa.port[1] <= addr->u.sa.port[1])
+                            violation = false;
+                        break;
+#if HAVE_IPV6
+                    case AF_INET6:
+                        if (data->addr->u.sa6.port[0] >= addr->u.sa6.port[0] &&
+                                data->addr->u.sa6.port[1] <= addr->u.sa6.port[1])
+                            violation = false;
+                        break;
+#endif /* HAVE_IPV6 */
+                    default:
+                        g_assert_not_reached();
                 }
-                else
-                    violation = false;
 
                 if (!violation)
                     break;
@@ -848,18 +859,19 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
             switch (data->addr->family) {
                 case AF_UNIX:
                     sydbox_access_violation(child, NULL, "%s{family=AF_UNIX path=%s abstract=%s}",
-                            sname, data->addr->u.sun_path, data->addr->abstract ? "true" : "false");
+                            sname, data->addr->u.saun.sun_path,
+                            data->addr->u.saun.abstract ? "true" : "false");
                     break;
                 case AF_INET:
-                    inet_ntop(AF_INET, &data->addr->u.sin_addr, ip, sizeof(ip));
+                    inet_ntop(AF_INET, &data->addr->u.sa.sin_addr, ip, sizeof(ip));
                     sydbox_access_violation(child, NULL, "%s{family=AF_INET addr=%s port=%d}",
-                            sname, ip, data->addr->port[0]);
+                            sname, ip, data->addr->u.sa.port[0]);
                     break;
 #if HAVE_IPV6
                 case AF_INET6:
-                    inet_ntop(AF_INET6, &data->addr->u.sin6_addr, ip, sizeof(ip));
+                    inet_ntop(AF_INET6, &data->addr->u.sa6.sin6_addr, ip, sizeof(ip));
                     sydbox_access_violation(child, NULL, "%s{family=AF_INET6 addr=%s port=%d}",
-                            sname, ip, data->addr->port[0]);
+                            sname, ip, data->addr->u.sa6.port[0]);
                     break;
 #endif /* HAVE_IPV6 */
                 default:
@@ -1042,7 +1054,7 @@ static int syscall_handle_chdir(struct tchild *child)
  */
 static int syscall_handle_bind(struct tchild *child, int flags)
 {
-    int subcall;
+    int subcall, port;
     long fd, retval;
     GSList *whitelist;
     struct sydbox_addr *addr;
@@ -1103,7 +1115,23 @@ static int syscall_handle_bind(struct tchild *child, int flags)
     }
 
     if (IS_SUPPORTED_FAMILY(addr->family)) {
-        if (addr->port[0] == 0) {
+        switch (addr->family) {
+            case AF_UNIX:
+                port = -1;
+                break;
+            case AF_INET:
+                port = addr->u.sa.port[0];
+                break;
+#if HAVE_IPV6
+            case AF_INET6:
+                port = addr->u.sa6.port[0];
+                break;
+#endif /* HAVE_IPV6 */
+            default:
+                g_assert_not_reached();
+        }
+
+        if (port == 0) {
             /* Special case for binding to port zero.
              * We'll check /proc/net/tcp after the subsequent listen() call to
              * find out the actual port number.
@@ -1168,9 +1196,24 @@ static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUS
         return 0;
     }
 
-    addr->port[0] = proc_lookup_port(child->pid, fd, addr->family);
-    addr->port[1] = addr->port[0];
-    if (addr->port[0] > 0) {
+    switch (addr->family) {
+        case AF_INET:
+            addr->u.sa.port[0] = proc_lookup_port(child->pid, fd, addr->family);
+            addr->u.sa.port[1] = addr->u.sa.port[0];
+            ret = (addr->u.sa.port[0] > 0);
+            break;
+#if HAVE_IPV6
+        case AF_INET6:
+            addr->u.sa6.port[0] = proc_lookup_port(child->pid, fd, addr->family);
+            addr->u.sa6.port[1] = addr->u.sa6.port[0];
+            ret = (addr->u.sa6.port[0] > 0);
+            break;
+#endif /* HAVE_IPV6 */
+        default:
+            g_assert_not_reached();
+    }
+
+    if (ret) {
         whitelist = sydbox_config_get_network_whitelist_connect();
         whitelist = g_slist_prepend(whitelist, address_dup(addr));
         sydbox_config_set_network_whitelist_connect(whitelist);

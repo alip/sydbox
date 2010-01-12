@@ -54,11 +54,10 @@ static void test2(void)
     addr = address_from_string("unix:///dev/null", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid unix address\n");
     XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family, got:%d expected:%d\n", addr->family, AF_UNIX);
-    XFAIL_UNLESS(addr->abstract == false, "non-abstract address marked abstract");
-    XFAIL_UNLESS(addr->port[0] == -1, "wrong port[0], got:%d expected:-1\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == -1, "wrong port[1], got:%d expected:-1\n", addr->port[1]);
-    XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/dev/null", 10), "wrong path got:`%s' expected:/dev/null\n",
-            addr->u.sun_path);
+    XFAIL_UNLESS(addr->u.saun.abstract == false, "non-abstract address marked abstract");
+    XFAIL_UNLESS(addr->u.saun.exact == false, "not a pattern");
+    XFAIL_UNLESS(0 == strncmp(addr->u.saun.sun_path, "/dev/null", 10),
+            "wrong path got:`%s' expected:/dev/null\n", addr->u.saun.sun_path);
     g_free(addr);
 }
 
@@ -69,12 +68,10 @@ static void test3(void)
     addr = address_from_string("unix-abstract:///tmp/.X11-unix/X0", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid unix address\n");
     XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family, got:%d expected:%d\n", addr->family, AF_UNIX);
-    XFAIL_UNLESS(addr->abstract == true, "abstract address marked non-abstract");
-    XFAIL_UNLESS(addr->port[0] == -1, "wrong port[0], got:%d expected:-1\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == -1, "wrong port[1], got:%d expected:-1\n", addr->port[1]);
-    XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/tmp/.X11-unix/X0", 10),
+    XFAIL_UNLESS(addr->u.saun.abstract == true, "abstract address marked non-abstract");
+    XFAIL_UNLESS(0 == strncmp(addr->u.saun.sun_path, "/tmp/.X11-unix/X0", 18),
             "wrong path got:`%s' expected:/tmp/.X11-unix/X0\n",
-            addr->u.sun_path);
+            addr->u.saun.sun_path);
     g_free(addr);
 }
 
@@ -86,11 +83,11 @@ static void test4(void)
     addr = address_from_string("inet://127.0.0.1@3", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid inet address\n");
     XFAIL_UNLESS(addr->family == AF_INET, "wrong family, got:%d expected:%d\n", addr->family, AF_INET);
-    XFAIL_UNLESS(addr->netmask == 32, "wrong netmask, got:%d expected:32\n", addr->netmask);
-    XFAIL_UNLESS(addr->port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == 3, "wrong port[1], got:%d expected:3\n", addr->port[1]);
-    XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sin_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-            g_strerror(errno));
+    XFAIL_UNLESS(addr->u.sa.netmask == 32, "wrong netmask, got:%d expected:32\n", addr->u.sa.netmask);
+    XFAIL_UNLESS(addr->u.sa.port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->u.sa.port[0]);
+    XFAIL_UNLESS(addr->u.sa.port[1] == 3, "wrong port[1], got:%d expected:3\n", addr->u.sa.port[1]);
+    XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sa.sin_addr, ip, sizeof(ip)),
+            "inet_ntop failed: %s\n", g_strerror(errno));
     XFAIL_UNLESS(0 == strncmp(ip, "127.0.0.1", 10), "wrong ip got:`%s' expected:127.0.0.1\n", ip);
     g_free(addr);
 }
@@ -104,11 +101,11 @@ static void test5(void)
     addr = address_from_string("inet6://::1@3", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid inet6 address\n");
     XFAIL_UNLESS(addr->family == AF_INET6, "wrong family, got:%d expected:%d\n", addr->family, AF_INET6);
-    XFAIL_UNLESS(addr->netmask == 128, "wrong netmask, got:%d expected:128\n", addr->netmask);
-    XFAIL_UNLESS(addr->port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == 3, "wrong port[1], got:%d expected:3\n", addr->port[1]);
-    XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sin6_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-            g_strerror(errno));
+    XFAIL_UNLESS(addr->u.sa6.netmask == 128, "wrong netmask, got:%d expected:128\n", addr->u.sa6.netmask);
+    XFAIL_UNLESS(addr->u.sa6.port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->u.sa6.port[0]);
+    XFAIL_UNLESS(addr->u.sa6.port[1] == 3, "wrong port[1], got:%d expected:3\n", addr->u.sa6.port[1]);
+    XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sa6.sin6_addr, ip, sizeof(ip)),
+            "inet_ntop failed: %s\n", g_strerror(errno));
     XFAIL_UNLESS(0 == strncasecmp(ip, "::1", 4), "wrong ip got:`%s' expected:`::1'\n", ip);
     g_free(addr);
 }
@@ -122,11 +119,11 @@ static void test6(void)
     addr = address_from_string("inet://127.0.0.1@3-5", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid inet address\n");
     XFAIL_UNLESS(addr->family == AF_INET, "wrong family, got:%d expected:%d\n", addr->family, AF_INET);
-    XFAIL_UNLESS(addr->netmask == 32, "wrong netmask, got:%d expected:32\n", addr->netmask);
-    XFAIL_UNLESS(addr->port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == 5, "wrong port[1], got:%d expected:5\n", addr->port[1]);
-    XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sin_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-            g_strerror(errno));
+    XFAIL_UNLESS(addr->u.sa.netmask == 32, "wrong netmask, got:%d expected:32\n", addr->u.sa.netmask);
+    XFAIL_UNLESS(addr->u.sa.port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->u.sa.port[0]);
+    XFAIL_UNLESS(addr->u.sa.port[1] == 5, "wrong port[1], got:%d expected:5\n", addr->u.sa.port[1]);
+    XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sa.sin_addr, ip, sizeof(ip)),
+            "inet_ntop failed: %s\n", g_strerror(errno));
     XFAIL_UNLESS(0 == strncmp(ip, "127.0.0.1", 10), "wrong ip got:`%s' expected:127.0.0.1\n", ip);
     g_free(addr);
 }
@@ -140,11 +137,11 @@ static void test7(void)
     addr = address_from_string("inet6://2001:db8:ac10:fe01::@3-5", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid inet6 address\n");
     XFAIL_UNLESS(addr->family == AF_INET6, "wrong family, got:%d expected:%d\n", addr->family, AF_INET6);
-    XFAIL_UNLESS(addr->netmask == 64, "wrong netmask, got:%d expected:64\n", addr->netmask);
-    XFAIL_UNLESS(addr->port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == 5, "wrong port[1], got:%d expected:5\n", addr->port[1]);
-    XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sin6_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-            g_strerror(errno));
+    XFAIL_UNLESS(addr->u.sa6.netmask == 64, "wrong netmask, got:%d expected:64\n", addr->u.sa6.netmask);
+    XFAIL_UNLESS(addr->u.sa6.port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->u.sa6.port[0]);
+    XFAIL_UNLESS(addr->u.sa6.port[1] == 5, "wrong port[1], got:%d expected:5\n", addr->u.sa6.port[1]);
+    XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sa6.sin6_addr, ip, sizeof(ip)),
+            "inet_ntop failed: %s\n", g_strerror(errno));
     XFAIL_UNLESS(0 == strncasecmp(ip, "2001:db8:ac10:fe01::", 21),
             "wrong ip got:`%s' expected:`2001:db8:ac10:fe01::'\n", ip);
     g_free(addr);
@@ -159,11 +156,11 @@ static void test8(void)
     addr = address_from_string("inet://192.168.0.0/16@3", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid inet address\n");
     XFAIL_UNLESS(addr->family == AF_INET, "wrong family, got:%d expected:%d\n", addr->family, AF_INET);
-    XFAIL_UNLESS(addr->netmask == 16, "wrong netmask, got:%d expected:16\n", addr->netmask);
-    XFAIL_UNLESS(addr->port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == 3, "wrong port[1], got:%d expected:3\n", addr->port[1]);
-    XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sin_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-            g_strerror(errno));
+    XFAIL_UNLESS(addr->u.sa.netmask == 16, "wrong netmask, got:%d expected:16\n", addr->u.sa.netmask);
+    XFAIL_UNLESS(addr->u.sa.port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->u.sa.port[0]);
+    XFAIL_UNLESS(addr->u.sa.port[1] == 3, "wrong port[1], got:%d expected:3\n", addr->u.sa.port[1]);
+    XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sa.sin_addr, ip, sizeof(ip)),
+            "inet_ntop failed: %s\n", g_strerror(errno));
     XFAIL_UNLESS(0 == strncmp(ip, "192.168.0.0", 10), "wrong ip got:`%s' expected:192.168.0.0\n", ip);
     g_free(addr);
 }
@@ -177,11 +174,11 @@ static void test9(void)
     addr = address_from_string("inet6://::1/64@3", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid inet6 address\n");
     XFAIL_UNLESS(addr->family == AF_INET6, "wrong family, got:%d expected:%d\n", addr->family, AF_INET6);
-    XFAIL_UNLESS(addr->netmask == 64, "wrong netmask, got:%d expected:64\n", addr->netmask);
-    XFAIL_UNLESS(addr->port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == 3, "wrong port[1], got:%d expected:3\n", addr->port[1]);
-    XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sin6_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-            g_strerror(errno));
+    XFAIL_UNLESS(addr->u.sa6.netmask == 64, "wrong netmask, got:%d expected:64\n", addr->u.sa6.netmask);
+    XFAIL_UNLESS(addr->u.sa6.port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->u.sa6.port[0]);
+    XFAIL_UNLESS(addr->u.sa6.port[1] == 3, "wrong port[1], got:%d expected:3\n", addr->u.sa6.port[1]);
+    XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sa6.sin6_addr, ip, sizeof(ip)),
+            "inet_ntop failed: %s\n", g_strerror(errno));
     XFAIL_UNLESS(0 == strncasecmp(ip, "::1", 4), "wrong ip got:`%s' expected:`::1'\n", ip);
     g_free(addr);
 }
@@ -195,11 +192,11 @@ static void test10(void)
     addr = address_from_string("inet://127.0.0.0/8@8990-9000", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid inet address\n");
     XFAIL_UNLESS(addr->family == AF_INET, "wrong family, got:%d expected:%d\n", addr->family, AF_INET);
-    XFAIL_UNLESS(addr->netmask == 8, "wrong netmask, got:%d expected:8\n", addr->netmask);
-    XFAIL_UNLESS(addr->port[0] == 8990, "wrong port[0], got:%d expected:8990\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == 9000, "wrong port[1], got:%d expected:9000\n", addr->port[1]);
-    XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sin_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-            g_strerror(errno));
+    XFAIL_UNLESS(addr->u.sa.netmask == 8, "wrong netmask, got:%d expected:8\n", addr->u.sa.netmask);
+    XFAIL_UNLESS(addr->u.sa.port[0] == 8990, "wrong port[0], got:%d expected:8990\n", addr->u.sa.port[0]);
+    XFAIL_UNLESS(addr->u.sa.port[1] == 9000, "wrong port[1], got:%d expected:9000\n", addr->u.sa.port[1]);
+    XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sa.sin_addr, ip, sizeof(ip)),
+            "inet_ntop failed: %s\n", g_strerror(errno));
     XFAIL_UNLESS(0 == strncmp(ip, "127.0.0.0", 10), "wrong ip got:`%s' expected:127.0.0.0\n", ip);
     g_free(addr);
 }
@@ -213,11 +210,11 @@ static void test11(void)
     addr = address_from_string("inet6://::1/64@3-5", false);
     XFAIL_IF(addr == NULL, "returned NULL for valid inet6 address\n");
     XFAIL_UNLESS(addr->family == AF_INET6, "wrong family, got:%d expected:%d\n", addr->family, AF_INET6);
-    XFAIL_UNLESS(addr->netmask == 64, "wrong netmask, got:%d expected:64\n", addr->netmask);
-    XFAIL_UNLESS(addr->port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->port[0]);
-    XFAIL_UNLESS(addr->port[1] == 5, "wrong port[1], got:%d expected:5\n", addr->port[1]);
-    XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sin6_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-            g_strerror(errno));
+    XFAIL_UNLESS(addr->u.sa6.netmask == 64, "wrong netmask, got:%d expected:64\n", addr->u.sa6.netmask);
+    XFAIL_UNLESS(addr->u.sa6.port[0] == 3, "wrong port[0], got:%d expected:3\n", addr->u.sa6.port[0]);
+    XFAIL_UNLESS(addr->u.sa6.port[1] == 5, "wrong port[1], got:%d expected:5\n", addr->u.sa6.port[1]);
+    XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sa6.sin6_addr, ip, sizeof(ip)),
+            "inet_ntop failed: %s\n", g_strerror(errno));
     XFAIL_UNLESS(0 == strncasecmp(ip, "::1", 4), "wrong ip got:`%s' expected:`::1'\n", ip);
     g_free(addr);
 }

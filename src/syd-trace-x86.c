@@ -351,29 +351,28 @@ struct sydbox_addr *trace_get_addr(pid_t pid, int personality, int narg,
 
     switch (addrbuf.sa.sa_family) {
         case AF_UNIX:
-            saddr->port[0] = -1;
-            saddr->port[1] = -1;
+            saddr->u.saun.exact = true;
             if (addrlen == 2)
-                saddr->u.sun_path[0] = '\0';
+                saddr->u.saun.sun_path[0] = '\0';
             else if (addrbuf.sa_un.sun_path[0] != '\0')
-                strncpy(saddr->u.sun_path, addrbuf.sa_un.sun_path, strlen(addrbuf.sa_un.sun_path) + 1);
+                strncpy(saddr->u.saun.sun_path, addrbuf.sa_un.sun_path, strlen(addrbuf.sa_un.sun_path) + 1);
             else {
-                saddr->abstract = true;
-                strncpy(saddr->u.sun_path, addrbuf.sa_un.sun_path + 1, strlen(addrbuf.sa_un.sun_path + 1) + 1);
+                saddr->u.saun.abstract = true;
+                strncpy(saddr->u.saun.sun_path, addrbuf.sa_un.sun_path + 1, strlen(addrbuf.sa_un.sun_path + 1) + 1);
             }
             break;
         case AF_INET:
-            saddr->port[0] = ntohs(addrbuf.sa_in.sin_port);
-            saddr->port[1] = saddr->port[0];
-            saddr->netmask = 32;
-            memcpy(&saddr->u.sin_addr, &addrbuf.sa_in.sin_addr, sizeof(struct in_addr));
+            saddr->u.sa.port[0] = ntohs(addrbuf.sa_in.sin_port);
+            saddr->u.sa.port[1] = saddr->u.sa.port[0];
+            saddr->u.sa.netmask = 32;
+            memcpy(&saddr->u.sa.sin_addr, &addrbuf.sa_in.sin_addr, sizeof(struct in_addr));
             break;
 #if HAVE_IPV6
         case AF_INET6:
-            saddr->port[0] = ntohs(addrbuf.sa6.sin6_port);
-            saddr->port[1] = saddr->port[0];
-            saddr->netmask = 64;
-            memcpy(&saddr->u.sin6_addr, &addrbuf.sa6.sin6_addr, sizeof(struct in6_addr));
+            saddr->u.sa6.port[0] = ntohs(addrbuf.sa6.sin6_port);
+            saddr->u.sa6.port[1] = saddr->u.sa6.port[0];
+            saddr->u.sa6.netmask = 64;
+            memcpy(&saddr->u.sa6.sin6_addr, &addrbuf.sa6.sin6_addr, sizeof(struct in6_addr));
             break;
 #endif /* HAVE_IPV6 */
         default:

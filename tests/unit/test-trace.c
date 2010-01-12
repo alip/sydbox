@@ -778,12 +778,12 @@ static void test17(void)
         /* Check the address. */
         addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, &fd);
         XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
-        XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/dev/null", 10),
-                "wrong address got:`%s' expected:`/dev/null'", addr->u.sun_path);
-        XFAIL_UNLESS(addr->abstract == false, "non-abstract socket marked abstract");
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
         XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family got:%d expected:%d\n", addr->family, AF_UNIX);
-        XFAIL_UNLESS(addr->port[0] == -1, "wrong port got:%d expected:-1\n", addr->port[0]);
+        XFAIL_UNLESS(0 == strncmp(addr->u.saun.sun_path, "/dev/null", 10),
+                "wrong address got:`%s' expected:`/dev/null'", addr->u.saun.sun_path);
+        XFAIL_UNLESS(addr->u.saun.abstract == false, "non-abstract socket marked abstract");
+        XFAIL_UNLESS(addr->u.saun.exact == true, "not exact");
 
         g_free(addr);
         trace_kill(pid);
@@ -854,12 +854,12 @@ static void test18(void)
         /* Check the address. */
         addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, &fd);
         XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
-        XFAIL_UNLESS(0 == strncmp(addr->u.sun_path, "/dev/null", 10),
-                "wrong address got:`%s' expected:`/dev/null'", addr->u.sun_path);
-        XFAIL_UNLESS(addr->abstract == true, "abstract socket marked non-abstract");
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
         XFAIL_UNLESS(addr->family == AF_UNIX, "wrong family got:%d expected:%d\n", addr->family, AF_UNIX);
-        XFAIL_UNLESS(addr->port[0] == -1, "wrong port got:%d expected:-1\n", addr->port[0]);
+        XFAIL_UNLESS(0 == strncmp(addr->u.saun.sun_path, "/dev/null", 10),
+                "wrong address got:`%s' expected:`/dev/null'", addr->u.saun.sun_path);
+        XFAIL_UNLESS(addr->u.saun.abstract == true, "abstract socket marked non-abstract");
+        XFAIL_UNLESS(addr->u.saun.exact == true, "not exact!");
 
         g_free(addr);
         trace_kill(pid);
@@ -930,13 +930,13 @@ static void test19(void)
         /* Check the address. */
         addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, &fd);
         XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
-        XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sin_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-                    g_strerror(errno));
-        XFAIL_UNLESS(0 == strncmp(ip, "127.0.0.1", 10),
-                "wrong address got:`%s' expected:`127.0.0.1'", ip);
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
         XFAIL_UNLESS(addr->family == AF_INET, "wrong family got:%d expected:%d\n", addr->family, AF_INET);
-        XFAIL_UNLESS(addr->port[0] == 23456, "wrong port got:%d expected:23456\n", addr->port[0]);
+        XFAIL_IF(NULL == inet_ntop(AF_INET, &addr->u.sa.sin_addr, ip, sizeof(ip)),
+                "inet_ntop failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(ip, "127.0.0.1", 10),
+                "wrong address got:`%s' expected:`127.0.0.1'", ip);
+        XFAIL_UNLESS(addr->u.sa.port[0] == 23456, "wrong port got:%d expected:23456\n", addr->u.sa.port[0]);
 
         g_free(addr);
         trace_kill(pid);
@@ -1007,14 +1007,14 @@ static void test20(void)
 
         /* Check the address. */
         addr = trace_get_addr(pid, CHECK_PERSONALITY, 1, DECODE_SOCKETCALL, &fd);
-        XFAIL_IF(NULL == ip, "trace_get_addr() failed: %s\n", g_strerror(errno));
-        XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sin6_addr, ip, sizeof(ip)), "inet_ntop failed: %s\n",
-                    g_strerror(errno));
-        XFAIL_UNLESS(0 == strncmp(ip, "::1", 4),
-                "wrong address got:`%s' expected:`::1'", ip);
+        XFAIL_IF(NULL == addr, "trace_get_addr() failed: %s\n", g_strerror(errno));
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
         XFAIL_UNLESS(addr->family == AF_INET6, "wrong family got:%d expected:%d\n", addr->family, AF_INET6);
-        XFAIL_UNLESS(addr->port[0] == 23456, "wrong port got:%d expected:23456\n", addr->port[0]);
+        XFAIL_IF(NULL == inet_ntop(AF_INET6, &addr->u.sa6.sin6_addr, ip, sizeof(ip)),
+                "inet_ntop failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(0 == strncmp(ip, "::1", 4),
+                "wrong address got:`%s' expected:`::1'", ip);
+        XFAIL_UNLESS(addr->u.sa6.port[0] == 23456, "wrong port got:%d expected:23456\n", addr->u.sa6.port[0]);
 
         g_free(addr);
         trace_kill(pid);

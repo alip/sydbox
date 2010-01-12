@@ -41,23 +41,29 @@ bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr
 {
     if (addr1->family != addr2->family)
         return false;
-    else if (addr1->netmask != addr2->netmask)
-        return false;
-    else if (addr1->port[0] != addr2->port[0])
-        return false;
-    else if (addr1->port[1] != addr2->port[1])
-        return false;
 
     switch (addr1->family) {
         case AF_UNIX:
-            if (addr1->abstract != addr2->abstract)
+            if (addr1->u.saun.abstract != addr2->u.saun.abstract)
                 return false;
-            return (0 == strncmp(addr1->u.sun_path, addr2->u.sun_path, PATH_MAX));
+            return (0 == strncmp(addr1->u.saun.sun_path, addr2->u.saun.sun_path, PATH_MAX));
         case AF_INET:
-            return (0 == memcmp(&addr1->u.sin_addr, &addr2->u.sin_addr, sizeof(struct in_addr)));
+            if (addr1->u.sa.netmask != addr2->u.sa.netmask)
+                return false;
+            if (addr1->u.sa.port[0] != addr2->u.sa.port[1])
+                return false;
+            if (addr1->u.sa.port[1] != addr2->u.sa.port[2])
+                return false;
+            return (0 == memcmp(&addr1->u.sa.sin_addr, &addr2->u.sa.sin_addr, sizeof(struct in_addr)));
 #if HAVE_IPV6
         case AF_INET6:
-            return (0 == memcmp(&addr1->u.sin6_addr, &addr2->u.sin6_addr, sizeof(struct in6_addr)));
+            if (addr1->u.sa6.netmask != addr2->u.sa6.netmask)
+                return false;
+            if (addr1->u.sa6.port[0] != addr2->u.sa6.port[1])
+                return false;
+            if (addr1->u.sa6.port[1] != addr2->u.sa6.port[2])
+                return false;
+            return (0 == memcmp(&addr1->u.sa6.sin6_addr, &addr2->u.sa6.sin6_addr, sizeof(struct in6_addr)));
 #endif /* HAVE_IPV6 */
         default:
             g_assert_not_reached();
@@ -71,19 +77,24 @@ struct sydbox_addr *address_dup(const struct sydbox_addr *src)
     dest = g_new(struct sydbox_addr, 1);
 
     dest->family = src->family;
-    dest->netmask = src->netmask;
-    dest->port[0] = src->port[0];
-    dest->port[1] = src->port[1];
     switch (src->family) {
         case AF_UNIX:
-            strncpy(dest->u.sun_path, src->u.sun_path, PATH_MAX);
+            dest->u.saun.abstract = src->u.saun.abstract;
+            dest->u.saun.exact = src->u.saun.exact;
+            strncpy(dest->u.saun.sun_path, src->u.saun.sun_path, PATH_MAX);
             break;
         case AF_INET:
-            memcpy(&dest->u.sin_addr, &src->u.sin_addr, sizeof(struct in_addr));
+            dest->u.sa.netmask = src->u.sa.netmask;
+            dest->u.sa.port[0] = src->u.sa.port[0];
+            dest->u.sa.port[1] = src->u.sa.port[1];
+            memcpy(&dest->u.sa.sin_addr, &src->u.sa.sin_addr, sizeof(struct in_addr));
             break;
 #if HAVE_IPV6
         case AF_INET6:
-            memcpy(&dest->u.sin6_addr, &src->u.sin6_addr, sizeof(struct in6_addr));
+            dest->u.sa6.netmask = src->u.sa6.netmask;
+            dest->u.sa6.port[0] = src->u.sa6.port[0];
+            dest->u.sa6.port[1] = src->u.sa6.port[1];
+            memcpy(&dest->u.sa6.sin6_addr, &src->u.sa6.sin6_addr, sizeof(struct in6_addr));
             break;
 #endif /* HAVE_IPV6 */
         default:
@@ -102,24 +113,28 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
 
     switch (needle->family) {
         case AF_UNIX:
-            if (haystack->abstract != needle->abstract)
+            if (haystack->u.saun.abstract != needle->u.saun.abstract)
                 return false;
-            return (0 == fnmatch(haystack->u.sun_path, needle->u.sun_path, FNM_PATHNAME));
+            if (haystack->u.saun.exact)
+                return (0 == strncmp(haystack->u.saun.sun_path, needle->u.saun.sun_path, PATH_MAX));
+            else
+                return (0 == fnmatch(haystack->u.saun.sun_path, needle->u.saun.sun_path, FNM_PATHNAME));
         case AF_INET:
-            ptr = (unsigned char *)&needle->u.sin_addr;
-            b = (unsigned char *)&haystack->u.sin_addr;
+            n = haystack->u.sa.netmask;
+            ptr = (unsigned char *)&needle->u.sa.sin_addr;
+            b = (unsigned char *)&haystack->u.sa.sin_addr;
             break;
 #if HAVE_IPV6
         case AF_INET6:
-            ptr = (unsigned char *)&needle->u.sin6_addr;
-            b = (unsigned char *)&haystack->u.sin6_addr;
+            n = haystack->u.sa6.netmask;
+            ptr = (unsigned char *)&needle->u.sa6.sin6_addr;
+            b = (unsigned char *)&haystack->u.sa6.sin6_addr;
             break;
 #endif /* HAVE_IPV6 */
         default:
             return false;
     }
 
-    n = haystack->netmask;
     while (n >= 8) {
         if (*ptr != *b)
             return false;
@@ -146,23 +161,21 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
 
     if (0 == strncmp(src, "unix://", 7)) {
         saddr->family = AF_UNIX;
-        saddr->abstract = false;
-        saddr->port[0] = -1;
-        saddr->port[1] = -1;
-        strncpy(saddr->u.sun_path, src + 7, PATH_MAX);
-        saddr->u.sun_path[PATH_MAX - 1] = '\0';
+        saddr->u.saun.abstract = false;
+        saddr->u.saun.exact = false;
+        strncpy(saddr->u.saun.sun_path, src + 7, PATH_MAX);
+        saddr->u.saun.sun_path[PATH_MAX - 1] = '\0';
         if (canlog)
-            g_info("New whitelist address {family=AF_UNIX path=%s}", saddr->u.sun_path);
+            g_info("New whitelist address {family=AF_UNIX path=%s abstract=false}", saddr->u.saun.sun_path);
     }
     else if (0 == strncmp(src, "unix-abstract://", 16)) {
         saddr->family = AF_UNIX;
-        saddr->abstract = true;
-        saddr->port[0] = -1;
-        saddr->port[1] = -1;
-        strncpy(saddr->u.sun_path, src + 16, PATH_MAX);
-        saddr->u.sun_path[PATH_MAX - 1] = '\0';
+        saddr->u.saun.abstract = true;
+        saddr->u.saun.exact = false;
+        strncpy(saddr->u.saun.sun_path, src + 16, PATH_MAX);
+        saddr->u.saun.sun_path[PATH_MAX - 1] = '\0';
         if (canlog)
-            g_info("New whitelist address {family=AF_UNIX path=@%s}", saddr->u.sun_path);
+            g_info("New whitelist address {family=AF_UNIX path=%s abstract=true}", saddr->u.saun.sun_path);
     }
     else if (0 == strncmp(src, "inet://", 7)) {
         saddr->family = AF_INET;
@@ -180,42 +193,42 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
 
         delim = strchr(++port_range, '-');
         if (NULL == delim) {
-            saddr->port[0] = atoi(port_range);
-            saddr->port[1] = saddr->port[0];
+            saddr->u.sa.port[0] = atoi(port_range);
+            saddr->u.sa.port[1] = saddr->u.sa.port[0];
         }
         else {
             port_range[delim - port_range] = '\0';
-            saddr->port[0] = atoi(port_range);
-            saddr->port[1] = atoi(++delim);
+            saddr->u.sa.port[0] = atoi(port_range);
+            saddr->u.sa.port[1] = atoi(++delim);
         }
 
         /* Find out netmask */
         netmask = strrchr(addr, '/');
         if (netmask == NULL) {
             /* Netmask not specified, figure it out. */
-            saddr->netmask = 8;
+            saddr->u.sa.netmask = 8;
             p = addr;
             while (*p != '\0') {
                 if (*p++ == '.') {
                     if (*p == '\0')
                         break;
-                    saddr->netmask += 8;
+                    saddr->u.sa.netmask += 8;
                 }
             }
         }
         else {
-            saddr->netmask = atoi(netmask + 1);
+            saddr->u.sa.netmask = atoi(netmask + 1);
             addr[netmask - addr] = '\0';
         }
 
-        if (0 >= inet_pton(AF_INET, addr, &saddr->u.sin_addr)) {
+        if (0 >= inet_pton(AF_INET, addr, &saddr->u.sa.sin_addr)) {
             g_free(addr);
             g_free(saddr);
             return NULL;
         }
         if (canlog)
             g_info("New whitelist address {family=AF_INET addr=%s netmask=%d port_range=%d-%d}",
-                    addr, saddr->netmask, saddr->port[0], saddr->port[1]);
+                    addr, saddr->u.sa.netmask, saddr->u.sa.port[0], saddr->u.sa.port[1]);
         g_free(addr);
     }
     else if (0 == strncmp(src, "inet6://", 8)) {
@@ -235,20 +248,20 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
 
         delim = strchr(++port_range, '-');
         if (NULL == delim) {
-            saddr->port[0] = atoi(port_range);
-            saddr->port[1] = saddr->port[0];
+            saddr->u.sa6.port[0] = atoi(port_range);
+            saddr->u.sa6.port[1] = saddr->u.sa6.port[0];
         }
         else {
             port_range[delim - port_range] = '\0';
-            saddr->port[0] = atoi(port_range);
-            saddr->port[1] = atoi(++delim);
+            saddr->u.sa6.port[0] = atoi(port_range);
+            saddr->u.sa6.port[1] = atoi(++delim);
         }
 
         /* Find out netmask */
         netmask = strrchr(addr, '/');
         if (netmask == NULL) {
             /* Netmask not give, figure it out */
-            saddr->netmask = 16;
+            saddr->u.sa6.netmask = 16;
             p = addr;
             while (*p != '\0') {
                 if (*p++ == ':') {
@@ -257,28 +270,28 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
                      */
                     if (*p == ':') {
                         if (p[1] != '\0')
-                            saddr->netmask = sizeof(struct in6_addr) * 8;
+                            saddr->u.sa6.netmask = sizeof(struct in6_addr) * 8;
                         break;
                     }
                     if (*p == '\0')
                         break;
-                    saddr->netmask += 16;
+                    saddr->u.sa6.netmask += 16;
                 }
             }
         }
         else {
-            saddr->netmask = atoi(netmask + 1);
+            saddr->u.sa6.netmask = atoi(netmask + 1);
             addr[netmask - addr] = '\0';
         }
 
-        if (0 >= inet_pton(AF_INET6, addr, &saddr->u.sin6_addr)) {
+        if (0 >= inet_pton(AF_INET6, addr, &saddr->u.sa6.sin6_addr)) {
             g_free(addr);
             g_free(saddr);
             return NULL;
         }
         if (canlog)
             g_info("New whitelist address {family=AF_INET6 addr=%s netmask=%d port_range=%d-%d}",
-                    addr, saddr->netmask, saddr->port[0], saddr->port[1]);
+                    addr, saddr->u.sa6.netmask, saddr->u.sa6.port[0], saddr->u.sa6.port[1]);
         g_free(addr);
 #else
         g_warning("inet6:// not supported (no IPV6 support)");
