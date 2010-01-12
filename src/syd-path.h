@@ -72,9 +72,9 @@
 #define CMD_NET_UNWHITELIST_BIND        CMD_PATH"net/unwhitelist/bind/"
 #define CMD_NET_UNWHITELIST_BIND_LEN    (CMD_PATH_LEN + 21)
 #define CMD_NET_WHITELIST_CONNECT       CMD_PATH"net/whitelist/connect/"
-#define CMD_NET_WHITELIST_CONNECT_LEN   (CMD_PATH_LEN + 19)
+#define CMD_NET_WHITELIST_CONNECT_LEN   (CMD_PATH_LEN + 22)
 #define CMD_NET_UNWHITELIST_CONNECT     CMD_PATH"net/unwhitelist/connect/"
-#define CMD_NET_UNWHITELIST_CONNECT_LEN (CMD_PATH_LEN + 21)
+#define CMD_NET_UNWHITELIST_CONNECT_LEN (CMD_PATH_LEN + 24)
 
 bool path_magic_dir(const char *path);
 
