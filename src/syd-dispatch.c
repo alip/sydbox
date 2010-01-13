@@ -116,12 +116,12 @@ bool dispatch_maybind(int personality G_GNUC_UNUSED, int sno)
 #endif
 }
 
-bool dispatch_maylisten(int personality G_GNUC_UNUSED, int sno)
+bool dispatch_maygetsockname(int personality G_GNUC_UNUSED, int sno)
 {
 #if defined(I386) || defined(POWERPC)
     return (__NR_socketcall == sno);
 #elif defined(IA64)
-    return (__NR_listen == sno);
+    return (__NR_getsockname == sno);
 #else
 #error unsupported architecture
 #endif

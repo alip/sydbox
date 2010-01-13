@@ -37,7 +37,7 @@ const char *dispatch_name(int personality, int sno);
 const char *dispatch_mode(int personality);
 bool dispatch_chdir(int personality, int sno);
 bool dispatch_maybind(int personality, int sno);
-bool dispatch_maylisten(int personality, int sno);
+bool dispatch_maygetsockname(int personality, int sno);
 #elif defined(X86_64)
 void dispatch_init32(void);
 void dispatch_init64(void);
@@ -51,8 +51,8 @@ bool dispatch_chdir32(int sno);
 bool dispatch_chdir64(int sno);
 bool dispatch_maybind32(int sno);
 bool dispatch_maybind64(int sno);
-bool dispatch_maylisten32(int sno);
-bool dispatch_maylisten64(int sno);
+bool dispatch_maygetsockname32(int sno);
+bool dispatch_maygetsockname64(int sno);
 
 #define dispatch_init()     \
     do {                    \
@@ -74,8 +74,8 @@ bool dispatch_maylisten64(int sno);
     ((personality) == 0) ? dispatch_chdir32((sno)) : dispatch_chdir64((sno))
 #define dispatch_maybind(personality, sno) \
     ((personality) == 0) ? dispatch_maybind32((sno)) : dispatch_maybind64((sno))
-#define dispatch_maylisten(personality, sno) \
-    ((personality) == 0) ? dispatch_maylisten32((sno)) : dispatch_maylisten64((sno))
+#define dispatch_maygetsockname(personality, sno) \
+    ((personality) == 0) ? dispatch_maygetsockname32((sno)) : dispatch_maygetsockname64((sno))
 
 #else
 #error unsupported architecture

@@ -91,8 +91,8 @@ inline bool dispatch_maybind64(int sno)
     return (__NR_bind == sno);
 }
 
-inline bool dispatch_maylisten64(int sno)
+inline bool dispatch_maygetsockname64(int sno)
 {
-    return (__NR_listen == sno);
+    return (__NR_getsockname == sno);
 }
 

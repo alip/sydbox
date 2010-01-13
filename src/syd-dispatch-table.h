@@ -90,8 +90,8 @@ static const struct syscall_def {
 #if defined(__NR_bind)
     {__NR_bind,         BIND_CALL},
 #endif
-#if defined(__NR_listen)
-    {__NR_listen,       LISTEN_CALL},
+#if defined(__NR_getsockname)
+    {__NR_getsockname,  GETSOCKNAME_CALL},
 #endif
 #if defined(__NR_sendto)
     {__NR_sendto,       SENDTO_CALL},

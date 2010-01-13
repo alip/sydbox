@@ -91,7 +91,7 @@ inline bool dispatch_maybind32(int sno)
     return (__NR_socketcall == sno);
 }
 
-inline bool dispatch_maylisten32(int sno)
+inline bool dispatch_maygetsockname32(int sno)
 {
     return (__NR_socketcall == sno);
 }

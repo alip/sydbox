@@ -1144,9 +1144,9 @@ static int syscall_handle_bind(struct tchild *child, int flags)
 }
 
 /**
- * listen(2) handler
+ * getsockname(2) handler
  */
-static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUSED int flags)
+static int syscall_handle_getsockname(struct tchild *child, int flags)
 {
     bool ret;
     int subcall;
@@ -1167,12 +1167,12 @@ static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUS
             // Child is dead.
             return -1;
         }
-        if (subcall != SOCKET_SUBCALL_LISTEN)
+        if (subcall != SOCKET_SUBCALL_GETSOCKNAME)
             return 0;
 
         ret = trace_get_fd(child->pid, child->personality, true, &fd);
     }
-    else if (flags & LISTEN_CALL)
+    else if (flags & GETSOCKNAME_CALL)
         ret = trace_get_fd(child->pid, child->personality, false, &fd);
     else
         g_assert_not_reached();
@@ -1187,7 +1187,7 @@ static int syscall_handle_listen(G_GNUC_UNUSED struct tchild *child, G_GNUC_UNUS
 
     addr = g_hash_table_lookup(child->bindzero, GINT_TO_POINTER(fd));
     if (addr == NULL) {
-        g_debug("No bind() call received before listen(), ignoring");
+        g_debug("No bind() call received before getsockname(), ignoring");
         return 0;
     }
 
@@ -1353,9 +1353,9 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                 if (0 > syscall_handle_bind(child, flags))
                     return context_remove_child(ctx, child->pid);
             }
-            if (g_hash_table_size(child->bindzero) > 0 && dispatch_maylisten(child->personality, sno)) {
+            if (g_hash_table_size(child->bindzero) > 0 && dispatch_maygetsockname(child->personality, sno)) {
                 flags = dispatch_lookup(child->personality, sno);
-                if (0 > syscall_handle_listen(child, flags))
+                if (0 > syscall_handle_getsockname(child, flags))
                     return context_remove_child(ctx, child->pid);
             }
         }

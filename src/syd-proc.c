@@ -105,39 +105,53 @@ static bool proc_lookup_inode(pid_t pid, int fd, unsigned *inode)
     return true;
 }
 
-int proc_lookup_port(pid_t pid, int fd, int af)
+static bool proc_lookup_port_internal(const char *path, unsigned myinode, unsigned *localport)
 {
-    unsigned inode, myinode, localport;
+    unsigned inode;
     char buf[4096];
     FILE *pfd;
+
+    pfd = fopen(path, "r");
+    if (NULL == pfd)
+        return false;
+
+    while (fgets(buf, 4096, pfd) != NULL) {
+        if (2 != sscanf(buf, "%*u: %*X:%x %*X:%*x %*x %*X:%*X %*x:%*X %*x %*u %*u %u",
+                    localport, &inode))
+            continue;
+        if (inode == myinode) {
+            fclose(pfd);
+            return true;
+        }
+    }
+    fclose(pfd);
+    return false;
+}
+
+int proc_lookup_port(pid_t pid, int fd, int af)
+{
+    unsigned myinode, localport;
 
     if (!proc_lookup_inode(pid, fd, &myinode))
         return -1;
 
-    if (af == AF_INET)
-        pfd = fopen("/proc/net/tcp", "r");
-#if HAVE_IPV6
-    else if (af == AF_INET6)
-        pfd = fopen("/proc/net/tcp6", "r");
-#endif /* HAVE_IPV6 */
-    else {
-        errno = EINVAL;
-        return -1;
-    }
-
-    if (G_UNLIKELY(NULL == pfd))
-        return -1;
-
-    while (fgets(buf, 4096, pfd) != NULL) {
-        if (2 != sscanf(buf, "%*u: %*X:%x %*X:%*x %*x %*X:%*X %*x:%*X %*x %*u %*u %u",
-                    &localport, &inode))
-            continue;
-        if (inode == myinode) {
-            fclose(pfd);
+    if (af == AF_INET) {
+        if (proc_lookup_port_internal("/proc/net/tcp", myinode, &localport))
             return localport;
-        }
+        if (proc_lookup_port_internal("/proc/net/udp", myinode, &localport))
+            return localport;
+        return -1;
     }
-    fclose(pfd);
+#if HAVE_IPV6
+    else if (af == AF_INET6) {
+        if (proc_lookup_port_internal("/proc/net/tcp6", myinode, &localport))
+            return localport;
+        if (proc_lookup_port_internal("/proc/net/udp6", myinode, &localport))
+            return localport;
+        return -1;
+    }
+#endif /* HAVE_IPV6 */
+    errno = EINVAL;
     return -1;
 }
 
