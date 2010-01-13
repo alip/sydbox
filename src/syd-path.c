@@ -56,127 +56,127 @@ static char *shell_expand(const char * const str)
 
 inline bool path_magic_dir(const char *path)
 {
-    return (0 == strncmp(path, CMD_PATH, CMD_PATH_LEN - 1));
+    return (0 == strncmp(path, CMD_PATH, sizeof(CMD_PATH) - 2));
 }
 
 inline bool path_magic_on(const char *path)
 {
-    return (0 == strncmp(path, CMD_ON, CMD_ON_LEN));
+    return (0 == strncmp(path, CMD_ON, sizeof(CMD_ON)));
 }
 
 inline bool path_magic_off(const char *path)
 {
-    return  (0 == strncmp(path, CMD_OFF, CMD_OFF_LEN));
+    return  (0 == strncmp(path, CMD_OFF, sizeof(CMD_OFF)));
 }
 
 inline bool path_magic_toggle(const char *path)
 {
-    return (0 == strncmp(path, CMD_TOGGLE, CMD_TOGGLE_LEN));
+    return (0 == strncmp(path, CMD_TOGGLE, sizeof(CMD_TOGGLE)));
 }
 
 inline bool path_magic_enabled(const char *path)
 {
-    return (0 == strncmp(path, CMD_ENABLED, CMD_ENABLED_LEN));
+    return (0 == strncmp(path, CMD_ENABLED, sizeof(CMD_ENABLED)));
 }
 
 inline bool path_magic_lock(const char *path)
 {
-    return (0 == strncmp(path, CMD_LOCK, CMD_LOCK_LEN));
+    return (0 == strncmp(path, CMD_LOCK, sizeof(CMD_LOCK)));
 }
 
 inline bool path_magic_exec_lock(const char *path)
 {
-    return (0 == strncmp(path, CMD_EXEC_LOCK, CMD_EXEC_LOCK_LEN));
+    return (0 == strncmp(path, CMD_EXEC_LOCK, sizeof(CMD_EXEC_LOCK)));
 }
 
 inline bool path_magic_wait_all(const char *path)
 {
-    return (0 == strncmp(path, CMD_WAIT_ALL, CMD_WAIT_ALL_LEN));
+    return (0 == strncmp(path, CMD_WAIT_ALL, sizeof(CMD_WAIT_ALL)));
 }
 
 inline bool path_magic_wait_eldest(const char *path)
 {
-    return (0 == strncmp(path, CMD_WAIT_ELDEST, CMD_WAIT_ELDEST_LEN));
+    return (0 == strncmp(path, CMD_WAIT_ELDEST, sizeof(CMD_WAIT_ELDEST)));
 }
 
 inline bool path_magic_wrap_lstat(const char *path)
 {
-    return (0 == strncmp(path, CMD_WRAP_LSTAT, CMD_WRAP_LSTAT_LEN));
+    return (0 == strncmp(path, CMD_WRAP_LSTAT, sizeof(CMD_WRAP_LSTAT)));
 }
 
 inline bool path_magic_nowrap_lstat(const char *path)
 {
-    return (0 == strncmp(path, CMD_NOWRAP_LSTAT, CMD_NOWRAP_LSTAT_LEN));
+    return (0 == strncmp(path, CMD_NOWRAP_LSTAT, sizeof(CMD_NOWRAP_LSTAT)));
 }
 
 inline bool path_magic_write(const char *path)
 {
-    return (0 == strncmp(path, CMD_WRITE, CMD_WRITE_LEN));
+    return (0 == strncmp(path, CMD_WRITE, sizeof(CMD_WRITE) - 1));
 }
 
 inline bool path_magic_rmwrite(const char *path)
 {
-    return (0 == strncmp(path, CMD_RMWRITE, CMD_RMWRITE_LEN));
+    return (0 == strncmp(path, CMD_RMWRITE, sizeof(CMD_RMWRITE) - 1));
 }
 
 inline bool path_magic_sandbox_exec(const char *path)
 {
-    return (0 == strncmp(path, CMD_SANDBOX_EXEC, CMD_SANDBOX_EXEC_LEN));
+    return (0 == strncmp(path, CMD_SANDBOX_EXEC, sizeof(CMD_SANDBOX_EXEC)));
 }
 
 inline bool path_magic_sandunbox_exec(const char *path)
 {
-    return (0 == strncmp(path, CMD_SANDUNBOX_EXEC, CMD_SANDUNBOX_EXEC_LEN));
+    return (0 == strncmp(path, CMD_SANDUNBOX_EXEC, sizeof(CMD_SANDUNBOX_EXEC)));
 }
 
 inline bool path_magic_addexec(const char *path)
 {
-    return (0 == strncmp(path, CMD_ADDEXEC, CMD_ADDEXEC_LEN));
+    return (0 == strncmp(path, CMD_ADDEXEC, sizeof(CMD_ADDEXEC) - 1));
 }
 
 inline bool path_magic_rmexec(const char *path)
 {
-    return (0 == strncmp(path, CMD_RMEXEC, CMD_RMEXEC_LEN));
+    return (0 == strncmp(path, CMD_RMEXEC, sizeof(CMD_RMEXEC) - 1));
 }
 
 inline bool path_magic_sandbox_net(const char *path)
 {
-    return (0 == strncmp(path, CMD_SANDBOX_NET, CMD_SANDBOX_NET_LEN));
+    return (0 == strncmp(path, CMD_SANDBOX_NET, sizeof(CMD_SANDBOX_NET)));
 }
 
 inline bool path_magic_sandunbox_net(const char *path)
 {
-    return (0 == strncmp(path, CMD_SANDUNBOX_NET, CMD_SANDUNBOX_NET_LEN));
+    return (0 == strncmp(path, CMD_SANDUNBOX_NET, sizeof(CMD_SANDUNBOX_NET)));
 }
 
 inline bool path_magic_addfilter(const char *path)
 {
-    return (0 == strncmp(path, CMD_ADDFILTER, CMD_ADDFILTER_LEN));
+    return (0 == strncmp(path, CMD_ADDFILTER, sizeof(CMD_ADDFILTER) - 1));
 }
 
 inline bool path_magic_rmfilter(const char *path)
 {
-    return (0 == strncmp(path, CMD_RMFILTER, CMD_RMFILTER_LEN));
+    return (0 == strncmp(path, CMD_RMFILTER, sizeof(CMD_RMFILTER) - 1));
 }
 
 inline bool path_magic_net_whitelist_bind(const char *path)
 {
-    return (0 == strncmp(path, CMD_NET_WHITELIST_BIND, CMD_NET_WHITELIST_BIND_LEN));
+    return (0 == strncmp(path, CMD_NET_WHITELIST_BIND, sizeof(CMD_NET_WHITELIST_BIND) - 1));
 }
 
 inline bool path_magic_net_unwhitelist_bind(const char *path)
 {
-    return (0 == strncmp(path, CMD_NET_UNWHITELIST_BIND, CMD_NET_UNWHITELIST_BIND_LEN));
+    return (0 == strncmp(path, CMD_NET_UNWHITELIST_BIND, sizeof(CMD_NET_UNWHITELIST_BIND) - 1));
 }
 
 inline bool path_magic_net_whitelist_connect(const char *path)
 {
-    return (0 == strncmp(path, CMD_NET_WHITELIST_CONNECT, CMD_NET_WHITELIST_CONNECT_LEN));
+    return (0 == strncmp(path, CMD_NET_WHITELIST_CONNECT, sizeof(CMD_NET_WHITELIST_CONNECT) - 1));
 }
 
 inline bool path_magic_net_unwhitelist_connect(const char *path)
 {
-    return (0 == strncmp(path, CMD_NET_UNWHITELIST_CONNECT, CMD_NET_UNWHITELIST_CONNECT_LEN));
+    return (0 == strncmp(path, CMD_NET_UNWHITELIST_CONNECT, sizeof(CMD_NET_UNWHITELIST_CONNECT) - 1));
 }
 
 int pathnode_new(GSList **pathlist, const char *path, int sanitize)

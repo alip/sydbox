@@ -26,55 +26,30 @@
 #include <glib.h>
 
 #define CMD_PATH                        "/dev/sydbox/"
-#define CMD_PATH_LEN                    12
 #define CMD_ON                          CMD_PATH"on"
-#define CMD_ON_LEN                      (CMD_PATH_LEN + 3)
 #define CMD_OFF                         CMD_PATH"off"
-#define CMD_OFF_LEN                     (CMD_PATH_LEN + 4)
 #define CMD_TOGGLE                      CMD_PATH"toggle"
-#define CMD_TOGGLE_LEN                  (CMD_PATH_LEN + 7)
 #define CMD_ENABLED                     CMD_PATH"enabled"
-#define CMD_ENABLED_LEN                 (CMD_PATH_LEN + 8)
 #define CMD_LOCK                        CMD_PATH"lock"
-#define CMD_LOCK_LEN                    (CMD_PATH_LEN + 5)
 #define CMD_EXEC_LOCK                   CMD_PATH"exec_lock"
-#define CMD_EXEC_LOCK_LEN               (CMD_PATH_LEN + 10)
 #define CMD_WAIT_ALL                    CMD_PATH"wait/all"
-#define CMD_WAIT_ALL_LEN                (CMD_PATH_LEN + 9)
 #define CMD_WAIT_ELDEST                 CMD_PATH"wait/eldest"
-#define CMD_WAIT_ELDEST_LEN             (CMD_PATH_LEN + 12)
 #define CMD_WRAP_LSTAT                  CMD_PATH"wrap/lstat"
-#define CMD_WRAP_LSTAT_LEN              (CMD_PATH_LEN + 11)
 #define CMD_NOWRAP_LSTAT                CMD_PATH"nowrap/lstat"
-#define CMD_NOWRAP_LSTAT_LEN            (CMD_PATH_LEN + 13)
 #define CMD_WRITE                       CMD_PATH"write/"
-#define CMD_WRITE_LEN                   (CMD_PATH_LEN + 6)
 #define CMD_RMWRITE                     CMD_PATH"unwrite/"
-#define CMD_RMWRITE_LEN                 (CMD_PATH_LEN + 8)
 #define CMD_SANDBOX_EXEC                CMD_PATH"sandbox/exec"
-#define CMD_SANDBOX_EXEC_LEN            (CMD_PATH_LEN + 13)
 #define CMD_SANDUNBOX_EXEC              CMD_PATH"sandunbox/exec"
-#define CMD_SANDUNBOX_EXEC_LEN          (CMD_PATH_LEN + 15)
 #define CMD_ADDEXEC                     CMD_PATH"addexec/"
-#define CMD_ADDEXEC_LEN                 (CMD_PATH_LEN + 8)
 #define CMD_RMEXEC                      CMD_PATH"rmexec/"
-#define CMD_RMEXEC_LEN                  (CMD_PATH_LEN + 7)
-#define CMD_SANDBOX_NET                 (CMD_PATH"sandbox/net")
-#define CMD_SANDBOX_NET_LEN             (CMD_PATH_LEN + 12)
-#define CMD_SANDUNBOX_NET               (CMD_PATH"sandunbox/net")
-#define CMD_SANDUNBOX_NET_LEN           (CMD_PATH_LEN + 14)
+#define CMD_SANDBOX_NET                 CMD_PATH"sandbox/net"
+#define CMD_SANDUNBOX_NET               CMD_PATH"sandunbox/net"
 #define CMD_ADDFILTER                   CMD_PATH"addfilter/"
-#define CMD_ADDFILTER_LEN               (CMD_PATH_LEN + 10)
 #define CMD_RMFILTER                    CMD_PATH"rmfilter/"
-#define CMD_RMFILTER_LEN                (CMD_PATH_LEN + 9)
 #define CMD_NET_WHITELIST_BIND          CMD_PATH"net/whitelist/bind/"
-#define CMD_NET_WHITELIST_BIND_LEN      (CMD_PATH_LEN + 19)
 #define CMD_NET_UNWHITELIST_BIND        CMD_PATH"net/unwhitelist/bind/"
-#define CMD_NET_UNWHITELIST_BIND_LEN    (CMD_PATH_LEN + 21)
 #define CMD_NET_WHITELIST_CONNECT       CMD_PATH"net/whitelist/connect/"
-#define CMD_NET_WHITELIST_CONNECT_LEN   (CMD_PATH_LEN + 22)
 #define CMD_NET_UNWHITELIST_CONNECT     CMD_PATH"net/unwhitelist/connect/"
-#define CMD_NET_UNWHITELIST_CONNECT_LEN (CMD_PATH_LEN + 24)
 
 bool path_magic_dir(const char *path);
 

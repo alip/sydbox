@@ -352,13 +352,13 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     }
     else if (path_magic_write(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_WRITE_LEN;
+        rpath = path + sizeof(CMD_WRITE) - 1;
         pathnode_new(&(child->sandbox->write_prefixes), rpath, 1);
         g_info("approved addwrite(\"%s\") for child %i", rpath, child->pid);
     }
     else if (path_magic_rmwrite(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_RMWRITE_LEN;
+        rpath = path + sizeof(CMD_RMWRITE) - 1;
         rpath_sanitized = sydbox_compress_path(rpath);
         if (NULL != child->sandbox->write_prefixes)
             pathnode_delete(&(child->sandbox->write_prefixes), rpath_sanitized);
@@ -377,13 +377,13 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     }
     else if (path_magic_addexec(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_ADDEXEC_LEN;
+        rpath = path + sizeof(CMD_ADDEXEC) - 1;
         pathnode_new(&(child->sandbox->exec_prefixes), rpath, 1);
         g_info("approved addexec(\"%s\") for child %i", rpath, child->pid);
     }
     else if (path_magic_rmexec(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_RMEXEC_LEN;
+        rpath = path + sizeof(CMD_RMEXEC) - 1;
         rpath_sanitized = sydbox_compress_path(rpath);
         if (NULL != child->sandbox->exec_prefixes)
             pathnode_delete(&(child->sandbox->exec_prefixes), rpath_sanitized);
@@ -402,19 +402,19 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     }
     else if (path_magic_addfilter(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_ADDFILTER_LEN;
+        rpath = path + sizeof(CMD_ADDFILTER) - 1;
         sydbox_config_addfilter(rpath);
         g_info("approved addfilter(\"%s\") for child %i", rpath, child->pid);
     }
     else if (path_magic_rmfilter(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_RMFILTER_LEN;
+        rpath = path + sizeof(CMD_RMFILTER) - 1;
         sydbox_config_rmfilter(rpath);
         g_info("approved rmfilter(\"%s\") for child %i", rpath, child->pid);
     }
     else if (path_magic_net_whitelist_bind(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_NET_WHITELIST_BIND_LEN;
+        rpath = path + sizeof(CMD_NET_WHITELIST_BIND) - 1;
         if ((addr = address_from_string(rpath, true)) == NULL)
             g_warning("malformed whitelist address `%s'", rpath);
         else {
@@ -425,7 +425,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     }
     else if (path_magic_net_unwhitelist_bind(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_NET_UNWHITELIST_BIND_LEN;
+        rpath = path + sizeof(CMD_NET_UNWHITELIST_BIND) - 1;
         if ((addr = address_from_string(rpath, false)) == NULL)
             g_warning("malformed whitelist address `%s'", rpath);
         else {
@@ -444,7 +444,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     }
     else if (path_magic_net_whitelist_connect(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_NET_WHITELIST_CONNECT_LEN;
+        rpath = path + sizeof(CMD_NET_WHITELIST_CONNECT) - 1;
         if ((addr = address_from_string(rpath, true)) == NULL)
             g_warning("malformed whitelist address `%s'", rpath);
         else {
@@ -455,7 +455,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     }
     else if (path_magic_net_unwhitelist_connect(path)) {
         data->result = RS_MAGIC;
-        rpath = path + CMD_NET_UNWHITELIST_CONNECT_LEN;
+        rpath = path + sizeof(CMD_NET_UNWHITELIST_CONNECT) - 1;
         if ((addr = address_from_string(rpath, false)) == NULL)
             g_warning("malformed whitelist address `%s'", rpath);
         else {
