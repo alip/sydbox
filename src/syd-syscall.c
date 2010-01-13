@@ -927,14 +927,9 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
     }
 }
 
-static void syscall_check_finalize(context_t *ctx, struct tchild *child, struct checkdata *data)
+static void syscall_check_finalize(G_GNUC_UNUSED context_t *ctx, struct tchild *child, struct checkdata *data)
 {
     g_debug("ending check for system call %lu(%s), child %i", sno, sname, child->pid);
-
-    if (ctx->before_initial_execve && sflags & EXEC_CALL) {
-        g_debug("setting before_initial_execve flag to off");
-        ctx->before_initial_execve = false;
-    }
 
     for (unsigned int i = 0; i < 2; i++)
         g_free(data->dirfdlist[i]);

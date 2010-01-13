@@ -206,6 +206,12 @@ int trace_loop(context_t *ctx)
                     g_info("access to magic commands is now denied for child %i", child->pid);
                     child->sandbox->lock = LOCK_SET;
                 }
+                // Check for before_initial_execve
+                if (G_UNLIKELY(ctx->before_initial_execve)) {
+                    g_info("setting before_initial_execve to false");
+                    ctx->before_initial_execve = false;
+                }
+
                 // Update child's personality
                 child->personality = trace_personality(child->pid);
                 if (0 > child->personality) {
