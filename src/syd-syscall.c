@@ -1148,11 +1148,27 @@ static int syscall_handle_bind(struct tchild *child, int flags)
  */
 static int syscall_handle_getsockname(struct tchild *child, int flags)
 {
-    bool ret;
     int subcall;
-    long fd;
+    long fd, retval;
     GSList *whitelist;
-    struct sydbox_addr *addr;
+    struct sydbox_addr *addr, *addr_new;
+
+    if (0 > trace_get_return(child->pid, &retval)) {
+        if (G_UNLIKELY(ESRCH != errno)) {
+            /* Error getting return code using ptrace()
+             * Silently ignore it.
+             */
+            g_debug("failed to get return code: %s", g_strerror(errno));
+            return 0;
+        }
+        // Child is dead.
+        return -1;
+    }
+
+    if (0 != retval) {
+        /* getsockname() call failed, ignore it */
+        return 0;
+    }
 
     if (flags & DECODE_SOCKETCALL) {
         subcall = trace_decode_socketcall(child->pid, child->personality);
@@ -1161,7 +1177,7 @@ static int syscall_handle_getsockname(struct tchild *child, int flags)
                 /* Error getting socket subcall using ptrace()
                  * Silently ignore it.
                  */
-                g_debug("Failed to decode socketcall: %s", g_strerror(errno));
+                g_debug("failed to decode socketcall: %s", g_strerror(errno));
                 return 0;
             }
             // Child is dead.
@@ -1170,18 +1186,18 @@ static int syscall_handle_getsockname(struct tchild *child, int flags)
         if (subcall != SOCKET_SUBCALL_GETSOCKNAME)
             return 0;
 
-        ret = trace_get_fd(child->pid, child->personality, true, &fd);
+        addr_new = trace_get_addr(child->pid, child->personality, 1, true, &fd);
     }
     else if (flags & GETSOCKNAME_CALL)
-        ret = trace_get_fd(child->pid, child->personality, false, &fd);
+        addr_new = trace_get_addr(child->pid, child->personality, 1, false, &fd);
     else
         g_assert_not_reached();
 
-    if (!ret) {
+    if (addr_new == NULL) {
         /* Error getting fd using ptrace()
          * Silently ignore it.
          */
-        g_debug("Failed to get file descriptor: %s", g_strerror(errno));
+        g_debug("failed to get address: %s", g_strerror(errno));
         return 0;
     }
 
@@ -1193,29 +1209,24 @@ static int syscall_handle_getsockname(struct tchild *child, int flags)
 
     switch (addr->family) {
         case AF_INET:
-            addr->u.sa.port[0] = proc_lookup_port(child->pid, fd, addr->family);
-            addr->u.sa.port[1] = addr->u.sa.port[0];
-            ret = (addr->u.sa.port[0] > 0);
+            addr->u.sa.port[0] = addr_new->u.sa.port[0];
+            addr->u.sa.port[1] = addr_new->u.sa.port[0];
             break;
 #if HAVE_IPV6
         case AF_INET6:
-            addr->u.sa6.port[0] = proc_lookup_port(child->pid, fd, addr->family);
-            addr->u.sa6.port[1] = addr->u.sa6.port[0];
-            ret = (addr->u.sa6.port[0] > 0);
+            addr->u.sa6.port[0] = addr_new->u.sa6.port[0];
+            addr->u.sa6.port[1] = addr_new->u.sa6.port[1];
             break;
 #endif /* HAVE_IPV6 */
         default:
             g_assert_not_reached();
     }
 
-    if (ret) {
-        whitelist = sydbox_config_get_network_whitelist_connect();
-        whitelist = g_slist_prepend(whitelist, address_dup(addr));
-        sydbox_config_set_network_whitelist_connect(whitelist);
-    }
-    else
-        g_debug("Looking up fd:%ld failed: %s", fd, g_strerror(errno));
+    whitelist = sydbox_config_get_network_whitelist_connect();
+    whitelist = g_slist_prepend(whitelist, address_dup(addr));
+    sydbox_config_set_network_whitelist_connect(whitelist);
 
+    g_free(addr_new);
     g_hash_table_remove(child->bindzero, GINT_TO_POINTER(fd));
     return 0;
 }

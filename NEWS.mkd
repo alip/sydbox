@@ -3,6 +3,8 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* When bind's port argument is zero, instead of looking up the port from
+  /proc/net/tcp{,6} intercept getsockname() at exit and get the address.
 * Fix network sandboxing for UDP sockets
 
 ### 0.6.1
