@@ -100,12 +100,17 @@ inline const char *dispatch_mode(int personality G_GNUC_UNUSED)
     return mode;
 }
 
-bool dispatch_chdir(int personality G_GNUC_UNUSED, int sno)
+inline bool dispatch_chdir(int personality G_GNUC_UNUSED, int sno)
 {
     return IS_CHDIR(sno);
 }
 
-bool dispatch_maybind(int personality G_GNUC_UNUSED, int sno)
+inline bool dispatch_dup(int personality G_GNUC_UNUSED, int sno)
+{
+    return IS_DUP(sno);
+}
+
+inline bool dispatch_maybind(int personality G_GNUC_UNUSED, int sno)
 {
 #if defined(I386) || defined(POWERPC)
     return (__NR_socketcall == sno);
@@ -116,7 +121,7 @@ bool dispatch_maybind(int personality G_GNUC_UNUSED, int sno)
 #endif
 }
 
-bool dispatch_maygetsockname(int personality G_GNUC_UNUSED, int sno)
+inline bool dispatch_maygetsockname(int personality G_GNUC_UNUSED, int sno)
 {
 #if defined(I386) || defined(POWERPC)
     return (__NR_socketcall == sno);

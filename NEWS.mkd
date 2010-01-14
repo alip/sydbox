@@ -3,6 +3,9 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Intercept dup() and dup2() calls to see if a socket descriptor we care about
+  has been duplicated.
+
 ### 0.6.2
 * When bind's port argument is zero, instead of looking up the port from
   /proc/net/tcp{,6} intercept getsockname() at exit and get the address.

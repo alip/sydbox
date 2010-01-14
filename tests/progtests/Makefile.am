@@ -22,6 +22,7 @@ TESTS = t01-chmod.bash t02-chown.bash t03-open.bash t04-creat.bash t05-lchown.ba
 if WANT_IPV6
 TESTS += t47-sandbox-network-ipv6.bash
 endif
+TESTS+= t48-sandbox-network-bindzero.bash
 
 EXTRA_DIST= $(TESTS)
 
@@ -47,6 +48,7 @@ check_PROGRAMS = test-lib.bash t01_chmod t01_chmod_toolong t02_chown t02_chown_t
 if WANT_IPV6
 check_PROGRAMS+= t47_sandbox_network_bind_ipv6 t47_sandbox_network_bind_ipv6_deny
 endif
+check_PROGRAMS+= t48_sandbox_network_bindzero_connect_tcp t48_sandbox_network_bindzero_dup_connect_tcp
 
 test_lib_bash_SOURCES= test-lib.bash.in
 
