@@ -22,5 +22,18 @@ if [[ 0 != $? ]]; then
 fi
 end_test
 
-start_test "t48-sandbox-network-bindzero-dup2 (TODO)"
+start_test "t48-sandbox-network-bindzero-dup2"
+SYDBOX_NET_WHITELIST_BIND=inet://127.0.0.1@0 \
+sydbox -N -B -- ./t48_sandbox_network_bindzero_dup2_connect_tcp 127.0.0.1
+if [[ 0 != $? ]]; then
+    die "Failed to whitelist bindzero address after dup2()"
+fi
+end_test
+
+start_test "t48-sandbox-network-bindzero-dup3"
+SYDBOX_NET_WHITELIST_BIND=inet://127.0.0.1@0 \
+sydbox -N -B -- ./t48_sandbox_network_bindzero_dup3_connect_tcp 127.0.0.1
+if [[ 0 != $? ]]; then
+    die "Failed to whitelist bindzero address after dup3()"
+fi
 end_test

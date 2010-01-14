@@ -98,6 +98,9 @@ static const struct syscall_def {
 #endif
     {__NR_dup,          DUP_CALL},
     {__NR_dup2,         DUP_CALL},
+#if defined(__NR_dup3)
+    {__NR_dup3,         DUP_CALL},
+#endif
     {__NR_execve,       EXEC_CALL},
     {-1,                -1},
 };

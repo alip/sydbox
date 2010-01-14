@@ -27,6 +27,11 @@
 #endif // HAVE_CONFIG_H
 
 #define IS_CHDIR(_sno)      (__NR_chdir == (_sno) || __NR_fchdir == (_sno))
+#ifdef HAVE_DUP3
+#define IS_DUP(_sno)        (__NR_dup == (_sno) || __NR_dup2 == (_sno) || __NR_dup3 == (_sno))
+#else
+#define IS_DUP(_sno)        (__NR_dup == (_sno) || __NR_dup2 == (_sno))
+#endif /* HAVE_DUP3 */
 #define UNKNOWN_SYSCALL     "unknown"
 
 #if defined(I386) || defined(IA64) || defined(POWERPC)
@@ -36,6 +41,7 @@ int dispatch_lookup(int personality, int sno);
 const char *dispatch_name(int personality, int sno);
 const char *dispatch_mode(int personality);
 bool dispatch_chdir(int personality, int sno);
+bool dispatch_dup(int personality, int sno);
 bool dispatch_maybind(int personality, int sno);
 bool dispatch_maygetsockname(int personality, int sno);
 #elif defined(X86_64)
@@ -49,6 +55,8 @@ const char *dispatch_name32(int sno);
 const char *dispatch_name64(int sno);
 bool dispatch_chdir32(int sno);
 bool dispatch_chdir64(int sno);
+bool dispatch_dup32(int sno);
+bool dispatch_dup64(int sno);
 bool dispatch_maybind32(int sno);
 bool dispatch_maybind64(int sno);
 bool dispatch_maygetsockname32(int sno);
@@ -72,6 +80,8 @@ bool dispatch_maygetsockname64(int sno);
     ((personality) == 0) ? "32 bit" : "64 bit"
 #define dispatch_chdir(personality, sno) \
     ((personality) == 0) ? dispatch_chdir32((sno)) : dispatch_chdir64((sno))
+#define dispatch_dup(personality, sno) \
+    ((personality) == 0) ? dispatch_dup32((sno)) : dispatch_dup64((sno))
 #define dispatch_maybind(personality, sno) \
     ((personality) == 0) ? dispatch_maybind32((sno)) : dispatch_maybind64((sno))
 #define dispatch_maygetsockname(personality, sno) \

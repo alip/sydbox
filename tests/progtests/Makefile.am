@@ -48,7 +48,8 @@ check_PROGRAMS = test-lib.bash t01_chmod t01_chmod_toolong t02_chown t02_chown_t
 if WANT_IPV6
 check_PROGRAMS+= t47_sandbox_network_bind_ipv6 t47_sandbox_network_bind_ipv6_deny
 endif
-check_PROGRAMS+= t48_sandbox_network_bindzero_connect_tcp t48_sandbox_network_bindzero_dup_connect_tcp
+check_PROGRAMS+= t48_sandbox_network_bindzero_connect_tcp t48_sandbox_network_bindzero_dup_connect_tcp \
+		 t48_sandbox_network_bindzero_dup2_connect_tcp t48_sandbox_network_bindzero_dup3_connect_tcp
 
 test_lib_bash_SOURCES= test-lib.bash.in
 
