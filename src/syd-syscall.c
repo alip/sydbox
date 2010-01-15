@@ -1283,7 +1283,6 @@ static int syscall_handle_dup(struct tchild *child)
 int syscall_handle(context_t *ctx, struct tchild *child)
 {
     bool entering;
-    int flags;
     struct checkdata data;
 
     entering = !(child->flags & TCHILD_INSYSCALL);
@@ -1407,14 +1406,12 @@ int syscall_handle(context_t *ctx, struct tchild *child)
         }
         else if (child->sandbox->network && sydbox_config_get_network_auto_whitelist_bind()) {
             if (dispatch_maybind(child->personality, sno)) {
-                flags = dispatch_lookup(child->personality, sno);
-                if (0 > syscall_handle_bind(child, flags))
+                if (0 > syscall_handle_bind(child, sflags))
                     return context_remove_child(ctx, child->pid);
             }
             if (g_hash_table_size(child->bindzero) > 0) {
                 if (dispatch_maygetsockname(child->personality, sno)) {
-                    flags = dispatch_lookup(child->personality, sno);
-                    if (0 > syscall_handle_getsockname(child, flags))
+                    if (0 > syscall_handle_getsockname(child, sflags))
                         return context_remove_child(ctx, child->pid);
                 }
                 else if (dispatch_dup(child->personality, sno)) {
