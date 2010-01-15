@@ -37,3 +37,11 @@ if [[ 0 != $? ]]; then
     die "Failed to whitelist bindzero address after dup3()"
 fi
 end_test
+
+start_test "t48-sandbox-network-bindzero-fdupfd"
+SYDBOX_NET_WHITELIST_BIND=inet://127.0.0.1@0 \
+sydbox -N -B -- ./t48_sandbox_network_bindzero_fdupfd_connect_tcp 127.0.0.1
+if [[ 0 != $? ]]; then
+    die "Failed to whitelist bindzero address after fcntl(F_DUPFD)"
+fi
+end_test

@@ -101,6 +101,7 @@ static const struct syscall_def {
 #if defined(__NR_dup3)
     {__NR_dup3,         DUP_CALL},
 #endif
+    {__NR_fcntl,        FCNTL_CALL},
     {__NR_execve,       EXEC_CALL},
     {-1,                -1},
 };

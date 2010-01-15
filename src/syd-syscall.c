@@ -1231,7 +1231,7 @@ static int syscall_handle_getsockname(struct tchild *child, int flags)
     return 0;
 }
 
-/* dup() and dup2() handler
+/* dup() family handler
  */
 static int syscall_handle_dup(struct tchild *child)
 {
@@ -1251,7 +1251,7 @@ static int syscall_handle_dup(struct tchild *child)
     }
 
     if (0 > newfd) {
-        /* dup() or dup2() call failed, ignore it */
+        /* Call failed, ignore it */
         return 0;
     }
 
@@ -1270,6 +1270,70 @@ static int syscall_handle_dup(struct tchild *child)
     addr = g_hash_table_lookup(child->bindzero, GINT_TO_POINTER(oldfd));
     if (addr == NULL) {
         g_debug("No bind() call received before dup() ignoring");
+        return 0;
+    }
+
+    g_debug("Duplicating address information oldfd:%ld newfd:%ld", oldfd, newfd);
+    g_hash_table_insert(child->bindzero, GINT_TO_POINTER(newfd), address_dup(addr));
+    return 0;
+}
+
+static int syscall_handle_fcntl(struct tchild *child)
+{
+    long oldfd, newfd, cmd;
+    struct sydbox_addr *addr;
+
+    if (0 > trace_get_return(child->pid, &newfd)) {
+        if (G_UNLIKELY(ESRCH != errno)) {
+            /* Error getting return code using ptrace()
+             * Silently ignore it.
+             */
+            g_debug("failed to get return value of fcntl: %s", g_strerror(errno));
+            return 0;
+        }
+        // Child is dead.
+        return -1;
+    }
+
+    if (0 > newfd) {
+        /* Call failed, ignore it */
+        return 0;
+    }
+
+    if (0 > trace_get_arg(child->pid, child->personality, 1, &cmd)) {
+        if (G_UNLIKELY(ESRCH != errno)) {
+            /* Error getting first argument using ptrace()
+             * Silently ignore it.
+             */
+            g_debug("failed to get fcntl command: %s", g_strerror(errno));
+            return 0;
+        }
+        // Child is dead.
+        return -1;
+    }
+
+    if (F_DUPFD != cmd) {
+        /* The command can't duplicate fd,
+         * Ignore it.
+         */
+        return 0;
+    }
+
+    if (0 > trace_get_arg(child->pid, child->personality, 0, &oldfd)) {
+        if (G_UNLIKELY(ESRCH != errno)) {
+            /* Error getting first argument using ptrace()
+             * Silently ignore it.
+             */
+            g_debug("failed to get fcntl fd: %s", g_strerror(errno));
+            return 0;
+        }
+        // Child is dead.
+        return -1;
+    }
+
+    addr = g_hash_table_lookup(child->bindzero, GINT_TO_POINTER(oldfd));
+    if (addr == NULL) {
+        g_debug("No bind() call received before fcntl() ignoring");
         return 0;
     }
 
@@ -1420,6 +1484,14 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                      * information.
                      */
                     if (0 > syscall_handle_dup(child))
+                        return context_remove_child(ctx, child->pid);
+                }
+                else if (sflags & FCNTL_CALL) {
+                    /* Child is exiting a system call that may have duplicated a file
+                     * descriptor in child->bindzero. Update file descriptor
+                     * information.
+                     */
+                    if (0 > syscall_handle_fcntl(child))
                         return context_remove_child(ctx, child->pid);
                 }
             }
