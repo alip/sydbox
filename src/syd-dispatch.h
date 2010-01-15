@@ -27,7 +27,7 @@
 #endif // HAVE_CONFIG_H
 
 #define IS_CHDIR(_sno)      (__NR_chdir == (_sno) || __NR_fchdir == (_sno))
-#ifdef HAVE_DUP3
+#if defined(__NR_dup3)
 #define IS_DUP(_sno)        (__NR_dup == (_sno) || __NR_dup2 == (_sno) || __NR_dup3 == (_sno))
 #else
 #define IS_DUP(_sno)        (__NR_dup == (_sno) || __NR_dup2 == (_sno))
