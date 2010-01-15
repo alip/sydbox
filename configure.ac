@@ -133,9 +133,9 @@ AC_CHECK_TYPES([struct pt_all_user_regs, struct ia64_fpreg],,,
 dnl }}}
 
 dnl {{{ Check whether getcwd(NULL, 0) allocates memory for result
-AC_MSG_CHECKING([whether getcwd(NULL, 0) allocates memory for result])
-AC_CACHE_VAL([ac_cv_func_getcwd_null])
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_CACHE_CHECK([whether getcwd(NULL, 0) allocates memory for result],
+			   [ac_cv_func_getcwd_null],
+			   [AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -151,21 +151,26 @@ int main(void) {
     }
 }
 ]])],
-[AC_MSG_RESULT([yes]) ; ac_cv_func_getcwd_null=yes],
-[AC_MSG_RESULT([no]) ; ac_cv_func_getcwd_null=no])
+[ac_cv_func_getcwd_null=yes],
+[ac_cv_func_getcwd_null=no])])
 if test x"$ac_cv_func_getcwd_null" = x"yes"; then
 	AC_DEFINE([HAVE_GETCWD_NULL], 1, [Define for getcwd(NULL, 0) that allocates memory])
 fi
 dnl }}}
 
 dnl {{{ Check for usable /dev/null
-AC_MSG_CHECKING([for usable /dev/null])
-AC_CACHE_VAL(ac_cv_dev_null_usable)
+AC_MSG_CHECKING([for /dev/null])
 if ! test -c /dev/null; then
 	AC_MSG_RESULT([NO!])
 	AC_MSG_ERROR([/dev/null is not a special character file])
+else
+	AC_MSG_RESULT([yes])
 fi
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+
+AC_CACHE_VAL(ac_cv_dev_null_usable)
+AC_CACHE_CHECK([for usable /dev/null],
+			   [ac_cv_dev_null_usable],
+			   [AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -218,17 +223,17 @@ int main(void) {
     return EXIT_SUCCESS;
 }
 ]])],
-[AC_MSG_RESULT([yes]) ; ac_cv_dev_null_usable=yes],
-[AC_MSG_RESULT([NO!]) ; ac_cv_dev_null_usable=no])
+[ac_cv_dev_null_usable=yes],
+[ac_cv_dev_null_usable=no])])
 if test x"$ac_cv_dev_null_usable" = x"no"; then
 	AC_MSG_ERROR([/dev/null fails to discard data])
 fi
 dnl }}}
 
 dnl {{{ Check for usable /proc
-AC_MSG_CHECKING(whether /proc/PID/cwd is usable)
-AC_CACHE_VAL(ac_cv_proc_cwd_usable)
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_CACHE_CHECK([whether /proc/\$pid/cwd is usable],
+			   [ac_cv_proc_cwd_usable],
+			   [AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <limits.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -272,15 +277,15 @@ fail:
     }
 }
 ]])],
-[AC_MSG_RESULT([yes]) ; ac_cv_proc_cwd_usable=yes],
-[AC_MSG_RESULT([NO!]) ; ac_cv_proc_cwd_usable=no])
+[ac_cv_proc_cwd_usable=yes],
+[ac_cv_proc_cwd_usable=no])])
 if test x"$ac_cv_proc_cwd_usable" = x"no"; then
 	AC_MSG_ERROR([/proc fails to give current working directory information about pids])
 fi
 
-AC_MSG_CHECKING(whether /proc/PID/fd/DIRFD is usable)
-AC_CACHE_VAL(ac_cv_proc_fd_usable)
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_CACHE_CHECK([whether /proc/\$pid/fd/\$dirfd is usable],
+			   [ac_cv_proc_fd_usable],
+			   [AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <limits.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -342,15 +347,15 @@ fail:
     }
 }
 ]])],
-[AC_MSG_RESULT([yes]) ; ac_cv_proc_fd_usable=yes],
-[AC_MSG_RESULT([NO!]) ; ac_cv_proc_fd_usable=no])
+[ac_cv_proc_fd_usable=yes],
+[ac_cv_proc_fd_usable=no])])
 if test x"$ac_cv_proc_fd_usable" = x"no"; then
 	AC_MSG_ERROR([/proc fails to give directory file descriptor information about pids])
 fi
 
-AC_MSG_CHECKING([whether /proc/self resolves to /proc/PID])
-AC_CACHE_VAL(ac_cv_have_prof_self)
-AC_RUN_IFELSE([AC_LANG_SOURCE([[
+AC_CACHE_CHECK([whether /proc/self resolves to /proc/\$pid],
+			   [ac_cv_have_proc_self],
+			   [AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -373,8 +378,8 @@ int main(void) {
     return (0 == strncmp(buf, proc_pid, 64)) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 ]])],
-[AC_MSG_RESULT([yes]) ; ac_cv_have_proc_self=yes],
-[AC_MSG_RESULT([no]) ; ac_cv_have_proc_self=no])
+[ac_cv_have_proc_self=yes],
+[ac_cv_have_proc_self=no])])
 if test x"$ac_cv_have_proc_self" = x"yes"; then
 	AC_DEFINE([HAVE_PROC_SELF], 1, [Define for /proc/self])
 fi
