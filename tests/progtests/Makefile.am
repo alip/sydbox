@@ -63,3 +63,5 @@ test-lib.bash: test-lib.bash.in
 
 check-valgrind:
 	SYDBOX_RUN_UNDER_VALGRIND=1 $(MAKE) check
+
+.PHONY: check-valgrind

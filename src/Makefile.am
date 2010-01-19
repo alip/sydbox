@@ -140,3 +140,5 @@ syd-syscallent64.h:
 	$(AM_V_at)echo >> $@
 endif
 endif
+
+.PHONY: sparse-check
