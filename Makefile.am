@@ -8,6 +8,8 @@ SUBDIRS = src data . tests
 
 check-valgrind:
 	$(MAKE) -C tests/progtests check-valgrind
+sparse-check:
+	$(MAKE) -C src sparse-check
 
 checksum: dist
 	@echo "SHA1 $(PACKAGE)-$(VERSION).tar.bz2"
