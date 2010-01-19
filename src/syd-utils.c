@@ -84,7 +84,6 @@ void sydbox_access_violation(struct tchild *child, const gchar *path, const gcha
 gchar *sydbox_compress_path(const gchar * const path)
 {
     bool skip_slashes = false;
-    gchar *retval;
     GString *compressed;
     guint i;
 
@@ -102,9 +101,6 @@ gchar *sydbox_compress_path(const gchar * const path)
     if (compressed->len > 1 && compressed->str[compressed->len - 1] == '/')
         g_string_truncate(compressed, compressed->len - 1);
 
-    retval = compressed->str;
-    g_string_free(compressed, FALSE);
-
-    return retval;
+    return g_string_free(compressed, FALSE);
 }
 
