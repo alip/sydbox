@@ -5,6 +5,7 @@
 
 no_create_files=1
 . test-lib.bash
+bind_socket_relative=./sydbox.sock
 bind_socket="$cwd"/sydbox.sock
 bind_socket2="$cwd"/sydbox2.sock
 bind_port=23456
@@ -38,6 +39,15 @@ SYDBOX_NET_WHITELIST_BIND=unix://"$bind_socket" \
 sydbox -N -- ./t46_sandbox_network_bind_unix "$bind_socket"
 if [[ 0 != $? ]]; then
     die "Failed to allow bind to Unix socket by whitelisting"
+fi
+end_test
+
+unlink "$bind_socket" 2>/dev/null
+start_test "t46-sandbox-network-deny-allow-whitelisted-bind-unix-relative"
+SYDBOX_NET_WHITELIST_BIND=unix://"$bind_socket" \
+sydbox -N -- ./t46_sandbox_network_bind_unix "$bind_socket_relative"
+if [[ 0 != $? ]]; then
+    die "Failed to allow bind to relative Unix socket by whitelisting"
 fi
 end_test
 

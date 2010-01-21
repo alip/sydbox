@@ -38,6 +38,7 @@ struct sydbox_addr {
             bool abstract;
             bool exact;
             char sun_path[PATH_MAX];
+            char *rsun_path;
         } saun;
 
         struct {
