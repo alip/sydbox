@@ -530,6 +530,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
  */
 static void syscall_check_magic(struct tchild *child, struct checkdata *data)
 {
+
     if (G_UNLIKELY(RS_ALLOW != data->result))
         return;
     else if (LOCK_SET == child->sandbox->lock) {
@@ -557,14 +558,8 @@ static void syscall_check_resolve(struct tchild *child, struct checkdata *data)
 {
     if (G_UNLIKELY(RS_ALLOW != data->result))
         return;
-    else if (child->sandbox->exec && sflags & EXEC_CALL) {
+    else if (child->sandbox->exec && sflags & EXEC_CALL)
         data->resolve = true;
-        return;
-    }
-    else if (child->sandbox->network && IS_NET_CALL(sflags)) {
-        data->resolve = true;
-        return;
-    }
     else if (!child->sandbox->path)
         return;
 
@@ -627,8 +622,6 @@ static gchar *syscall_resolvepath(struct tchild *child, struct checkdata *data, 
 {
     bool maycreat;
     int mode;
-    char *path, *path_sanitized, *resolved_path;
-
     if (data->open_flags & O_CREAT)
         maycreat = true;
     else if (0 == narg && sflags & (CAN_CREAT | MUST_CREAT))
@@ -641,19 +634,13 @@ static gchar *syscall_resolvepath(struct tchild *child, struct checkdata *data, 
         maycreat = true;
     else if (3 == narg && sflags & (CAN_CREAT_AT2 | MUST_CREAT_AT2))
         maycreat = true;
-    else if (-1 == narg) /* socket() call */
-        maycreat = true;
     else
         maycreat = false;
     mode = maycreat ? CAN_ALL_BUT_LAST : CAN_EXISTING;
 
-    if (-1 == narg) {
-        g_assert(data->addr->family == AF_UNIX);
-        g_assert(!data->addr->u.saun.abstract);
-        path = data->addr->u.saun.sun_path;
-    }
-    else
-        path = data->pathlist[narg];
+    char *path = data->pathlist[narg];
+    char *path_sanitized;
+    char *resolved_path;
 
     if (!g_path_is_absolute(path)) {
         char *absdir, *abspath;
@@ -671,7 +658,7 @@ static gchar *syscall_resolvepath(struct tchild *child, struct checkdata *data, 
         g_free(abspath);
     }
     else
-        path_sanitized = sydbox_compress_path(path);
+        path_sanitized = sydbox_compress_path (path);
 
 #ifdef HAVE_PROC_SELF
     /* Special case for /proc/self.
@@ -718,19 +705,8 @@ static void syscall_check_canonicalize(context_t *ctx, struct tchild *child, str
         data->rpathlist[0] = syscall_resolvepath(child, data, 0, false);
         if (NULL == data->rpathlist[0])
             return;
-        g_debug("canonicalized `%s' to `%s'", data->pathlist[0], data->rpathlist[0]);
-    }
-    if (child->sandbox->network &&
-            IS_NET_CALL(sflags) &&
-            data->addr != NULL &&
-            data->addr->family == AF_UNIX &&
-            !data->addr->u.saun.abstract) {
-        g_debug("caninicalizing `%s' for system call %lu(%s), child %i",
-                data->addr->u.saun.sun_path, sno, sname, child->pid);
-        data->addr->u.saun.rsun_path = syscall_resolvepath(child, data, -1, false);
-        if (NULL == data->addr->u.saun.rsun_path)
-            return;
-        g_debug("canonicalized `%s' to `%s'", data->addr->u.saun.sun_path, data->addr->u.saun.rsun_path);
+        else
+            g_debug("canonicalized `%s' to `%s'", data->pathlist[0], data->rpathlist[0]);
     }
 
     if (!child->sandbox->path)
@@ -988,10 +964,6 @@ static void syscall_check_finalize(G_GNUC_UNUSED context_t *ctx, struct tchild *
     }
 
     g_free(data->sargv);
-    if (data->addr != NULL &&
-            data->addr->family == AF_UNIX &&
-            !data->addr->u.saun.abstract)
-        g_free(data->addr->u.saun.rsun_path);
     g_free(data->addr);
 }
 
