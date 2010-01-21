@@ -26,6 +26,8 @@
 
 #include <glib.h>
 
+#include "syd-net.h"
+
 /* TCHILD flags */
 #define TCHILD_NEEDSETUP   (1 << 0)    /* child needs setup. */
 #define TCHILD_NEEDINHERIT (1 << 1)    /* child needs to inherit sandbox data from her parent. */
@@ -60,6 +62,7 @@ struct tchild
     long retval;             // Replaced system call will return this value.
     GString *lastexec;       // Last execve() arguments converted to string (used for debugging)
     GHashTable *bindzero;    // List of addresses whose port argument was zero.
+    struct sydbox_addr *bindlast; // Last bind() address
     struct tdata *sandbox;   // Sandbox data
 };
 

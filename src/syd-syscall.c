@@ -964,7 +964,16 @@ static void syscall_check_finalize(G_GNUC_UNUSED context_t *ctx, struct tchild *
     }
 
     g_free(data->sargv);
-    g_free(data->addr);
+    if (child->sandbox->network &&
+            sydbox_config_get_network_auto_whitelist_bind() &&
+            data->result == RS_ALLOW) {
+        /* Store the bind address.
+         * We'll use it again to whitelist it when the system call is exiting.
+         */
+        child->bindlast = data->addr;
+    }
+    else
+        g_free(data->addr);
 }
 
 /* BAD_SYSCALL handler for system calls.
@@ -1077,7 +1086,6 @@ static int syscall_handle_bind(struct tchild *child, int flags)
     int subcall, port;
     long fd, retval;
     GSList *whitelist;
-    struct sydbox_addr *addr;
 
     if (0 > trace_get_return(child->pid, &retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
@@ -1094,6 +1102,8 @@ static int syscall_handle_bind(struct tchild *child, int flags)
 
     if (0 != retval) {
         /* Bind call failed, ignore it */
+        g_free(child->bindlast);
+        child->bindlast = NULL;
         return 0;
     }
 
@@ -1111,40 +1121,24 @@ static int syscall_handle_bind(struct tchild *child, int flags)
             // Child is dead.
             return -1;
         }
-        if (subcall != SOCKET_SUBCALL_BIND)
+        if (subcall != SOCKET_SUBCALL_BIND) {
+            g_free(child->bindlast);
+            child->bindlast = NULL;
             return 0;
-
-        addr = trace_get_addr(child->pid, child->personality, 1, true, &fd);
-    }
-    else if (flags & BIND_CALL)
-        addr = trace_get_addr(child->pid, child->personality, 1, false, &fd);
-    else
-        g_assert_not_reached();
-
-    if (NULL == addr) {
-        if (G_UNLIKELY(ESRCH != errno)) {
-            /* Error getting address using ptrace()
-             * child is still alive, hence the error is fatal.
-             */
-            g_critical("Failed to get address of bind() call: %s", g_strerror(errno));
-            g_printerr("Failed to get address of bind() call: %s\n", g_strerror(errno));
-            exit(-1);
         }
-        // Child is dead
-        return -1;
     }
 
-    if (IS_SUPPORTED_FAMILY(addr->family)) {
-        switch (addr->family) {
+    if (IS_SUPPORTED_FAMILY(child->bindlast->family)) {
+        switch (child->bindlast->family) {
             case AF_UNIX:
                 port = -1;
                 break;
             case AF_INET:
-                port = addr->u.sa.port[0];
+                port = child->bindlast->u.sa.port[0];
                 break;
 #if HAVE_IPV6
             case AF_INET6:
-                port = addr->u.sa6.port[0];
+                port = child->bindlast->u.sa6.port[0];
                 break;
 #endif /* HAVE_IPV6 */
             default:
@@ -1153,18 +1147,31 @@ static int syscall_handle_bind(struct tchild *child, int flags)
 
         if (port == 0) {
             /* Special case for binding to port zero.
-             * We'll check /proc/net/tcp after the subsequent listen() call to
-             * find out the actual port number.
+             * We'll check the getsockname() call after this to get the port.
              */
-            g_hash_table_insert(child->bindzero, GINT_TO_POINTER(fd), addr);
+            if (!trace_get_fd(child->pid, child->personality, flags & DECODE_SOCKETCALL, &fd)) {
+                if (G_UNLIKELY(ESRCH != errno)) {
+                    /* Error getting return code using ptrace()
+                     * child is still alive, hence the error is fatal.
+                     */
+                    g_critical("failed to get file descriptor: %s", g_strerror(errno));
+                    g_printerr("failed to get file descriptor: %s\n", g_strerror(errno));
+                    exit(-1);
+                }
+                // Child is dead.
+                return -1;
+            }
+            g_hash_table_insert(child->bindzero, GINT_TO_POINTER(fd), child->bindlast);
             return 0;
         }
         whitelist = sydbox_config_get_network_whitelist_connect();
-        whitelist = g_slist_prepend(whitelist, addr);
+        whitelist = g_slist_prepend(whitelist, child->bindlast);
         sydbox_config_set_network_whitelist_connect(whitelist);
     }
     else
-        g_free(addr);
+        g_free(child->bindlast);
+
+    child->bindlast = NULL;
     return 0;
 }
 

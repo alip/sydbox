@@ -51,6 +51,7 @@ void tchild_new(GHashTable *children, pid_t pid)
     child->cwd = NULL;
     child->lastexec = g_string_new("");
     child->bindzero = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+    child->bindlast = NULL;
     child->sandbox = (struct tdata *) g_malloc(sizeof(struct tdata));
     child->sandbox->path = true;
     child->sandbox->exec = false;
@@ -115,12 +116,12 @@ void tchild_free_one(gpointer child_ptr)
             pathnode_free(&(child->sandbox->exec_prefixes));
         g_free(child->sandbox);
     }
-    if (G_LIKELY(NULL != child->cwd))
-        g_free(child->cwd);
     if (G_LIKELY(NULL != child->lastexec))
         g_string_free(child->lastexec, TRUE);
     if (G_LIKELY(NULL != child->bindzero))
         g_hash_table_destroy(child->bindzero);
+    g_free(child->bindlast);
+    g_free(child->cwd);
     g_free(child);
 }
 
