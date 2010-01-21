@@ -107,6 +107,7 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
 {
     int n, mask;
     unsigned char *b, *ptr;
+    char *hsun_path, *nsun_path;
 
     if (needle->family != haystack->family)
         return false;
@@ -115,10 +116,12 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
         case AF_UNIX:
             if (haystack->u.saun.abstract != needle->u.saun.abstract)
                 return false;
+            hsun_path = haystack->u.saun.rsun_path ? haystack->u.saun.rsun_path : haystack->u.saun.sun_path;
+            nsun_path = needle->u.saun.rsun_path ? needle->u.saun.rsun_path : needle->u.saun.sun_path;
             if (haystack->u.saun.exact)
-                return (0 == strncmp(haystack->u.saun.sun_path, needle->u.saun.sun_path, PATH_MAX));
+                return (0 == strncmp(hsun_path, nsun_path, sizeof(hsun_path)));
             else
-                return (0 == fnmatch(haystack->u.saun.sun_path, needle->u.saun.sun_path, FNM_PATHNAME));
+                return (0 == fnmatch(hsun_path, nsun_path, FNM_PATHNAME));
         case AF_INET:
             n = haystack->u.sa.netmask;
             ptr = (unsigned char *)&needle->u.sa.sin_addr;
