@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -63,6 +64,30 @@
 
 #define MODE_STRING(flags)                                                      \
     ((flags) & OPEN_MODE || (flags) & OPEN_MODE_AT) ? "O_WRONLY/O_RDWR" : "..."
+
+enum {
+    RS_ALLOW,
+    RS_NOWRITE,
+    RS_MAGIC,
+    RS_DENY,
+    RS_ERROR = EX_SOFTWARE
+};
+
+struct checkdata {
+    gint result;                // Check result
+    gint save_errno;            // errno when the result is RS_ERROR
+
+    bool resolve;               // true if the system call resolves paths
+    glong open_flags;           // flags argument of open()/openat()
+    glong access_flags;         // flags argument of access()/faccessat()
+    gchar *sargv;               // argv[] list of execve() call stringified
+    gchar *dirfdlist[2];        // dirfd arguments (resolved)
+    gchar *pathlist[4];         // Path arguments
+    gchar *rpathlist[4];        // Path arguments (canonicalized)
+
+    int socket_subcall;         // Socketcall() subcall
+    struct sydbox_addr *addr;   // Destination address of socket call
+};
 
 static long sno;
 static int sflags;
