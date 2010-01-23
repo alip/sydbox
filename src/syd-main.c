@@ -106,7 +106,7 @@ static GOptionEntry entries[] =
         "Logging verbosity",              NULL },
     { "log-file",               'l', 0, G_OPTION_ARG_FILENAME,                     &logfile,
         "Path to the log file",           NULL },
-    { "no-colour",              'C', 0, G_OPTION_ARG_NONE | G_OPTION_FLAG_REVERSE, &colour,
+    { "no-colour",              'C', G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,     &colour,
         "Disable colouring of messages",  NULL },
     { "lock",                   'L', 0, G_OPTION_ARG_NONE,                         &lock,
         "Disallow magic commands",        NULL },
