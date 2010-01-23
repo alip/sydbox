@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.6.3
 * Resolve path of non-abstract UNIX sockets
 * Intercept dup family calls and fcntl calls to see if a socket descriptor we
   care about has been duplicated
