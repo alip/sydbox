@@ -46,6 +46,10 @@
 #define CMD_SANDUNBOX_NET               CMD_PATH"sandunbox/net"
 #define CMD_ADDFILTER                   CMD_PATH"addfilter/"
 #define CMD_RMFILTER                    CMD_PATH"rmfilter/"
+#define CMD_ADDFILTER_EXEC              CMD_PATH"addfilter_exec/"
+#define CMD_RMFILTER_EXEC               CMD_PATH"rmfilter_exec/"
+#define CMD_ADDFILTER_NET               CMD_PATH"addfilter_net/"
+#define CMD_RMFILTER_NET                CMD_PATH"rmfilter_net/"
 #define CMD_NET_WHITELIST_BIND          CMD_PATH"net/whitelist/bind/"
 #define CMD_NET_UNWHITELIST_BIND        CMD_PATH"net/unwhitelist/bind/"
 #define CMD_NET_WHITELIST_CONNECT       CMD_PATH"net/whitelist/connect/"
@@ -92,6 +96,14 @@ bool path_magic_sandunbox_net(const char *path);
 bool path_magic_addfilter(const char *path);
 
 bool path_magic_rmfilter(const char *path);
+
+bool path_magic_addfilter_exec(const char *path);
+
+bool path_magic_rmfilter_exec(const char *path);
+
+bool path_magic_addfilter_net(const char *path);
+
+bool path_magic_rmfilter_net(const char *path);
 
 bool path_magic_net_allow(const char *path);
 

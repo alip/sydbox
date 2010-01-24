@@ -74,7 +74,7 @@ struct sydbox_addr *address_dup(const struct sydbox_addr *src)
 {
     struct sydbox_addr *dest;
 
-    dest = g_new(struct sydbox_addr, 1);
+    dest = g_new0(struct sydbox_addr, 1);
 
     dest->family = src->family;
     switch (src->family) {

@@ -159,6 +159,26 @@ inline bool path_magic_rmfilter(const char *path)
     return (0 == strncmp(path, CMD_RMFILTER, sizeof(CMD_RMFILTER) - 1));
 }
 
+inline bool path_magic_addfilter_exec(const char *path)
+{
+    return (0 == strncmp(path, CMD_ADDFILTER_EXEC, sizeof(CMD_ADDFILTER_EXEC) - 1));
+}
+
+inline bool path_magic_rmfilter_exec(const char *path)
+{
+    return (0 == strncmp(path, CMD_RMFILTER_EXEC, sizeof(CMD_RMFILTER_EXEC) - 1));
+}
+
+inline bool path_magic_addfilter_net(const char *path)
+{
+    return (0 == strncmp(path, CMD_ADDFILTER_NET, sizeof(CMD_ADDFILTER_NET) - 1));
+}
+
+inline bool path_magic_rmfilter_net(const char *path)
+{
+    return (0 == strncmp(path, CMD_RMFILTER_NET, sizeof(CMD_RMFILTER_NET) - 1));
+}
+
 inline bool path_magic_net_whitelist_bind(const char *path)
 {
     return (0 == strncmp(path, CMD_NET_WHITELIST_BIND, sizeof(CMD_NET_WHITELIST_BIND) - 1));

@@ -26,6 +26,8 @@
 
 #include <glib.h>
 
+#include "syd-net.h"
+
 // Environment variables
 #define ENV_LOG                     "SYDBOX_LOG"
 #define ENV_CONFIG                  "SYDBOX_CONFIG"
@@ -197,6 +199,10 @@ GSList *sydbox_config_get_exec_prefixes(void);
 
 GSList *sydbox_config_get_filters(void);
 
+GSList *sydbox_config_get_exec_filters(void);
+
+GSList *sydbox_config_get_network_filters(void);
+
 GSList *sydbox_config_get_network_whitelist_bind(void);
 
 void sydbox_config_set_network_whitelist_bind(GSList *whitelist);
@@ -208,6 +214,14 @@ void sydbox_config_set_network_whitelist_connect(GSList *whitelist);
 void sydbox_config_addfilter(const gchar *filter);
 
 int sydbox_config_rmfilter(const gchar *filter);
+
+void sydbox_config_addfilter_exec(const gchar *filter);
+
+int sydbox_config_rmfilter_exec(const gchar *filter);
+
+void sydbox_config_addfilter_net(const struct sydbox_addr *filter);
+
+int sydbox_config_rmfilter_net(const struct sydbox_addr *filter);
 
 void sydbox_config_rmfilter_all(void);
 

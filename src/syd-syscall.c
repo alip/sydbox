@@ -437,6 +437,40 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
         sydbox_config_rmfilter(rpath);
         g_info("approved rmfilter(\"%s\") for child %i", rpath, child->pid);
     }
+    else if (path_magic_addfilter_exec(path)) {
+        data->result = RS_MAGIC;
+        rpath = path + sizeof(CMD_ADDFILTER_EXEC) - 1;
+        sydbox_config_addfilter_exec(rpath);
+        g_info("approved addfilter_exec(\"%s\") for child %i", rpath, child->pid);
+    }
+    else if (path_magic_rmfilter_exec(path)) {
+        data->result = RS_MAGIC;
+        rpath = path + sizeof(CMD_RMFILTER_EXEC) - 1;
+        sydbox_config_rmfilter_exec(rpath);
+        g_info("approved rmfilter_exec(\"%s\") for child %i", rpath, child->pid);
+    }
+    else if (path_magic_addfilter_net(path)) {
+        data->result = RS_MAGIC;
+        rpath = path + sizeof(CMD_ADDFILTER_NET) - 1;
+        if ((addr = address_from_string(rpath, true)) == NULL)
+            g_warning("malformed filter address `%s'", rpath);
+        else {
+            sydbox_config_addfilter_net(addr);
+            g_free(addr);
+            g_info("approved addfilter_net(\"%s\") for child %i", rpath, child->pid);
+        }
+    }
+    else if (path_magic_rmfilter_net(path)) {
+        data->result = RS_MAGIC;
+        rpath = path + sizeof(CMD_RMFILTER_NET) - 1;
+        if ((addr = address_from_string(rpath, true)) == NULL)
+            g_warning("malformed filter address `%s'", rpath);
+        else {
+            sydbox_config_rmfilter_net(addr);
+            g_free(addr);
+            g_info("approved rmfilter_net(\"%s\") for child %i", rpath, child->pid);
+        }
+    }
     else if (path_magic_net_whitelist_bind(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_NET_WHITELIST_BIND) - 1;

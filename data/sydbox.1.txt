@@ -1,11 +1,11 @@
 // sydbox man page
 // vim: set ts=4 sts=4 et tw=120 ft=asciidoc :
-// Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+// Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
 // Distributed under the terms of the GNU General Public License v2
 SYDBOX(1)
 =========
 :man source: sydbox
-:man version: 0.1
+:man version: 0.6.4
 :man manual: Sydbox Manual
 
 NAME
@@ -199,8 +199,12 @@ according to the command. Currently there's one type of magic commands:
   * */dev/sydbox/unwrite/PATH*      stat'ing this path removes *PATH* from the list of write allowed paths.
   * */dev/sydbox/addexec/PATH*      stat'ing this path adds *PATH* to the list of execve(2) allowed paths.
   * */dev/sydbox/rmexec/PATH*       stat'ing this path removes *PATH* from the list of execve(2) allowed paths.
-  * */dev/sydbox/addfilter/PATTERN* stat'ing this path adds *PATTERN* to the list of violation filter patterns.
-  * */dev/sydbox/rmfilter/PATTERN*  stat'ing this path removes *PATTERN* from the list of violation filter patterns.
+  * */dev/sydbox/addfilter/PATTERN* stat'ing this path adds *PATTERN* to the list of path violation filters
+  * */dev/sydbox/rmfilter/PATTERN*  stat'ing this path removes *PATTERN* from the list of path violation filters
+  * */dev/sydbox/addfilter_exec/PATTERN* stat'ing this path adds *PATTERN* to the list of exec violation filters
+  * */dev/sydbox/rmfilter_exec/PATTERN*  stat'ing this path removes *PATTERN* from the list of exec violation filters
+  * */dev/sydbox/addfilter_net/ADDR* stat'ing this path adds *ADDR* to the list of network violation filters
+  * */dev/sydbox/rmfilter_net/ADDR*  stat'ing this path removes *ADDR* from the list of network violation filters
   * */dev/sydbox/net/whitelist/bind/ADDR*   stat'ing this path adds the given address to the bind() whitelist.
   * */dev/sydbox/net/unwhitelist/bind/ADDR* stat'ing this path removes the given address from the bind() whitelist.
   * */dev/sydbox/net/whitelist/connect/ADDR*   stat'ing this path adds the given address to the connect() whitelist.
