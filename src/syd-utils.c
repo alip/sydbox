@@ -33,52 +33,78 @@
 #include "syd-log.h"
 #include "syd-utils.h"
 
-void sydbox_access_violation(struct tchild *child, const gchar *path, const gchar *fmt, ...)
+static void sydbox_access_violation_va(struct tchild *child, const gchar *fmt, va_list args)
 {
-    va_list args;
-    time_t now = time(NULL);
+    bool colour;
+    time_t now;
 
-    if (NULL != path) {
-        GSList *walk = sydbox_config_get_filters();
-        while (NULL != walk) {
-            gchar *pattern = (gchar *)walk->data;
-            if (0 == fnmatch(pattern, path, FNM_PATHNAME)) {
-                g_debug("pattern `%s' matches path `%s', ignoring the access violation", pattern, path);
-                return;
-            }
-            else
-                g_debug("pattern `%s' doesn't match path `%s'", pattern, path);
-            walk = g_slist_next(walk);
-        }
-    }
+    colour = sydbox_config_get_colourise_output();
+    now = time(NULL);
 
     g_fprintf(stderr, PACKAGE "@%lu: %sAccess Violation!%s\n", now,
-            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
-            sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+            colour ? ANSI_MAGENTA : "",
+            colour ? ANSI_NORMAL : "");
     g_fprintf(stderr, PACKAGE "@%lu: %sChild Process ID: %s%i%s\n", now,
-            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
-            sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
+            colour ? ANSI_MAGENTA : "",
+            colour ? ANSI_DARK_MAGENTA : "",
             child->pid,
-            sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+            colour ? ANSI_NORMAL : "");
     g_fprintf(stderr, PACKAGE "@%lu: %sChild CWD: %s%s%s\n", now,
-            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
-            sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
+            colour ? ANSI_MAGENTA : "",
+            colour ? ANSI_DARK_MAGENTA : "",
             child->cwd,
-            sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+            colour ? ANSI_NORMAL : "");
     g_fprintf(stderr, PACKAGE "@%lu: %sLast Exec: %s%s%s\n", now,
-            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
-            sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "",
+            colour ? ANSI_MAGENTA : "",
+            colour ? ANSI_DARK_MAGENTA : "",
             child->lastexec->str,
-            sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+            colour ? ANSI_NORMAL : "");
     g_fprintf(stderr, PACKAGE "@%lu: %sReason: %s", now,
-            sydbox_config_get_colourise_output() ? ANSI_MAGENTA : "",
-            sydbox_config_get_colourise_output() ? ANSI_DARK_MAGENTA : "");
+            colour ? ANSI_MAGENTA : "",
+            colour ? ANSI_DARK_MAGENTA : "");
+
+    g_vfprintf(stderr, fmt, args);
+
+    g_fprintf(stderr, "%s\n", colour ? ANSI_NORMAL : "");
+}
+
+void sydbox_access_violation_path(struct tchild *child, const gchar *path, const gchar *fmt, ...)
+{
+    va_list args;
+
+    GSList *walk = sydbox_config_get_filters();
+    while (NULL != walk) {
+        gchar *pattern = (gchar *)walk->data;
+        if (0 == fnmatch(pattern, path, FNM_PATHNAME)) {
+            g_debug("pattern `%s' matches path `%s', ignoring the access violation", pattern, path);
+            return;
+        }
+        else
+            g_debug("pattern `%s' doesn't match path `%s'", pattern, path);
+        walk = g_slist_next(walk);
+    }
 
     va_start(args, fmt);
-    g_vfprintf(stderr, fmt, args);
+    sydbox_access_violation_va(child, fmt, args);
     va_end(args);
+}
 
-    g_fprintf(stderr, "%s\n", sydbox_config_get_colourise_output() ? ANSI_NORMAL : "");
+void sydbox_access_violation_exec(struct tchild *child, const gchar *path, const gchar *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    sydbox_access_violation_va(child, fmt, args);
+    va_end(args);
+}
+
+void sydbox_access_violation_net(struct tchild *child, struct sydbox_addr *addr, const gchar *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    sydbox_access_violation_va(child, fmt, args);
+    va_end(args);
 }
 
 gchar *sydbox_compress_path(const gchar * const path)

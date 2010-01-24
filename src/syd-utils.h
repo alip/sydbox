@@ -39,18 +39,46 @@
 #define ANSI_DARK_MAGENTA   "[01;35m"
 
 /**
- * sydbox_access_violation:
+ * sydbox_access_violation_path:
  * @child: the traced child
  * @path: path that caused the access violation if any.
  * @fmt: format string (as with printf())
  * @varargs: parameters to be used with @fmt
  *
- * Raise an access violation.
+ * Raise a path access violation.
  *
- * Since: 0.5
+ * Since: 0.6.4
  **/
 G_GNUC_PRINTF(3, 4)
-void sydbox_access_violation(struct tchild *child, const gchar *path, const gchar *fmt, ...);
+void sydbox_access_violation_path(struct tchild *child, const gchar *path, const gchar *fmt, ...);
+
+/**
+ * sydbox_access_violation_exec:
+ * @child: the traced child
+ * @path: path that caused the access violation if any.
+ * @fmt: format string (as with printf())
+ * @varargs: parameters to be used with @fmt
+ *
+ * Raise an exec access violation.
+ *
+ * Since: 0.6.4
+ **/
+G_GNUC_PRINTF(3, 4)
+void sydbox_access_violation_exec(struct tchild *child, const gchar *path, const gchar *fmt, ...);
+
+/**
+ * sydbox_access_violation_exec:
+ * @child: the traced child
+ * @path: address that caused the access violation if any.
+ * @fmt: format string (as with printf())
+ * @varargs: parameters to be used with @fmt
+ *
+ * Raise a network access violation.
+ *
+ * Since: 0.6.4
+ **/
+G_GNUC_PRINTF(3, 4)
+void sydbox_access_violation_net(struct tchild *child, struct sydbox_addr *addr, const gchar *fmt, ...);
 
 /**
  * sydbox_compress_path:

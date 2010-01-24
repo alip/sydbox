@@ -833,20 +833,20 @@ static void syscall_handle_path(struct tchild *child, struct checkdata *data, in
 
         switch (narg) {
             case 0:
-                sydbox_access_violation(child, path, "%s(\"%s\", %s)",
-                                        sname, path, MODE_STRING(sflags));
+                sydbox_access_violation_path(child, path, "%s(\"%s\", %s)",
+                        sname, path, MODE_STRING(sflags));
                 break;
             case 1:
-                sydbox_access_violation(child, path, "%s(?, \"%s\", %s)",
-                                        sname, path, MODE_STRING(sflags));
+                sydbox_access_violation_path(child, path, "%s(?, \"%s\", %s)",
+                        sname, path, MODE_STRING(sflags));
                 break;
             case 2:
-                sydbox_access_violation(child, path, "%s(?, ?, \"%s\", %s)",
-                                        sname, path, MODE_STRING(sflags));
+                sydbox_access_violation_path(child, path, "%s(?, ?, \"%s\", %s)",
+                        sname, path, MODE_STRING(sflags));
                 break;
             case 3:
-                sydbox_access_violation(child, path, "%s(?, ?, ?, \"%s\", %s)",
-                                        sname, path, MODE_STRING(sflags));
+                sydbox_access_violation_path(child, path, "%s(?, ?, ?, \"%s\", %s)",
+                        sname, path, MODE_STRING(sflags));
                 break;
             default:
                 g_assert_not_reached();
@@ -909,19 +909,19 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
         if (violation) {
             switch (data->addr->family) {
                 case AF_UNIX:
-                    sydbox_access_violation(child, NULL, "%s{family=AF_UNIX path=%s abstract=%s}",
+                    sydbox_access_violation_net(child, data->addr, "%s{family=AF_UNIX path=%s abstract=%s}",
                             sname, data->addr->u.saun.sun_path,
                             data->addr->u.saun.abstract ? "true" : "false");
                     break;
                 case AF_INET:
                     inet_ntop(AF_INET, &data->addr->u.sa.sin_addr, ip, sizeof(ip));
-                    sydbox_access_violation(child, NULL, "%s{family=AF_INET addr=%s port=%d}",
+                    sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET addr=%s port=%d}",
                             sname, ip, data->addr->u.sa.port[0]);
                     break;
 #if HAVE_IPV6
                 case AF_INET6:
                     inet_ntop(AF_INET6, &data->addr->u.sa6.sin6_addr, ip, sizeof(ip));
-                    sydbox_access_violation(child, NULL, "%s{family=AF_INET6 addr=%s port=%d}",
+                    sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET6 addr=%s port=%d}",
                             sname, ip, data->addr->u.sa6.port[0]);
                     break;
 #endif /* HAVE_IPV6 */
@@ -941,7 +941,7 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
         g_debug("checking `%s' for exec access", data->rpathlist[0]);
         int allow_exec = pathlist_check(child->sandbox->exec_prefixes, data->rpathlist[0]);
         if (!allow_exec) {
-            sydbox_access_violation(child, data->rpathlist[0],
+            sydbox_access_violation_exec(child, data->rpathlist[0],
                     "execve(\"%s\", [%s])", data->rpathlist[0], data->sargv);
             data->result = RS_DENY;
             child->retval = -EACCES;
