@@ -31,9 +31,10 @@ int main(int argc, char **argv)
     }
 
     srv.sun_family = AF_UNIX;
+    strcpy(srv.sun_path, "X");
+    strcat(srv.sun_path, argv[1]);
+    len = strlen(srv.sun_path) + sizeof(srv.sun_family);
     srv.sun_path[0] = '\0';
-    strcat(srv.sun_path + 1, argv[1]);
-    len = strlen(srv.sun_path + 1) + 1 + sizeof(srv.sun_family);
 
     if (bind(fd, (struct sockaddr *)&srv, len) < 0) {
         perror("bind");
