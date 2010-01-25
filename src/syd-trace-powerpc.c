@@ -43,7 +43,7 @@
         ? (sizeof(unsigned long) * PT_ORIG_R3)      \
         : (sizeof(unsigned long) * ((i) + PT_R3)))
 
-inline int trace_personality(pid_t pid G_GNUC_UNUSED)
+inline int trace_personality(G_GNUC_UNUSED pid_t pid)
 {
     return 0;
 }

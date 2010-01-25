@@ -75,7 +75,7 @@ static inline void sydbox_log_output (const gchar *log_domain,
 }
 
 static void sydbox_log_handler(const gchar *log_domain, GLogLevelFlags log_level,
-        const gchar *message, gpointer user_data G_GNUC_UNUSED)
+        const gchar *message, G_GNUC_UNUSED gpointer userdata)
 {
     if ( ((log_level & G_LOG_LEVEL_MESSAGE)   && sydbox_config_get_verbosity() < 1) ||
          ((log_level & G_LOG_LEVEL_INFO)      && sydbox_config_get_verbosity() < 2) ||

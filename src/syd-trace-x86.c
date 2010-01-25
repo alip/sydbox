@@ -36,7 +36,7 @@ static const long syscall_args[1][MAX_ARGS] = {
     {4 * EBX, 4 * ECX, 4 * EDX, 4 * ESI, 4 * EDI, 4 * EBP}
 };
 
-inline int trace_personality(pid_t pid G_GNUC_UNUSED)
+inline int trace_personality(G_GNUC_UNUSED pid_t pid)
 {
     return 0;
 }

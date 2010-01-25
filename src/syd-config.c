@@ -518,14 +518,14 @@ void sydbox_config_update_from_environment(void)
     }
 }
 
-static inline void print_slist_entry(gpointer data, gpointer userdata G_GNUC_UNUSED)
+static inline void print_slist_entry(gpointer data, G_GNUC_UNUSED gpointer userdata)
 {
     gchar *cdata = (gchar *) data;
     if (NULL != cdata && '\0' != cdata[0])
         g_fprintf(stderr, "\t%s\n", cdata);
 }
 
-static inline void print_netlist_entry(gpointer data, gpointer userdata G_GNUC_UNUSED)
+static inline void print_netlist_entry(gpointer data, G_GNUC_UNUSED gpointer userdata)
 {
     char ip[100] = { 0 };
     struct sydbox_addr *addr = (struct sydbox_addr *) data;

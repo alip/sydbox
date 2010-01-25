@@ -125,13 +125,13 @@ void tchild_free_one(gpointer child_ptr)
     g_free(child);
 }
 
-void tchild_kill_one(gpointer pid_ptr, gpointer child_ptr G_GNUC_UNUSED, void *userdata G_GNUC_UNUSED)
+void tchild_kill_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_UNUSED void *userdata)
 {
     pid_t pid = GPOINTER_TO_INT(pid_ptr);
     trace_kill(pid);
 }
 
-void tchild_cont_one(gpointer pid_ptr, gpointer child_ptr G_GNUC_UNUSED, void *userdata G_GNUC_UNUSED)
+void tchild_cont_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_UNUSED void *userdata)
 {
     pid_t pid = GPOINTER_TO_INT(pid_ptr);
     trace_cont(pid);

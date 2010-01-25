@@ -175,7 +175,8 @@ static gchar *get_groupname (void)
     return (errno) ? NULL : g_strdup(grp->gr_name);
 }
 
-static void G_GNUC_NORETURN sydbox_execute_child(int argc G_GNUC_UNUSED, char **argv)
+G_GNUC_NORETURN
+static void sydbox_execute_child(G_GNUC_UNUSED int argc, char **argv)
 {
     if (trace_me() < 0) {
         g_printerr("failed to set tracing: %s\n", g_strerror(errno));
@@ -193,7 +194,7 @@ static void G_GNUC_NORETURN sydbox_execute_child(int argc G_GNUC_UNUSED, char **
 
     execvp(argv[0], argv);
 
-    g_printerr("execvp() failed: %s\n", g_strerror (errno));
+    g_printerr("execvp() failed: %s\n", g_strerror(errno));
     _exit(-1);
 }
 

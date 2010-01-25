@@ -67,7 +67,7 @@ void dispatch_free(void)
     }
 }
 
-int dispatch_lookup(int personality G_GNUC_UNUSED, int sno)
+int dispatch_lookup(G_GNUC_UNUSED int personality, int sno)
 {
     gpointer f;
 
@@ -76,7 +76,7 @@ int dispatch_lookup(int personality G_GNUC_UNUSED, int sno)
     return (f == NULL) ? -1 : GPOINTER_TO_INT(f);
 }
 
-const char *dispatch_name(int personality G_GNUC_UNUSED, int sno)
+const char *dispatch_name(G_GNUC_UNUSED int personality, int sno)
 {
     const char *sname;
 
@@ -85,7 +85,7 @@ const char *dispatch_name(int personality G_GNUC_UNUSED, int sno)
     return sname ? sname : UNKNOWN_SYSCALL;
 }
 
-inline const char *dispatch_mode(int personality G_GNUC_UNUSED)
+inline const char *dispatch_mode(G_GNUC_UNUSED int personality)
 {
     const char *mode;
 #if defined(I386)
@@ -100,17 +100,17 @@ inline const char *dispatch_mode(int personality G_GNUC_UNUSED)
     return mode;
 }
 
-inline bool dispatch_chdir(int personality G_GNUC_UNUSED, int sno)
+inline bool dispatch_chdir(G_GNUC_UNUSED int personality, int sno)
 {
     return IS_CHDIR(sno);
 }
 
-inline bool dispatch_dup(int personality G_GNUC_UNUSED, int sno)
+inline bool dispatch_dup(G_GNUC_UNUSED int personality, int sno)
 {
     return IS_DUP(sno);
 }
 
-inline bool dispatch_maybind(int personality G_GNUC_UNUSED, int sno)
+inline bool dispatch_maybind(G_GNUC_UNUSED int personality, int sno)
 {
 #if defined(I386) || defined(POWERPC)
     return (__NR_socketcall == sno);
@@ -121,7 +121,7 @@ inline bool dispatch_maybind(int personality G_GNUC_UNUSED, int sno)
 #endif
 }
 
-inline bool dispatch_maygetsockname(int personality G_GNUC_UNUSED, int sno)
+inline bool dispatch_maygetsockname(G_GNUC_UNUSED int personality, int sno)
 {
 #if defined(I386) || defined(POWERPC)
     return (__NR_socketcall == sno);

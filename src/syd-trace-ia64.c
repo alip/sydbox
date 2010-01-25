@@ -57,7 +57,7 @@ static int upeek_ia64(pid_t pid, int narg, long *res)
     return umoven(pid, (unsigned long) ia64_rse_skip_regs(out0, narg), (char *) res, sizeof(long));
 }
 
-inline int trace_personality(pid_t pid G_GNUC_UNUSED)
+inline int trace_personality(G_GNUC_UNUSED pid_t pid)
 {
     return 0;
 }
@@ -127,7 +127,7 @@ int trace_set_return(pid_t pid, long val)
     return 0;
 }
 
-int trace_get_arg(pid_t pid, int personality G_GNUC_UNUSED, int arg, long *res)
+int trace_get_arg(pid_t pid, G_GNUC_UNUSED int personality, int arg, long *res)
 {
     int save_errno;
 
@@ -143,7 +143,7 @@ int trace_get_arg(pid_t pid, int personality G_GNUC_UNUSED, int arg, long *res)
     return 0;
 }
 
-char *trace_get_path(pid_t pid, int personality G_GNUC_UNUSED, int arg)
+char *trace_get_path(pid_t pid, G_GNUC_UNUSED int personality, int arg)
 {
     int save_errno;
     long addr = 0;
@@ -174,7 +174,7 @@ char *trace_get_path(pid_t pid, int personality G_GNUC_UNUSED, int arg)
     return buf;
 }
 
-char *trace_get_argv_as_string(pid_t pid, int personality G_GNUC_UNUSED, int arg)
+char *trace_get_argv_as_string(pid_t pid, G_GNUC_UNUSED int personality, int arg)
 {
     int save_errno;
     char *s;
@@ -225,7 +225,7 @@ char *trace_get_argv_as_string(pid_t pid, int personality G_GNUC_UNUSED, int arg
     return g_string_free(res, FALSE);
 }
 
-int trace_fake_stat(pid_t pid, int personality G_GNUC_UNUSED)
+int trace_fake_stat(pid_t pid, G_GNUC_UNUSED int personality)
 {
     int n, m, save_errno;
     long addr = 0;
@@ -275,7 +275,7 @@ int trace_fake_stat(pid_t pid, int personality G_GNUC_UNUSED)
     return 0;
 }
 
-int trace_decode_socketcall(pid_t pid, int personality G_GNUC_UNUSED)
+int trace_decode_socketcall(pid_t pid, G_GNUC_UNUSED int personality)
 {
     int save_errno;
     long addr;
