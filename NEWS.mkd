@@ -6,6 +6,7 @@ every change, see git log.
 * Use vfork instead of fork to spawn initial child, which decreases start up
   time. This also replaces before\_initial\_execve hack for `execve()` sandboxing.
 * Network access violations can be filtered
+* Fix option parsing
 
 ### 0.6.3
 * Resolve path of non-abstract UNIX sockets
