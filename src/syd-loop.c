@@ -19,6 +19,10 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -247,7 +251,12 @@ int trace_loop(context_t *ctx)
             case E_EXIT_SIGNAL:
                 if (G_UNLIKELY(ctx->eldest == pid)) {
                     exit_code = 128 + WTERMSIG(status);
+#ifdef HAVE_STRSIGNAL
+                    g_message("eldest child %i exited with signal %d (%s)", pid,
+                            WTERMSIG(status), strsignal(WTERMSIG(status)));
+#else
                     g_message("eldest child %i exited with signal %d", pid, WTERMSIG(status));
+#endif /* HAVE_STRSIGNAL */
                     if (!sydbox_config_get_wait_all()) {
                         g_hash_table_foreach(ctx->children, tchild_cont_one, NULL);
                         g_hash_table_destroy(ctx->children);
@@ -255,8 +264,15 @@ int trace_loop(context_t *ctx)
                         return exit_code;
                     }
                 }
-                else
+                else {
+#ifdef HAVE_STRSIGNAL
+                    g_info("child %i exited with signal signal %d (%s)", pid,
+                            WTERMSIG(status), strsignal(WTERMSIG(status)));
+#else
                     g_info("child %i exited with signal %d", pid, WTERMSIG(status));
+#endif /* HAVE_STRSIGNAL */
+                }
+
                 tchild_delete(ctx->children, pid);
                 break;
             case E_UNKNOWN:

@@ -124,7 +124,7 @@ AC_CHECK_HEADERS([sys/reg.h], [], [])
 dnl }}}
 
 dnl {{{ Check functions
-AC_CHECK_FUNCS([dup3 fchdir])
+AC_CHECK_FUNCS([dup3 fchdir strsignal])
 dnl }}}
 
 dnl {{{ Check types
