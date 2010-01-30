@@ -27,7 +27,6 @@
 typedef struct
 {
     pid_t eldest;               // first child's pid is kept to determine return code.
-    bool before_initial_execve; // first execve() is noted here for execve(2) sandboxing.
     GHashTable *children;       // list of children
 } context_t;
 

@@ -242,7 +242,7 @@ static void syscall_check_start(G_GNUC_UNUSED context_t *ctx, struct tchild *chi
             return;
     }
 #if 0
-    if (!ctx->before_initial_execve && child->sandbox->exec && sflags & EXEC_CALL) {
+    if (child->sandbox->exec && sflags & EXEC_CALL) {
 #endif
     if (sflags & EXEC_CALL) {
         if (!syscall_get_path(child->pid, child->personality, 0, data))
@@ -743,12 +743,13 @@ static gchar *syscall_resolvepath(struct tchild *child, struct checkdata *data, 
  * returns.
  * If child->sandbox->path is false it does nothing and simply returns.
  */
-static void syscall_check_canonicalize(context_t *ctx, struct tchild *child, struct checkdata *data)
+static void syscall_check_canonicalize(G_GNUC_UNUSED context_t *ctx, struct tchild *child,
+        struct checkdata *data)
 {
     if (G_UNLIKELY(RS_ALLOW != data->result))
         return;
 
-    if (!ctx->before_initial_execve && child->sandbox->exec && sflags & EXEC_CALL) {
+    if (child->sandbox->exec && sflags & EXEC_CALL) {
         g_debug("canonicalizing `%s' for system call %lu(%s), child %i", data->pathlist[0],
                 sno, sname, child->pid);
         data->rpathlist[0] = syscall_resolvepath(child, data, 0, false);
@@ -889,7 +890,8 @@ static void syscall_handle_path(struct tchild *child, struct checkdata *data, in
     }
 }
 
-static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata *data)
+static void syscall_check(G_GNUC_UNUSED context_t *ctx, struct tchild *child,
+        struct checkdata *data)
 {
     bool isbind, violation;
     char ip[100] = { 0 };
@@ -971,7 +973,7 @@ static void syscall_check(context_t *ctx, struct tchild *child, struct checkdata
         return;
     }
 
-    if (!ctx->before_initial_execve && child->sandbox->exec && sflags & EXEC_CALL) {
+    if (child->sandbox->exec && sflags & EXEC_CALL) {
         g_debug("checking `%s' for exec access", data->rpathlist[0]);
         int allow_exec = pathlist_check(child->sandbox->exec_prefixes, data->rpathlist[0]);
         if (!allow_exec) {

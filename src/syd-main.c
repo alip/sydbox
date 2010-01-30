@@ -183,12 +183,6 @@ static void sydbox_execute_child(G_GNUC_UNUSED int argc, char **argv)
         _exit(-1);
     }
 
-    /* stop and wait for the parent to resume us with trace_syscall */
-    if (kill(getpid(), SIGSTOP) < 0) {
-        g_printerr("failed to send SIGSTOP: %s\n", g_strerror(errno));
-        _exit(-1);
-    }
-
     if (strncmp(argv[0], "/bin/sh", 8) == 0)
         g_fprintf(stderr, ANSI_DARK_MAGENTA PINK_FLOYD ANSI_NORMAL);
 
@@ -223,13 +217,14 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
 #undef HANDLE_SIGNAL
 
     /* wait for SIGSTOP */
-    wait (&status);
-    if (WIFEXITED (status)) {
+    wait(&status);
+    if (WIFEXITED(status)) {
         g_critical("wtf? child died before sending SIGSTOP");
         g_printerr("wtf? child died before sending SIGSTOP\n");
         exit(WEXITSTATUS(status));
     }
-    g_assert(WIFSTOPPED(status) && SIGSTOP == WSTOPSIG(status));
+    g_assert(WIFSTOPPED(status));
+    g_assert(WSTOPSIG(status) == SIGTRAP);
 
     if (0 > trace_setup(pid)) {
         g_critical("failed to setup tracing options: %s", g_strerror(errno));
@@ -391,7 +386,7 @@ static int sydbox_internal_main(int argc, char **argv)
     g_setenv("SYDBOX_VERSION", VERSION, 1);
     g_setenv("SYDBOX_GITHEAD", GIT_HEAD, 1);
 
-    if ((pid = fork()) < 0) {
+    if ((pid = vfork()) < 0) {
         g_printerr("failed to fork: %s\n", g_strerror(errno));
         return EXIT_FAILURE;
     }
