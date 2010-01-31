@@ -92,16 +92,10 @@ void tchild_inherit(struct tchild *child, struct tchild *parent)
     child->sandbox->network = parent->sandbox->network;
     child->sandbox->lock = parent->sandbox->lock;
     // Copy path lists
-    walk = parent->sandbox->write_prefixes;
-    while (NULL != walk) {
+    for (walk = parent->sandbox->write_prefixes; walk != NULL; walk = g_slist_next(walk))
         pathnode_new(&(child->sandbox->write_prefixes), walk->data, 0);
-        walk = g_slist_next(walk);
-    }
-    walk = parent->sandbox->exec_prefixes;
-    while (NULL != walk) {
+    for (walk = parent->sandbox->exec_prefixes; walk != NULL; walk = g_slist_next(walk))
         pathnode_new(&(child->sandbox->exec_prefixes), walk->data, 0);
-        walk = g_slist_next(walk);
-    }
     child->flags &= ~TCHILD_NEEDINHERIT;
 }
 

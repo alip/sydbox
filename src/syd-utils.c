@@ -73,7 +73,7 @@ void sydbox_access_violation_path(struct tchild *child, const gchar *path, const
     va_list args;
     GSList *walk;
 
-    for (walk = sydbox_config_get_filters(); NULL != walk; walk = g_slist_next(walk)) {
+    for (walk = sydbox_config_get_filters(); walk != NULL; walk = g_slist_next(walk)) {
         gchar *pattern = (gchar *)walk->data;
         if (0 == fnmatch(pattern, path, FNM_PATHNAME)) {
             g_debug("pattern `%s' matches path `%s', ignoring the access violation", pattern, path);
@@ -93,7 +93,7 @@ void sydbox_access_violation_exec(struct tchild *child, const gchar *path, const
     va_list args;
     GSList *walk;
 
-    for (walk = sydbox_config_get_exec_filters(); NULL != walk; walk = g_slist_next(walk)) {
+    for (walk = sydbox_config_get_exec_filters(); walk != NULL; walk = g_slist_next(walk)) {
         gchar *pattern = (gchar *)walk->data;
         if (0 == fnmatch(pattern, path, FNM_PATHNAME)) {
             g_debug("pattern `%s' matches path `%s', ignoring the access violation", pattern, path);
@@ -113,7 +113,7 @@ void sydbox_access_violation_net(struct tchild *child, struct sydbox_addr *addr,
     va_list args;
     GSList *walk;
 
-    for (walk = sydbox_config_get_network_filters(); NULL != walk; walk = g_slist_next(walk)) {
+    for (walk = sydbox_config_get_network_filters(); walk != NULL; walk = g_slist_next(walk)) {
         if (address_has(walk->data, addr)) {
             g_debug("filter matches address, ignoring the access violation");
             return;

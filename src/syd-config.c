@@ -752,15 +752,13 @@ int sydbox_config_rmfilter(const gchar *filter)
 {
     GSList *walk;
 
-    walk = config->filters;
-    while (NULL != walk) {
+    for (walk = config->filters; walk != NULL; walk = g_slist_next(walk)) {
         if (0 == strncmp(walk->data, filter, strlen(filter) + 1)) {
             config->filters = g_slist_remove_link(config->filters, walk);
             g_free(walk->data);
             g_slist_free(walk);
             return 1;
         }
-        walk = g_slist_next(walk);
     }
     return 0;
 }
@@ -774,15 +772,13 @@ int sydbox_config_rmfilter_exec(const gchar *filter)
 {
     GSList *walk;
 
-    walk = config->exec_filters;
-    while (NULL != walk) {
+    for (walk = config->exec_filters; walk != NULL; walk = g_slist_next(walk)) {
         if (0 == strncmp(walk->data, filter, strlen(filter) + 1)) {
             config->exec_filters = g_slist_remove_link(config->exec_filters, walk);
             g_free(walk->data);
             g_slist_free(walk);
             return 1;
         }
-        walk = g_slist_next(walk);
     }
     return 0;
 }
@@ -796,15 +792,13 @@ int sydbox_config_rmfilter_net(const struct sydbox_addr *filter)
 {
     GSList *walk;
 
-    walk = config->network_filters;
-    while (NULL != walk) {
+    for (walk = config->network_filters; walk != NULL; walk = g_slist_next(walk)) {
         if (address_cmp(walk->data, filter)) {
             config->network_filters = g_slist_remove_link(config->network_filters, walk);
             g_free(walk->data);
             g_slist_free(walk);
             return 1;
         }
-        walk = g_slist_next(walk);
     }
     return 0;
 }

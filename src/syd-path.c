@@ -265,8 +265,7 @@ void pathnode_delete(GSList **pathlist, const char *path_sanitized)
 {
     GSList *walk;
 
-    walk = *pathlist;
-    while (NULL != walk) {
+    for (walk = *pathlist; walk != NULL; walk = g_slist_next(walk)) {
         if (0 == strncmp(walk->data, path_sanitized, strlen(path_sanitized) + 1)) {
             g_debug("freeing pathnode %p", (void *) walk);
             *pathlist = g_slist_remove_link(*pathlist, walk);
@@ -274,7 +273,6 @@ void pathnode_delete(GSList **pathlist, const char *path_sanitized)
             g_slist_free(walk);
             break;
         }
-        walk = g_slist_next(walk);
     }
 }
 
@@ -312,8 +310,7 @@ int pathlist_check(GSList *pathlist, const char *path_sanitized)
     g_debug("checking `%s'", path_sanitized);
 
     ret = 0;
-    walk = pathlist;
-    while (NULL != walk) {
+    for (walk = pathlist; walk != NULL; walk = g_slist_next(walk)) {
         if (0 == strncmp(walk->data, "/", 2)) {
             g_debug("`%s' begins with `%s'", path_sanitized, (char *) walk->data);
             ret = 1;
@@ -343,7 +340,6 @@ int pathlist_check(GSList *pathlist, const char *path_sanitized)
         }
         else
             g_debug("`%s' doesn't begin with `%s'", path_sanitized, (char *) walk->data);
-        walk = g_slist_next(walk);
     }
     if (ret)
         g_debug("path list check succeeded for `%s'", path_sanitized);
