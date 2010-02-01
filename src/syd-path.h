@@ -2,7 +2,7 @@
 
 /*
  * Copyright (c) 2009 Saleem Abdulrasool <compnerd@compnerd.org>
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -129,7 +129,7 @@ void pathnode_delete(GSList **pathlist, const char *path_sanitized);
 
 int pathlist_init(GSList **pathlist, const char *pathlist_env);
 
-int pathlist_check(GSList *pathlist, const char *path_sanitized);
+bool pathlist_check(GSList *pathlist, const char *path_sanitized);
 
 #endif // SYDBOX_GUARD_PATH_H
 

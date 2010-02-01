@@ -851,9 +851,8 @@ static void syscall_handle_path(struct tchild *child, struct checkdata *data, in
     char *path = data->rpathlist[narg];
 
     g_debug("checking `%s' for write access", path);
-    int allow_write = pathlist_check(child->sandbox->write_prefixes, path);
 
-    if (G_UNLIKELY(!allow_write)) {
+    if (G_UNLIKELY(!pathlist_check(child->sandbox->write_prefixes, path))) {
         if (syscall_handle_create(child, data, narg))
             return;
 
@@ -975,8 +974,7 @@ static void syscall_check(G_GNUC_UNUSED context_t *ctx, struct tchild *child,
 
     if (child->sandbox->exec && sflags & EXEC_CALL) {
         g_debug("checking `%s' for exec access", data->rpathlist[0]);
-        int allow_exec = pathlist_check(child->sandbox->exec_prefixes, data->rpathlist[0]);
-        if (!allow_exec) {
+        if (G_UNLIKELY(!pathlist_check(child->sandbox->exec_prefixes, data->rpathlist[0]))) {
             sydbox_access_violation_exec(child, data->rpathlist[0],
                     "execve(\"%s\", [%s])", data->rpathlist[0], data->sargv);
             data->result = RS_DENY;

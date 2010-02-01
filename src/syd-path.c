@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -302,31 +302,33 @@ int pathlist_init(GSList **pathlist, const char *pathlist_env)
     return npaths;
 }
 
-int pathlist_check(GSList *pathlist, const char *path_sanitized)
+bool pathlist_check(GSList *pathlist, const char *path_sanitized)
 {
-    int ret;
+    bool ret;
+    size_t len;
     GSList *walk;
 
     g_debug("checking `%s'", path_sanitized);
 
-    ret = 0;
+    ret = false;
     for (walk = pathlist; walk != NULL; walk = g_slist_next(walk)) {
         if (0 == strncmp(walk->data, "/", 2)) {
             g_debug("`%s' begins with `%s'", path_sanitized, (char *) walk->data);
-            ret = 1;
+            ret = true;
             break;
         }
-        else if (0 == strncmp(path_sanitized, walk->data, strlen(walk->data))) {
-            if (strlen(path_sanitized) > strlen(walk->data)) {
+        len = strlen(walk->data);
+        if (0 == strncmp(path_sanitized, walk->data, len)) {
+            if (strlen(path_sanitized) > len) {
                 /* Path begins with one of the allowed paths. Check for a
                  * zero byte or a / on the next character so that for example
                  * /devzero/foo doesn't pass the test when /dev is the only
                  * allowed path.
                  */
-                const char last = path_sanitized[strlen(walk->data)];
+                const char last = path_sanitized[len];
                 if ('\0' == last || '/' == last) {
                     g_debug("`%s' begins with `%s'", path_sanitized, (char *) walk->data);
-                    ret = 1;
+                    ret = true;
                     break;
                 }
                 else
@@ -334,7 +336,7 @@ int pathlist_check(GSList *pathlist, const char *path_sanitized)
             }
             else {
                 g_debug("`%s' begins with `%s'", path_sanitized, (char *) walk->data);
-                ret = 1;
+                ret = true;
                 break;
             }
         }
