@@ -185,7 +185,7 @@ static bool syscall_decode_net(struct tchild *child, struct checkdata *data)
     return true;
 }
 
-static bool syscall_handle_net(struct tchild *child, struct checkdata *data)
+static bool syscall_getaddr_net(struct tchild *child, struct checkdata *data)
 {
     if (sflags & DECODE_SOCKETCALL)
         return syscall_decode_net(child, data);
@@ -252,7 +252,7 @@ static void syscall_check_start(G_GNUC_UNUSED context_t *ctx, struct tchild *chi
         g_string_printf(child->lastexec, "execve(\"%s\", [%s])", data->pathlist[0], data->sargv);
     }
     if (child->sandbox->network) {
-        if (!syscall_handle_net(child, data))
+        if (!syscall_getaddr_net(child, data))
             return;
     }
 }
@@ -889,14 +889,82 @@ static void syscall_handle_path(struct tchild *child, struct checkdata *data, in
     }
 }
 
-static void syscall_check(G_GNUC_UNUSED context_t *ctx, struct tchild *child,
-        struct checkdata *data)
+static void syscall_handle_net(struct tchild *child, struct checkdata *data)
 {
     bool isbind, violation;
     char ip[100] = { 0 };
     GSList *whitelist, *walk;
     struct sydbox_addr *addr;
 
+    isbind = ((sflags & BIND_CALL) ||
+        ((sflags & DECODE_SOCKETCALL) && data->socket_subcall == SOCKET_SUBCALL_BIND));
+    whitelist = isbind
+        ? sydbox_config_get_network_whitelist_bind()
+        : sydbox_config_get_network_whitelist_connect();
+
+    violation = true;
+    for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
+        addr = (struct sydbox_addr *)walk->data;
+        if (address_has(addr, data->addr)) {
+            /* Check port range for NET_FAMILY. */
+            switch (addr->family) {
+                case AF_UNIX:
+                    violation = false;
+                    break;
+                case AF_INET:
+                    if (data->addr->u.sa.port[0] >= addr->u.sa.port[0] &&
+                            data->addr->u.sa.port[1] <= addr->u.sa.port[1])
+                        violation = false;
+                    break;
+#if HAVE_IPV6
+                case AF_INET6:
+                    if (data->addr->u.sa6.port[0] >= addr->u.sa6.port[0] &&
+                            data->addr->u.sa6.port[1] <= addr->u.sa6.port[1])
+                        violation = false;
+                    break;
+#endif /* HAVE_IPV6 */
+                default:
+                    g_assert_not_reached();
+            }
+
+            if (!violation)
+                break;
+        }
+    }
+
+    if (violation) {
+        switch (data->addr->family) {
+            case AF_UNIX:
+                sydbox_access_violation_net(child, data->addr, "%s{family=AF_UNIX path=%s abstract=%s}",
+                        sname, data->addr->u.saun.sun_path,
+                        data->addr->u.saun.abstract ? "true" : "false");
+                break;
+            case AF_INET:
+                inet_ntop(AF_INET, &data->addr->u.sa.sin_addr, ip, sizeof(ip));
+                sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET addr=%s port=%d}",
+                        sname, ip, data->addr->u.sa.port[0]);
+                break;
+#if HAVE_IPV6
+            case AF_INET6:
+                inet_ntop(AF_INET6, &data->addr->u.sa6.sin6_addr, ip, sizeof(ip));
+                sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET6 addr=%s port=%d}",
+                        sname, ip, data->addr->u.sa6.port[0]);
+                break;
+#endif /* HAVE_IPV6 */
+            default:
+                g_assert_not_reached();
+        }
+        data->result = RS_DENY;
+        /* For bind() set errno to EADDRNOTAVAIL.
+         * For connect() and sendto() set errno to ECONNREFUSED.
+         */
+        child->retval = isbind ? -EADDRNOTAVAIL : -ECONNREFUSED;
+    }
+}
+
+static void syscall_check(G_GNUC_UNUSED context_t *ctx, struct tchild *child,
+        struct checkdata *data)
+{
     if (G_UNLIKELY(RS_ALLOW != data->result))
         return;
 
@@ -904,71 +972,7 @@ static void syscall_check(G_GNUC_UNUSED context_t *ctx, struct tchild *child,
             IS_NET_CALL(sflags) &&
             data->addr != NULL &&
             IS_SUPPORTED_FAMILY(data->addr->family)) {
-
-        isbind = ((sflags & BIND_CALL) ||
-            ((sflags & DECODE_SOCKETCALL) && data->socket_subcall == SOCKET_SUBCALL_BIND));
-        whitelist = isbind
-            ? sydbox_config_get_network_whitelist_bind()
-            : sydbox_config_get_network_whitelist_connect();
-
-        violation = true;
-        for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
-            addr = (struct sydbox_addr *)walk->data;
-            if (address_has(addr, data->addr)) {
-                /* Check port range for NET_FAMILY. */
-                switch (addr->family) {
-                    case AF_UNIX:
-                        violation = false;
-                        break;
-                    case AF_INET:
-                        if (data->addr->u.sa.port[0] >= addr->u.sa.port[0] &&
-                                data->addr->u.sa.port[1] <= addr->u.sa.port[1])
-                            violation = false;
-                        break;
-#if HAVE_IPV6
-                    case AF_INET6:
-                        if (data->addr->u.sa6.port[0] >= addr->u.sa6.port[0] &&
-                                data->addr->u.sa6.port[1] <= addr->u.sa6.port[1])
-                            violation = false;
-                        break;
-#endif /* HAVE_IPV6 */
-                    default:
-                        g_assert_not_reached();
-                }
-
-                if (!violation)
-                    break;
-            }
-        }
-
-        if (violation) {
-            switch (data->addr->family) {
-                case AF_UNIX:
-                    sydbox_access_violation_net(child, data->addr, "%s{family=AF_UNIX path=%s abstract=%s}",
-                            sname, data->addr->u.saun.sun_path,
-                            data->addr->u.saun.abstract ? "true" : "false");
-                    break;
-                case AF_INET:
-                    inet_ntop(AF_INET, &data->addr->u.sa.sin_addr, ip, sizeof(ip));
-                    sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET addr=%s port=%d}",
-                            sname, ip, data->addr->u.sa.port[0]);
-                    break;
-#if HAVE_IPV6
-                case AF_INET6:
-                    inet_ntop(AF_INET6, &data->addr->u.sa6.sin6_addr, ip, sizeof(ip));
-                    sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET6 addr=%s port=%d}",
-                            sname, ip, data->addr->u.sa6.port[0]);
-                    break;
-#endif /* HAVE_IPV6 */
-                default:
-                    g_assert_not_reached();
-            }
-            data->result = RS_DENY;
-            /* For bind() set errno to EADDRNOTAVAIL.
-             * For connect() and sendto() set errno to ECONNREFUSED.
-             */
-            child->retval = isbind ? -EADDRNOTAVAIL : -ECONNREFUSED;
-        }
+        syscall_handle_net(child, data);
         return;
     }
 
