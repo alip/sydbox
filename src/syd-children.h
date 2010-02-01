@@ -44,10 +44,10 @@ enum lock_status
 
 struct tdata
 {
-    bool path;                          // Whether path sandboxing is enabled for child.
-    bool exec;                          // Whether execve(2) sandboxing is enabled for child.
-    bool network;                       // Whether network sandboxing is enabled for child.
-    int lock;                           // Whether magic commands are locked for the child.
+    bool path;              // Whether path sandboxing is enabled for child.
+    bool exec;              // Whether execve(2) sandboxing is enabled for child.
+    bool network;           // Whether network sandboxing is enabled for child.
+    int lock;               // Whether magic commands are locked for the child.
     GSList *write_prefixes;
     GSList *exec_prefixes;
 };
