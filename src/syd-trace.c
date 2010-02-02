@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -29,21 +29,25 @@ unsigned int trace_event(int status)
 
     if (WIFSTOPPED(status)) {
         sig = WSTOPSIG(status);
-        if (SIGSTOP == sig)
-            return E_STOP;
-        else if ((SIGTRAP | 0x80) == sig)
-            return E_SYSCALL;
-
-        event = (status >> 16) & 0xffff;
-        switch (event) {
-            case PTRACE_EVENT_FORK:
-                return E_FORK;
-            case PTRACE_EVENT_VFORK:
-                return E_VFORK;
-            case PTRACE_EVENT_CLONE:
-                return E_CLONE;
-            case PTRACE_EVENT_EXEC:
-                return E_EXEC;
+        switch (sig) {
+            case SIGSTOP:
+                return E_STOP;
+            case SIGTRAP | 0x80:
+                return E_SYSCALL;
+            case SIGTRAP:
+                event = (status >> 16) & 0xffff;
+                switch (event) {
+                    case PTRACE_EVENT_FORK:
+                        return E_FORK;
+                    case PTRACE_EVENT_VFORK:
+                        return E_VFORK;
+                    case PTRACE_EVENT_CLONE:
+                        return E_CLONE;
+                    case PTRACE_EVENT_EXEC:
+                        return E_EXEC;
+                    default:
+                        return E_GENUINE;
+                }
             default:
                 return E_GENUINE;
         }
