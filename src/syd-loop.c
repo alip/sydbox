@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  * Based in part upon catbox which is:
  *  Copyright (c) 2006-2007 TUBITAK/UEKAE
  *
@@ -108,7 +108,15 @@ static int xfork(context_t *ctx, struct tchild *child)
 
 static int xgenuine(context_t * ctx, struct tchild *child, int status)
 {
-    if (G_UNLIKELY(0 > trace_syscall(child->pid, WSTOPSIG(status)))) {
+    int sig = WSTOPSIG(status);
+
+#ifdef HAVE_STRSIGNAL
+    g_debug("child %i received genuine signal %d (%s)", child->pid, sig, strsignal(sig));
+#else
+    g_debug("child %i received genuine signal %d", child->pid, sig);
+#endif /* HAVE_STRSIGNAL */
+
+    if (G_UNLIKELY(0 > trace_syscall(child->pid, sig))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i after genuine signal: %s", child->pid, g_strerror(errno));
             g_printerr("failed to resume child %i after genuine signal: %s\n", child->pid, g_strerror(errno));
@@ -116,23 +124,31 @@ static int xgenuine(context_t * ctx, struct tchild *child, int status)
         }
         return context_remove_child(ctx, child->pid);
     }
-    g_debug("resumed child %i after genuine signal", child->pid);
+    g_debug("child %i was resumed after genuine signal", child->pid);
     return 0;
 }
 
 static int xunknown(context_t *ctx, struct tchild *child, int status)
 {
-    if (G_UNLIKELY(0 > trace_syscall(child->pid, WSTOPSIG(status)))) {
+    int sig = WSTOPSIG(status);
+
+#ifdef HAVE_STRSIGNAL
+    g_info("unknown signal %#x (%s) received from child %i", sig, strsignal(sig), child->pid);
+#else
+    g_info("unknown signal %#x received from child %i", sig, child->pid);
+#endif /* HAVE_STRSIGNAL */
+
+    if (G_UNLIKELY(0 > trace_syscall(child->pid, sig))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i after unknown signal %#x: %s",
-                    child->pid, WSTOPSIG(status), g_strerror(errno));
+                    child->pid, sig, g_strerror(errno));
             g_printerr("failed to resume child %i after unknown signal %#x: %s\n",
-                    child->pid, WSTOPSIG(status), g_strerror(errno));
+                    child->pid, sig, g_strerror(errno));
             exit(-1);
         }
         return context_remove_child(ctx, child->pid);
     }
-    g_debug("resumed child %i after unknown signal %#x", child->pid, status);
+    g_debug("child %i was resumed after unknown signal %#x", child->pid, sig);
     return 0;
 }
 
@@ -161,7 +177,7 @@ int trace_loop(context_t *ctx)
 
         switch(event) {
             case E_STOP:
-                g_debug("latest event for child %i is E_STOP, calling event handler", pid);
+                g_debug("child %i stopped", pid);
                 if (NULL == child) {
                     /* Child is born before PTRACE_EVENT_FORK.
                      * Set her up but don't resume her until we receive the
@@ -195,7 +211,10 @@ int trace_loop(context_t *ctx)
             case E_FORK:
             case E_VFORK:
             case E_CLONE:
-                g_debug("latest event for child %i is E_FORK, calling event handler", pid);
+                g_debug("child %i called %s()", pid,
+                        (event == E_FORK)
+                            ? "fork"
+                            : (event == E_VFORK) ? "vfork" : "clone");
                 ret = xfork(ctx, child);
                 if (0 != ret)
                     return exit_code;
@@ -204,7 +223,7 @@ int trace_loop(context_t *ctx)
                     return exit_code;
                 break;
             case E_EXEC:
-                g_debug("latest event for child %i is E_EXEC, calling event handler", pid);
+                g_debug("child %i called execve()", pid);
                 // Check for exec_lock
                 if (G_UNLIKELY(LOCK_PENDING == child->sandbox->lock)) {
                     g_info("access to magic commands is now denied for child %i", child->pid);
@@ -224,7 +243,6 @@ int trace_loop(context_t *ctx)
                     return exit_code;
                 break;
             case E_GENUINE:
-                g_debug("latest event for child %i is E_GENUINE, calling event handler", pid);
                 ret = xgenuine(ctx, child, status);
                 if (0 != ret)
                     return exit_code;
@@ -245,7 +263,7 @@ int trace_loop(context_t *ctx)
                     }
                 }
                 else
-                    g_debug("child %i exited with return code: %d", pid, ret);
+                    g_debug("child %i exited with return code %d", pid, ret);
                 tchild_delete(ctx->children, pid);
                 break;
             case E_EXIT_SIGNAL:
@@ -266,7 +284,7 @@ int trace_loop(context_t *ctx)
                 }
                 else {
 #ifdef HAVE_STRSIGNAL
-                    g_info("child %i exited with signal signal %d (%s)", pid,
+                    g_info("child %i exited with signal %d (%s)", pid,
                             WTERMSIG(status), strsignal(WTERMSIG(status)));
 #else
                     g_info("child %i exited with signal %d", pid, WTERMSIG(status));
@@ -276,7 +294,6 @@ int trace_loop(context_t *ctx)
                 tchild_delete(ctx->children, pid);
                 break;
             case E_UNKNOWN:
-                g_info("unknown signal %#x received from child %i", WSTOPSIG(status), pid);
                 ret = xunknown(ctx, child, status);
                 if (0 != ret)
                     return exit_code;
