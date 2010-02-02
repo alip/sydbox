@@ -85,7 +85,7 @@ void tchild_inherit(struct tchild *child, struct tchild *parent)
         child->cwd = g_strdup(parent->cwd);
     }
 
-    child->lastexec = g_string_new(parent->lastexec->str);
+    child->lastexec = g_string_assign(child->lastexec, parent->lastexec->str);
     child->personality = parent->personality;
     child->sandbox->path = parent->sandbox->path;
     child->sandbox->exec = parent->sandbox->exec;
