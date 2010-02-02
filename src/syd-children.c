@@ -37,14 +37,14 @@
 #include "syd-trace.h"
 #include "syd-net.h"
 
-void tchild_new(GHashTable *children, pid_t pid)
+struct tchild *tchild_new(GHashTable *children, pid_t pid, bool eldest)
 {
     gchar *proc_pid;
     struct tchild *child;
 
     g_debug("new child %i", pid);
     child = (struct tchild *) g_malloc(sizeof(struct tchild));
-    child->flags = TCHILD_NEEDSETUP | TCHILD_NEEDINHERIT;
+    child->flags = eldest ? TCHILD_NEEDSETUP : TCHILD_NEEDSETUP | TCHILD_NEEDINHERIT;
     child->pid = pid;
     child->sno = 0xbadca11;
     child->retval = -1;
@@ -60,7 +60,7 @@ void tchild_new(GHashTable *children, pid_t pid)
     child->sandbox->write_prefixes = NULL;
     child->sandbox->exec_prefixes = NULL;
 
-    if (sydbox_config_get_allow_proc_pid()) {
+    if (!eldest && sydbox_config_get_allow_proc_pid()) {
         /* Allow /proc/%d which is needed for processes to work reliably.
          * FIXME: This path will be inherited by children as well.
          */
@@ -70,6 +70,7 @@ void tchild_new(GHashTable *children, pid_t pid)
     }
 
     g_hash_table_insert(children, GINT_TO_POINTER(pid), child);
+    return child;
 }
 
 void tchild_inherit(struct tchild *child, struct tchild *parent)

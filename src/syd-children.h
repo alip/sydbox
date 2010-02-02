@@ -66,7 +66,7 @@ struct tchild
     struct tdata *sandbox;   // Sandbox data
 };
 
-void tchild_new(GHashTable *children, pid_t pid);
+struct tchild *tchild_new(GHashTable *children, pid_t pid, bool eldest);
 
 void tchild_inherit(struct tchild *child, struct tchild *parent);
 

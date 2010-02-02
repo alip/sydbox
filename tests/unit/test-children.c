@@ -29,9 +29,9 @@ static void test1(void)
     GHashTable *children = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, tchild_free_one);
     struct tchild *child;
 
-    tchild_new(children, 666);
+    tchild_new(children, 666, true);
 
-    child = (struct tchild *) tchild_find(children, 666);
+    child = tchild_find(children, 666);
     g_assert(child);
     g_assert_cmpint(child->pid, ==, 666);
     g_assert(child->flags & TCHILD_NEEDSETUP);
@@ -46,9 +46,9 @@ static void test2(void)
 {
     GHashTable *children = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, tchild_free_one);
 
-    tchild_new(children, 666);
-    tchild_new(children, 667);
-    tchild_new(children, 668);
+    tchild_new(children, 666, true);
+    tchild_new(children, 667, false);
+    tchild_new(children, 668, false);
 
     tchild_delete(children, 666);
 

@@ -91,8 +91,7 @@ static int xfork(context_t *ctx, struct tchild *child)
         /* Child hasn't been born yet, add it to the list of children and
          * inherit parent's sandbox data.
          */
-        tchild_new(ctx->children, childpid);
-        newchild = tchild_find(ctx->children, childpid);
+        newchild = tchild_new(ctx->children, childpid, false);
         tchild_inherit(newchild, child);
     }
     else if (newchild->flags & TCHILD_NEEDINHERIT) {
@@ -184,8 +183,7 @@ int trace_loop(context_t *ctx)
                      * event.
                      */
                     g_debug("setting up prematurely born child %i", pid);
-                    tchild_new(ctx->children, pid);
-                    child = tchild_find(ctx->children, pid);
+                    child = tchild_new(ctx->children, pid, false);
                     ret = xsetup(ctx, child);
                     if (0 != ret)
                         return exit_code;

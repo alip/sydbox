@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  * Copyright (c) 2009 Saleem Abdulrasool <compnerd@compnerd.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
@@ -232,9 +232,8 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
         exit(-1);
     }
 
-    tchild_new(ctx->children, pid);
     ctx->eldest = pid;
-    eldest = tchild_find(ctx->children, pid);
+    eldest = tchild_new(ctx->children, pid, true);
     eldest->personality = trace_personality(pid);
     if (0 > eldest->personality) {
         g_critical("failed to determine personality of eldest child %i: %s", eldest->pid, g_strerror(errno));
@@ -246,15 +245,21 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
     eldest->sandbox->exec = sydbox_config_get_sandbox_exec();
     eldest->sandbox->network = sydbox_config_get_sandbox_network();
     eldest->sandbox->lock = sydbox_config_get_disallow_magic_commands() ? LOCK_SET : LOCK_UNSET;
+
     eldest->sandbox->write_prefixes = sydbox_config_get_write_prefixes();
+    if (sydbox_config_get_allow_proc_pid()) {
+        gchar *proc_pid = g_strdup_printf("/proc/%i", pid);
+        pathnode_new(&(eldest->sandbox->write_prefixes), proc_pid, false);
+        g_free(proc_pid);
+    }
     eldest->sandbox->exec_prefixes = sydbox_config_get_exec_prefixes();
+
     eldest->cwd = egetcwd();
     if (NULL == eldest->cwd) {
         g_critical("failed to get current working directory: %s", g_strerror(errno));
         g_printerr("failed to get current working directory: %s\n", g_strerror(errno));
         exit(-1);
     }
-    eldest->flags &= ~TCHILD_NEEDINHERIT;
 
     /* Construct the lastexec string for the initial exec */
     int i;
@@ -273,7 +278,7 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
     }
 
     g_info("entering loop");
-    retval = trace_loop (ctx);
+    retval = trace_loop(ctx);
     g_info("exited loop with return value: %d", retval);
 
     return retval;
