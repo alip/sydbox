@@ -378,7 +378,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     else if (path_magic_write(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_WRITE) - 1;
-        pathnode_new(&(child->sandbox->write_prefixes), rpath, 1);
+        pathnode_new(&(child->sandbox->write_prefixes), rpath, true);
         g_info("approved addwrite(\"%s\") for child %i", rpath, child->pid);
     }
     else if (path_magic_rmwrite(path)) {
@@ -403,7 +403,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     else if (path_magic_addexec(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_ADDEXEC) - 1;
-        pathnode_new(&(child->sandbox->exec_prefixes), rpath, 1);
+        pathnode_new(&(child->sandbox->exec_prefixes), rpath, true);
         g_info("approved addexec(\"%s\") for child %i", rpath, child->pid);
     }
     else if (path_magic_rmexec(path)) {

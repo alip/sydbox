@@ -65,7 +65,7 @@ void tchild_new(GHashTable *children, pid_t pid)
          * FIXME: This path will be inherited by children as well.
          */
         proc_pid = g_strdup_printf("/proc/%i", pid);
-        pathnode_new(&(child->sandbox->write_prefixes), proc_pid, 0);
+        pathnode_new(&(child->sandbox->write_prefixes), proc_pid, false);
         g_free(proc_pid);
     }
 
@@ -93,9 +93,9 @@ void tchild_inherit(struct tchild *child, struct tchild *parent)
     child->sandbox->lock = parent->sandbox->lock;
     // Copy path lists
     for (walk = parent->sandbox->write_prefixes; walk != NULL; walk = g_slist_next(walk))
-        pathnode_new(&(child->sandbox->write_prefixes), walk->data, 0);
+        pathnode_new(&(child->sandbox->write_prefixes), walk->data, false);
     for (walk = parent->sandbox->exec_prefixes; walk != NULL; walk = g_slist_next(walk))
-        pathnode_new(&(child->sandbox->exec_prefixes), walk->data, 0);
+        pathnode_new(&(child->sandbox->exec_prefixes), walk->data, false);
     child->flags &= ~TCHILD_NEEDINHERIT;
 }
 

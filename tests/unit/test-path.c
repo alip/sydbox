@@ -2,6 +2,7 @@
 
 /*
  * Copyright (c) 2009 Saleem Abdulrasool <compnerd@compnerd.org>
+ * Copyright (c) 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -17,6 +18,7 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdbool.h>
 #include <string.h>
 #include <glib.h>
 
@@ -27,7 +29,7 @@ static void test1(void)
 {
     GSList *pathlist = NULL;
 
-    pathnode_new(&pathlist, "/dev/null", 1);
+    pathnode_new(&pathlist, "/dev/null", true);
     g_assert_cmpstr(pathlist->data, ==, "/dev/null");
     g_assert(pathlist->next == NULL);
 
@@ -41,7 +43,7 @@ static void test2(void)
 
     old_home = g_strdup(g_getenv("HOME"));
     if (g_setenv("HOME", "/home/sydbox", TRUE)) {
-        pathnode_new(&pathlist, "${HOME}/.sydbox", 1);
+        pathnode_new(&pathlist, "${HOME}/.sydbox", true);
         g_assert_cmpstr(pathlist->data, ==, "/home/sydbox/.sydbox");
     }
     g_setenv("HOME", old_home, TRUE);
@@ -52,7 +54,7 @@ static void test3(void)
 {
     GSList *pathlist = NULL;
 
-    pathnode_new(&pathlist, "$(echo -n /home/sydbox)/.sydbox", 1);
+    pathnode_new(&pathlist, "$(echo -n /home/sydbox)/.sydbox", true);
     g_assert_cmpstr(pathlist->data, ==, "/home/sydbox/.sydbox");
 }
 
@@ -60,7 +62,7 @@ static void test4(void)
 {
     GSList *pathlist = NULL;
 
-    pathnode_new(&pathlist, "/dev/null", 1);
+    pathnode_new(&pathlist, "/dev/null", true);
     pathnode_free(&pathlist);
     g_assert(pathlist == NULL);
 }
@@ -75,7 +77,7 @@ static void test5(void)
     retval = pathlist_init(&pathlist, env);
     g_assert_cmpint(retval, ==, 3);
 
-    for (entry = pathlist; entry; entry = g_slist_next (entry))
+    for (entry = pathlist; entry != NULL; entry = g_slist_next(entry))
         if (strcmp(entry->data, "foo") == 0)
             seen_foo = TRUE;
         else if (strcmp(entry->data, "bar") == 0)
@@ -123,7 +125,7 @@ static void test8(void)
 {
     GSList *pathlist = NULL;
 
-    pathnode_new(&pathlist, "/dev/null", 1);
+    pathnode_new(&pathlist, "/dev/null", true);
     pathnode_delete(&pathlist, "/dev/null");
 
     g_assert(pathlist == NULL);
@@ -133,13 +135,13 @@ static void test9(void)
 {
     GSList *pathlist = NULL, *entry;
 
-    pathnode_new(&pathlist, "/dev/null", 1);
-    pathnode_new(&pathlist, "/dev/zero", 1);
-    pathnode_new(&pathlist, "/dev/random", 1);
+    pathnode_new(&pathlist, "/dev/null", true);
+    pathnode_new(&pathlist, "/dev/zero", true);
+    pathnode_new(&pathlist, "/dev/random", true);
 
     pathnode_delete(&pathlist, "/dev/null");
 
-    for (entry = pathlist; entry; entry = g_slist_next(entry))
+    for (entry = pathlist; entry != NULL; entry = g_slist_next(entry))
         g_assert_cmpstr(entry->data, !=, "/dev/null");
 
     pathnode_free(&pathlist);

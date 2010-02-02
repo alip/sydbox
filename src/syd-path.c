@@ -199,7 +199,7 @@ inline bool path_magic_net_unwhitelist_connect(const char *path)
     return (0 == strncmp(path, CMD_NET_UNWHITELIST_CONNECT, sizeof(CMD_NET_UNWHITELIST_CONNECT) - 1));
 }
 
-int pathnode_new(GSList **pathlist, const char *path, int sanitize)
+int pathnode_new(GSList **pathlist, const char *path, bool sanitize)
 {
     char *data;
 
@@ -231,14 +231,14 @@ int pathnode_new(GSList **pathlist, const char *path, int sanitize)
     return 0;
 }
 
-int pathnode_new_early(GSList **pathlist, const char *path, int sanitize)
+int pathnode_new_early(GSList **pathlist, const char *path, bool sanitize)
 {
     char *data, *spath;
 
     if (G_UNLIKELY(NULL == path || '\0' == path[0]))
         return -1;
 
-    if (!sanitize)
+    if (G_LIKELY(!sanitize))
         data = g_strdup(path);
     else {
         spath = sydbox_compress_path(path);

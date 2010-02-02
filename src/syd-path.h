@@ -119,9 +119,9 @@ bool path_magic_net_whitelist_connect(const char *path);
 
 bool path_magic_net_unwhitelist_connect(const char *path);
 
-int pathnode_new(GSList **pathlist, const char *path, int sanitize);
+int pathnode_new(GSList **pathlist, const char *path, bool sanitize);
 
-int pathnode_new_early(GSList **pathlist, const char *path, int sanitize);
+int pathnode_new_early(GSList **pathlist, const char *path, bool sanitize);
 
 void pathnode_free(GSList **pathlist);
 

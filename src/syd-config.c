@@ -389,7 +389,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     char **write_prefixes = g_key_file_get_string_list(config_fd, "prefix", "write", NULL, NULL);
     if (NULL != write_prefixes) {
         for (unsigned int i = 0; NULL != write_prefixes[i]; i++)
-            pathnode_new_early(&config->write_prefixes, write_prefixes[i], 1);
+            pathnode_new_early(&config->write_prefixes, write_prefixes[i], true);
         g_strfreev(write_prefixes);
     }
 
@@ -397,7 +397,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     char **exec_prefixes = g_key_file_get_string_list(config_fd, "prefix", "exec", NULL, NULL);
     if (NULL != exec_prefixes) {
         for (unsigned int i = 0; NULL != exec_prefixes[i]; i++)
-            pathnode_new_early(&config->exec_prefixes, exec_prefixes[i], 1);
+            pathnode_new_early(&config->exec_prefixes, exec_prefixes[i], true);
         g_strfreev(exec_prefixes);
     }
 
