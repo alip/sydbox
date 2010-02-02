@@ -31,7 +31,7 @@
 #define IS_DUP(_sno)        (__NR_dup == (_sno) || __NR_dup2 == (_sno) || __NR_dup3 == (_sno))
 #else
 #define IS_DUP(_sno)        (__NR_dup == (_sno) || __NR_dup2 == (_sno))
-#endif /* HAVE_DUP3 */
+#endif /* defined(__NR_dup3) */
 #define UNKNOWN_SYSCALL     "unknown"
 
 #if defined(I386) || defined(IA64) || defined(POWERPC)
