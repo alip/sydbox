@@ -218,7 +218,7 @@ ptrace(1)
 
 AUTHORS
 -------
-Ali Polatel <polatel at gmail dot com>
+Ali Polatel <alip at exherbo dot org>
 
 Saleem Abdulrasool <compnerd at compnerd dot org>
 
@@ -228,7 +228,7 @@ Report bugs to /dev/null.
 
 COPYRIGHT
 ---------
-Copyright (C) 2009 Ali Polatel <alip at exherbo dot org>
+Copyright (C) 2009, 2010 Ali Polatel <alip at exherbo dot org>
 
 Copyright (C) 2009 Saleem Abdulrasool <compnerd at compnerd dot org>
 
