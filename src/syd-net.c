@@ -263,7 +263,7 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
         /* Find out netmask */
         netmask = strrchr(addr, '/');
         if (netmask == NULL) {
-            /* Netmask not give, figure it out */
+            /* Netmask not specified, figure it out */
             saddr->u.sa6.netmask = 16;
             p = addr;
             while (*p != '\0') {
