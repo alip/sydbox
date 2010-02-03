@@ -153,12 +153,12 @@ static int xunknown(context_t *ctx, struct tchild *child, int status)
 
 int trace_loop(context_t *ctx)
 {
-    int status, ret, exit_code;
+    int status, exit_code;
     unsigned int event;
     pid_t pid;
     struct tchild *child;
 
-    exit_code = ret = EXIT_SUCCESS;
+    exit_code = EXIT_SUCCESS;
     while (NULL != ctx->children) {
         pid = waitpid(-1, &status, __WALL);
         if (G_UNLIKELY(0 > pid)) {
@@ -184,26 +184,21 @@ int trace_loop(context_t *ctx)
                      */
                     g_debug("setting up prematurely born child %i", pid);
                     child = tchild_new(ctx->children, pid, false);
-                    ret = xsetup(ctx, child);
-                    if (0 != ret)
+                    if (0 != xsetup(ctx, child))
                         return exit_code;
                 }
                 else {
                     g_debug("setting up child %i", child->pid);
-                    ret = xsetup(ctx, child);
-                    if (0 != ret)
+                    if (0 != xsetup(ctx, child))
                         return exit_code;
-                    ret = xsyscall(ctx, child);
-                    if (0 != ret)
+                    if (0 != xsyscall(ctx, child))
                         return exit_code;
                 }
                 break;
             case E_SYSCALL:
-                ret = syscall_handle(ctx, child);
-                if (0 != ret)
+                if (0 != syscall_handle(ctx, child))
                     return exit_code;
-                ret = xsyscall(ctx, child);
-                if (0 != ret)
+                if (0 != xsyscall(ctx, child))
                     return exit_code;
                 break;
             case E_FORK:
@@ -213,11 +208,9 @@ int trace_loop(context_t *ctx)
                         (event == E_FORK)
                             ? "fork"
                             : (event == E_VFORK) ? "vfork" : "clone");
-                ret = xfork(ctx, child);
-                if (0 != ret)
+                if (0 != xfork(ctx, child))
                     return exit_code;
-                ret = xsyscall(ctx, child);
-                if (0 != ret)
+                if (0 != xsyscall(ctx, child))
                     return exit_code;
                 break;
             case E_EXEC:
@@ -236,13 +229,11 @@ int trace_loop(context_t *ctx)
                     exit(-1);
                 }
                 g_debug("updated child %i's personality to %s mode", child->pid, dispatch_mode(child->personality));
-                ret = xsyscall(ctx, child);
-                if (0 != ret)
+                if (0 != xsyscall(ctx, child))
                     return exit_code;
                 break;
             case E_GENUINE:
-                ret = xgenuine(ctx, child, status);
-                if (0 != ret)
+                if (0 != xgenuine(ctx, child, status))
                     return exit_code;
                 break;
             case E_EXIT:
@@ -261,7 +252,7 @@ int trace_loop(context_t *ctx)
                     }
                 }
                 else
-                    g_debug("child %i exited with return code %d", pid, ret);
+                    g_debug("child %i exited with return code %d", pid, WEXITSTATUS(status));
                 tchild_delete(ctx->children, pid);
                 break;
             case E_EXIT_SIGNAL:
@@ -292,8 +283,7 @@ int trace_loop(context_t *ctx)
                 tchild_delete(ctx->children, pid);
                 break;
             case E_UNKNOWN:
-                ret = xunknown(ctx, child, status);
-                if (0 != ret)
+                if (0 != xunknown(ctx, child, status))
                     return exit_code;
                 break;
             default:
