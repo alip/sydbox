@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <netinet/in.h>
+#include <sys/types.h>
 
 #include <glib.h>
 
@@ -37,6 +37,7 @@ char *pgetcwd(pid_t pid)
     int ret;
     char *cwd;
     char linkcwd[64];
+
     snprintf(linkcwd, 64, "/proc/%i/cwd", pid);
 
     // First try ereadlink()
@@ -59,6 +60,7 @@ char *pgetdir(pid_t pid, int dfd) {
     int ret;
     char *dir;
     char linkdir[128];
+
     snprintf(linkdir, 128, "/proc/%i/fd/%d", pid, dfd);
 
     // First try ereadlink()

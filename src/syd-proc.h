@@ -18,12 +18,14 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __PROC_H__
-#define __PROC_H__
+#ifndef SYDBOX_GUARD_PROC_H
+#define SYDBOX_GUARD_PROC_H
+
+#include <sys/types.h>
 
 char *pgetcwd(pid_t pid);
 
 char *pgetdir(pid_t pid, int dfd);
 
-#endif
+#endif /* !SYDBOX_GUARD_PROC_H */
 
