@@ -216,11 +216,11 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
 
 #undef HANDLE_SIGNAL
 
-    /* wait for SIGSTOP */
+    /* wait for SIGTRAP */
     wait(&status);
     if (WIFEXITED(status)) {
-        g_critical("wtf? child died before sending SIGSTOP");
-        g_printerr("wtf? child died before sending SIGSTOP\n");
+        g_critical("wtf? child died before sending SIGTRAP");
+        g_printerr("wtf? child died before sending SIGTRAP\n");
         exit(WEXITSTATUS(status));
     }
     g_assert(WIFSTOPPED(status));
