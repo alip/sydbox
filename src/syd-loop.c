@@ -159,7 +159,7 @@ int trace_loop(context_t *ctx)
     struct tchild *child;
 
     exit_code = EXIT_SUCCESS;
-    while (NULL != ctx->children) {
+    while (g_hash_table_size(ctx->children) > 0) {
         pid = waitpid(-1, &status, __WALL);
         if (G_UNLIKELY(0 > pid)) {
             if (ECHILD == errno)
