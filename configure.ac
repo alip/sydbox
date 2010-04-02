@@ -101,6 +101,10 @@ ia64)
 	arch=ia64
 	AC_DEFINE([IA64], 1, [Define for the IA64 architecture.])
 	;;
+powerpc64*)
+	arch=powerpc64
+	AC_DEFINE([POWERPC64], 1, [Define for the POWERPC64 architecture.])
+	;;
 powerpc*)
 	arch=powerpc
 	AC_DEFINE([POWERPC], 1, [Define for the POWERPC architecture.])
@@ -115,7 +119,8 @@ AM_CONDITIONAL(I386, test x"$arch" = x"i386")
 AM_CONDITIONAL(X86_64, test x"$arch" = x"x86_64")
 AM_CONDITIONAL(IA64, test x"$arch" = x"ia64")
 AM_CONDITIONAL(POWERPC, test x"$arch" = x"powerpc")
-AM_CONDITIONAL(P1, test x"$arch" = x"i386" -o x"$arch" = x"ia64" -o x"$arch" = x"powerpc")
+AM_CONDITIONAL(POWERPC64, test x"$arch" = x"powerpc64")
+AM_CONDITIONAL(P1, test x"$arch" = x"i386" -o x"$arch" = x"ia64" -o x"$arch" = x"powerpc" -o x"$arch" = x"powerpc64")
 AM_CONDITIONAL(P2, test x"$arch" = x"x86_64")
 dnl }}}
 

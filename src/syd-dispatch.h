@@ -34,7 +34,7 @@
 #endif /* defined(__NR_dup3) */
 #define UNKNOWN_SYSCALL     "unknown"
 
-#if defined(I386) || defined(IA64) || defined(POWERPC)
+#if defined(I386) || defined(IA64) || defined(POWERPC) || defined(POWERPC64)
 void dispatch_init(void);
 void dispatch_free(void);
 int dispatch_lookup(int personality, int sno);

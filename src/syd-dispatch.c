@@ -92,8 +92,10 @@ inline const char *dispatch_mode(G_GNUC_UNUSED int personality)
     mode = "32 bit";
 #elif defined(IA64)
     mode = "64 bit";
-#elif defined(POWERPC)
+#elif defined(POWERPC64)
     mode = "64 bit";
+#elif defined(POWERPC)
+    mode = "32 bit";
 #else
 #error unsupported architecture
 #endif
@@ -112,7 +114,7 @@ inline bool dispatch_dup(G_GNUC_UNUSED int personality, int sno)
 
 inline bool dispatch_maybind(G_GNUC_UNUSED int personality, int sno)
 {
-#if defined(I386) || defined(POWERPC)
+#if defined(I386) || defined(POWERPC) || defined(POWERPC64)
     return (__NR_socketcall == sno);
 #elif defined(IA64)
     return (__NR_bind == sno);
@@ -123,7 +125,7 @@ inline bool dispatch_maybind(G_GNUC_UNUSED int personality, int sno)
 
 inline bool dispatch_maygetsockname(G_GNUC_UNUSED int personality, int sno)
 {
-#if defined(I386) || defined(POWERPC)
+#if defined(I386) || defined(POWERPC) || defined(POWERPC64)
     return (__NR_socketcall == sno);
 #elif defined(IA64)
     return (__NR_getsockname == sno);

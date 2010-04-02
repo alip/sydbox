@@ -38,6 +38,10 @@ SPARSE_CPPFLAGS+= -D__ia64__=1
 endif
 if POWERPC
 sydbox_SOURCES+= syd-dispatch.c syd-trace-powerpc.c
+SPARSE_CPPFLAGS+= -D__powerpc__=1
+endif
+if POWERPC64
+sydbox_SOURCES+= syd-dispatch.c syd-trace-powerpc.c
 SPARSE_CPPFLAGS+= -D__powerpc64__=1
 endif
 
