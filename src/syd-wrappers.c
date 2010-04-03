@@ -65,10 +65,6 @@
 #include "syd-path.h"
 #include "syd-wrappers.h"
 
-#ifndef __set_errno
-# define __set_errno(v) errno = (v)
-#endif
-
 #ifndef MAXSYMLINKS
 # define MAXSYMLINKS 256
 #endif
@@ -80,6 +76,7 @@ edirname (const gchar *path)
     return g_path_get_dirname(path);
 }
 
+// basename wrapper which doesn't modify its argument
 gchar *
 ebasename (const gchar *path)
 {
@@ -334,12 +331,12 @@ canonicalize_filename_mode (const gchar *name,
     size_t extra_len = 0;
 
     if (name == NULL) {
-        __set_errno(EINVAL);
+        errno = EINVAL;
         return NULL;
     }
 
     if (name[0] == '\0') {
-        __set_errno(ENOENT);
+        errno = ENOENT;
         return NULL;
     }
 
@@ -422,7 +419,7 @@ canonicalize_filename_mode (const gchar *name,
 
                 /* Protect against infinite loops */
                 if (readlinks++ > MAXSYMLINKS) {
-                    __set_errno(ELOOP);
+                    errno = ELOOP;
                     goto error;
                 }
 
@@ -458,7 +455,7 @@ canonicalize_filename_mode (const gchar *name,
             }
             else {
                 if (!S_ISDIR (st.st_mode) && *end) {
-                    __set_errno(ENOTDIR);
+                    errno = ENOTDIR;
                     goto error;
                 }
             }
