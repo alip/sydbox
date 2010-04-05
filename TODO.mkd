@@ -13,5 +13,6 @@
     * [x86](http://en.wikipedia.org/wiki/X86): stable.
     * [x86\_64](http://en.wikipedia.org/wiki/X86_64): stable.
     * [ia64](http://en.wikipedia.org/wiki/Ia64): new, needs testing.
+    * [ppc](http://en.wikipedia.org/wiki/PowerPC): new, needs testing.
     * [ppc64](http://en.wikipedia.org/wiki/Ppc64): new, needs testing.
 
