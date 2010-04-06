@@ -48,7 +48,7 @@
 
 #include "test-helpers.h"
 
-#if defined(I386) || defined(IA64) || defined(POWERPC)
+#if defined(I386) || defined(IA64) || defined(POWERPC) || defined(POWERPC64)
 #define CHECK_PERSONALITY 0
 #elif defined(X86_64)
 #define CHECK_PERSONALITY 1
