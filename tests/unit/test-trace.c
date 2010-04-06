@@ -56,7 +56,7 @@
 #error unsupported architecture
 #endif
 
-#if defined(I386) || defined(POWERPC)
+#if defined(I386) || defined(POWERPC) || defined(POWERPC64)
 #define DECODE_SOCKETCALL (true)
 #elif defined(IA64) || defined(X86_64)
 #define DECODE_SOCKETCALL (false)
