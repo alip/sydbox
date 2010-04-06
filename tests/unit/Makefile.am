@@ -31,6 +31,10 @@ if POWERPC
 libsydbox_SOURCES+= $(top_srcdir)/src/syd-dispatch.c \
 		    $(top_srcdir)/src/syd-trace-powerpc.c
 endif
+if POWERPC64
+libsydbox_SOURCES+= $(top_srcdir)/src/syd-dispatch.c \
+		    $(top_srcdir)/src/syd-trace-powerpc.c
+endif
 
 AM_CFLAGS += -DDATADIR="\"$(datadir)\"" -DSYSCONFDIR="\"$(sysconfdir)\"" -I$(top_srcdir)/src
 # }}}
