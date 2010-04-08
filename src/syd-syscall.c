@@ -59,8 +59,6 @@
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET)
 #endif /* HAVE_IPV6 */
 #define IS_NET_CALL(fl)             ((fl) & (BIND_CALL | CONNECT_CALL | SENDTO_CALL | DECODE_SOCKETCALL))
-#define NET_RESTRICTED_CALL(fl)     ((fl) & (CONNECT_CALL | SENDTO_CALL))
-#define NET_RESTRICTED_SUBCALL(sub) ((sub) == SOCKET_SUBCALL_CONNECT || (sub) == SOCKET_SUBCALL_SENDTO)
 
 #define MODE_STRING(flags)                                                      \
     ((flags) & OPEN_MODE || (flags) & OPEN_MODE_AT) ? "O_WRONLY/O_RDWR" : "..."
