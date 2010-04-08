@@ -43,7 +43,7 @@ struct tchild *tchild_new(GHashTable *children, pid_t pid, bool eldest)
     struct tchild *child;
 
     g_debug("new child %i", pid);
-    child = (struct tchild *) g_malloc(sizeof(struct tchild));
+    child = g_new(struct tchild, 1);
     child->flags = eldest ? TCHILD_NEEDSETUP : TCHILD_NEEDSETUP | TCHILD_NEEDINHERIT;
     child->pid = pid;
     child->sno = 0xbadca11;
@@ -52,7 +52,7 @@ struct tchild *tchild_new(GHashTable *children, pid_t pid, bool eldest)
     child->lastexec = g_string_new("");
     child->bindzero = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
     child->bindlast = NULL;
-    child->sandbox = (struct tdata *) g_malloc(sizeof(struct tdata));
+    child->sandbox = g_new(struct tdata, 1);
     child->sandbox->path = true;
     child->sandbox->exec = false;
     child->sandbox->network = false;
