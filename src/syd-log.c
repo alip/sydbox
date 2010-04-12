@@ -30,8 +30,8 @@
 #include "syd-config.h"
 #include "syd-log.h"
 
-static FILE *fd;
-static bool initialized;
+static FILE *fd = NULL;
+static bool initialized = false;
 
 static inline void sydbox_log_output (const gchar *log_domain,
         GLogLevelFlags log_level, const gchar *message)
