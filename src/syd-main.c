@@ -113,7 +113,7 @@ static GOptionEntry entries[] =
     { "disable-sandbox-path",   'P', 0, G_OPTION_ARG_NONE,                         &disable_sandbox_path,
         "Disable path sandboxing",        NULL },
     { "sandbox-exec",           'E', 0, G_OPTION_ARG_NONE,                         &sandbox_exec,
-        "Enable execve(2) sandboxing",    NULL },
+        "Enable execve() sandboxing",     NULL },
     { "sandbox-network",        'N', 0, G_OPTION_ARG_NONE,                         &sandbox_net,
         "Enable network sandboxing",      NULL },
     { "network-whitelist-bind", 'B', 0, G_OPTION_ARG_NONE,                         &network_auto_whitelist_bind,
