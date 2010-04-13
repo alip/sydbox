@@ -112,7 +112,7 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
     char *haystack_str, *needle_str;
 
     /* Only stringify if log level is debug because stringifying network
-     * addresses allocate memory.
+     * addresses allocates memory.
      */
     if (sydbox_config_get_verbosity() > 2) {
         haystack_str = address_to_string(haystack);
