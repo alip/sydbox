@@ -4,6 +4,7 @@ This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
 * Ported to PPC, now PPC is a supported architecture.
+* More detailed logging for network sandboxing.
 
 ### 0.6.4
 * Use vfork instead of fork to spawn initial child, which decreases start up

@@ -29,6 +29,7 @@
 
 #include <glib.h>
 
+#include "syd-config.h"
 #include "syd-net.h"
 
 #include "test-helpers.h"
@@ -253,9 +254,18 @@ void test12(void)
     g_free(haystack);
 }
 
+static void no_log(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
+{
+}
+
 int main(int argc, char **argv)
 {
+    g_setenv(ENV_NO_CONFIG, "1", 1);
+    sydbox_config_load(NULL, NULL);
+
     g_test_init(&argc, &argv, NULL);
+
+    g_log_set_default_handler(no_log, NULL);
 
     g_test_add_func("/net/address_from_string/invalid", test1);
     g_test_add_func("/net/address_from_string/unix", test2);

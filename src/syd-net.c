@@ -34,6 +34,7 @@
 
 #include <glib.h>
 
+#include "syd-config.h"
 #include "syd-log.h"
 #include "syd-net.h"
 
@@ -108,20 +109,61 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
     int n, mask;
     unsigned char *b, *ptr;
     char *hsun_path, *nsun_path;
+    char *haystack_str, *needle_str;
 
-    if (needle->family != haystack->family)
+    /* Only stringify if log level is debug because stringifying network
+     * addresses allocate memory.
+     */
+    if (sydbox_config_get_verbosity() > 2) {
+        haystack_str = address_to_string(haystack);
+        needle_str = address_to_string(needle);
+    }
+    else
+        haystack_str = needle_str = NULL;
+
+    if (needle->family != haystack->family) {
+        g_debug("%s doesn't have %s (family mismatch)", haystack_str, needle_str);
+        g_free(haystack_str);
+        g_free(needle_str);
         return false;
+    }
 
     switch (needle->family) {
         case AF_UNIX:
-            if (haystack->u.saun.abstract != needle->u.saun.abstract)
+            if (haystack->u.saun.abstract != needle->u.saun.abstract) {
+                g_debug("%s doesn't have %s (abstract mismatch)", haystack_str, needle_str);
+                g_free(haystack_str);
+                g_free(needle_str);
                 return false;
+            }
             hsun_path = haystack->u.saun.rsun_path ? haystack->u.saun.rsun_path : haystack->u.saun.sun_path;
             nsun_path = needle->u.saun.rsun_path ? needle->u.saun.rsun_path : needle->u.saun.sun_path;
-            if (haystack->u.saun.exact)
-                return (0 == strncmp(hsun_path, nsun_path, sizeof(hsun_path)));
-            else
-                return (0 == fnmatch(hsun_path, nsun_path, FNM_PATHNAME));
+            if (haystack->u.saun.exact) {
+                if (0 == strncmp(hsun_path, nsun_path, sizeof(hsun_path))) {
+                    g_debug("%s has %s (path exact match)", haystack_str, needle_str);
+                    g_free(haystack_str);
+                    g_free(needle_str);
+                    return true;
+                }
+                /* else */
+                g_debug("%s doesn't have %s (path exact mismatch)", haystack_str, needle_str);
+                g_free(haystack_str);
+                g_free(needle_str);
+                return false;
+            }
+            else {
+                if (0 == fnmatch(hsun_path, nsun_path, FNM_PATHNAME)) {
+                    g_debug("%s has %s (path pattern match)", haystack_str, needle_str);
+                    g_free(haystack_str);
+                    g_free(needle_str);
+                    return true;
+                }
+                /* else */
+                g_debug("%s doesn't have %s (path pattern mismatch)", haystack_str, needle_str);
+                g_free(haystack_str);
+                g_free(needle_str);
+                return false;
+            }
         case AF_INET:
             n = haystack->u.sa.netmask;
             ptr = (unsigned char *)&needle->u.sa.sin_addr;
@@ -139,8 +181,12 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
     }
 
     while (n >= 8) {
-        if (*ptr != *b)
+        if (*ptr != *b) {
+            g_debug("%s doesn't have %s (netmask mismatch)", haystack_str, needle_str);
+            g_free(haystack_str);
+            g_free(needle_str);
             return false;
+        }
         ++ptr;
         ++b;
         n -= 8;
@@ -149,10 +195,43 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
     if (n != 0) {
         mask = ((~0) << (8 - n)) & 255;
 
-        if ((*ptr ^ *b) & mask)
+        if ((*ptr ^ *b) & mask) {
+            g_debug("%s doesn't have %s (netmask mismatch)", haystack_str, needle_str);
+            g_free(haystack_str);
+            g_free(needle_str);
             return false;
+        }
     }
+
+    g_debug("%s has %s (netmask match)", haystack_str, needle_str);
+    g_free(haystack_str);
+    g_free(needle_str);
     return true;
+}
+
+char *address_to_string(const struct sydbox_addr *addr)
+{
+    char ip[100] = { 0 };
+
+    switch (addr->family) {
+        case AF_UNIX:
+            return g_strdup_printf("{family=AF_UNIX path=%s abstract=%s}",
+                    addr->u.saun.sun_path,
+                    addr->u.saun.abstract ? "true" : "false");
+        case AF_INET:
+            inet_ntop(AF_INET, &addr->u.sa.sin_addr, ip, sizeof(ip));
+            return g_strdup_printf("{family=AF_INET addr=%s netmask=%d port_range=%d-%d}",
+                    ip, addr->u.sa.netmask, addr->u.sa.port[0], addr->u.sa.port[1]);
+#if HAVE_IPV6
+        case AF_INET6:
+            inet_ntop(AF_INET6, &addr->u.sa6.sin6_addr, ip, sizeof(ip));
+            return g_strdup_printf("{family=AF_INET6 addr=%s netmask=%d port_range=%d-%d}",
+                    ip, addr->u.sa6.netmask, addr->u.sa6.port[0], addr->u.sa6.port[1]);
+#endif /* HAVE_IPV6 */
+        default:
+            g_assert_not_reached();
+    }
+    /* never reached */
 }
 
 struct sydbox_addr *address_from_string(const gchar *src, bool canlog)

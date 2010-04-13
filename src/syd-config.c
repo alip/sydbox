@@ -527,33 +527,14 @@ static inline void print_slist_entry(gpointer data, G_GNUC_UNUSED gpointer userd
 
 static inline void print_netlist_entry(gpointer data, G_GNUC_UNUSED gpointer userdata)
 {
-    char ip[100] = { 0 };
+    char *saddr;
     struct sydbox_addr *addr = (struct sydbox_addr *) data;
 
-    if (NULL == addr)
-        return;
+    g_return_if_fail(addr != NULL);
 
-    switch (addr->family) {
-        case AF_UNIX:
-            g_fprintf(stderr, "\t{family=AF_UNIX path=%s abstract=%s}\n",
-                    addr->u.saun.sun_path,
-                    addr->u.saun.abstract ? "true" : "false");
-            break;
-        case AF_INET:
-            inet_ntop(AF_INET, &addr->u.sa.sin_addr, ip, sizeof(ip));
-            g_fprintf(stderr, "\t{family=AF_INET addr=%s netmask=%d port_range=%d-%d}\n",
-                    ip, addr->u.sa.netmask, addr->u.sa.port[0], addr->u.sa.port[1]);
-            break;
-#if HAVE_IPV6
-        case AF_INET6:
-            inet_ntop(AF_INET6, &addr->u.sa6.sin6_addr, ip, sizeof(ip));
-            g_fprintf(stderr, "\t{family=AF_INET6 addr=%s netmask=%d port_range=%d-%d}\n",
-                    ip, addr->u.sa6.netmask, addr->u.sa6.port[0], addr->u.sa6.port[1]);
-            break;
-#endif /* HAVE_IPV6 */
-        default:
-            g_assert_not_reached();
-    }
+    saddr = address_to_string(addr);
+    g_fprintf(stderr, "\t%s\n", saddr);
+    g_free(saddr);
 }
 
 void sydbox_config_write_to_stderr (void)
