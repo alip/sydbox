@@ -107,11 +107,6 @@ inline bool dispatch_chdir(G_GNUC_UNUSED int personality, int sno)
     return IS_CHDIR(sno);
 }
 
-inline bool dispatch_dup(G_GNUC_UNUSED int personality, int sno)
-{
-    return IS_DUP(sno);
-}
-
 inline bool dispatch_maybind(G_GNUC_UNUSED int personality, int sno)
 {
 #if defined(I386) || defined(POWERPC) || defined(POWERPC64)
