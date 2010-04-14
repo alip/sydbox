@@ -36,8 +36,6 @@ int dispatch_lookup(int personality, int sno);
 const char *dispatch_name(int personality, int sno);
 const char *dispatch_mode(int personality);
 bool dispatch_chdir(int personality, int sno);
-bool dispatch_maybind(int personality, int sno);
-bool dispatch_maygetsockname(int personality, int sno);
 #elif defined(X86_64)
 void dispatch_init32(void);
 void dispatch_init64(void);
@@ -49,10 +47,6 @@ const char *dispatch_name32(int sno);
 const char *dispatch_name64(int sno);
 bool dispatch_chdir32(int sno);
 bool dispatch_chdir64(int sno);
-bool dispatch_maybind32(int sno);
-bool dispatch_maybind64(int sno);
-bool dispatch_maygetsockname32(int sno);
-bool dispatch_maygetsockname64(int sno);
 
 #define dispatch_init()     \
     do {                    \

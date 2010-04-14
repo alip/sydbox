@@ -86,12 +86,3 @@ inline bool dispatch_chdir32(int sno)
     return IS_CHDIR(sno);
 }
 
-inline bool dispatch_maybind32(int sno)
-{
-    return (__NR_socketcall == sno);
-}
-
-inline bool dispatch_maygetsockname32(int sno)
-{
-    return (__NR_socketcall == sno);
-}

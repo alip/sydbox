@@ -107,25 +107,3 @@ inline bool dispatch_chdir(G_GNUC_UNUSED int personality, int sno)
     return IS_CHDIR(sno);
 }
 
-inline bool dispatch_maybind(G_GNUC_UNUSED int personality, int sno)
-{
-#if defined(I386) || defined(POWERPC) || defined(POWERPC64)
-    return (__NR_socketcall == sno);
-#elif defined(IA64)
-    return (__NR_bind == sno);
-#else
-#error unsupported architecture
-#endif
-}
-
-inline bool dispatch_maygetsockname(G_GNUC_UNUSED int personality, int sno)
-{
-#if defined(I386) || defined(POWERPC) || defined(POWERPC64)
-    return (__NR_socketcall == sno);
-#elif defined(IA64)
-    return (__NR_getsockname == sno);
-#else
-#error unsupported architecture
-#endif
-}
-

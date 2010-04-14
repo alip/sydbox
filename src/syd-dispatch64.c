@@ -86,13 +86,3 @@ inline bool dispatch_chdir64(int sno)
     return IS_CHDIR(sno);
 }
 
-inline bool dispatch_maybind64(int sno)
-{
-    return (__NR_bind == sno);
-}
-
-inline bool dispatch_maygetsockname64(int sno)
-{
-    return (__NR_getsockname == sno);
-}
-
