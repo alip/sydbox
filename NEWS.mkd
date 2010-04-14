@@ -6,6 +6,7 @@ every change, see git log.
 * Ported to PPC, now PPC is a supported architecture.
 * More detailed logging for network sandboxing.
 * Fix the check for fcntl after bind.
+* Fix how we store the last bind address which may cause segmentation faults.
 
 ### 0.6.4
 * Use vfork instead of fork to spawn initial child, which decreases start up

@@ -1032,15 +1032,9 @@ static void syscall_check_finalize(G_GNUC_UNUSED context_t *ctx, struct tchild *
         /* Store the bind address.
          * We'll use it again to whitelist it when the system call is exiting.
          */
-        child->bindlast = data->addr;
+        child->bindlast = address_dup(data->addr);
     }
-    else {
-        if (data->addr != NULL &&
-                data->addr->family == AF_UNIX &&
-                !data->addr->u.saun.abstract)
-            g_free(data->addr->u.saun.rsun_path);
-        g_free(data->addr);
-    }
+    address_free(data->addr);
 }
 
 /* BAD_SYSCALL handler for system calls.
@@ -1169,7 +1163,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
 
     if (0 != retval) {
         /* Bind call failed, ignore it */
-        g_free(child->bindlast);
+        address_free(child->bindlast);
         child->bindlast = NULL;
         return 0;
     }
@@ -1189,7 +1183,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
             return -1;
         }
         if (subcall != SOCKET_SUBCALL_BIND) {
-            g_free(child->bindlast);
+            address_free(child->bindlast);
             child->bindlast = NULL;
             return 0;
         }
@@ -1228,16 +1222,16 @@ static int syscall_handle_bind(struct tchild *child, int flags)
                 // Child is dead.
                 return -1;
             }
-            g_hash_table_insert(child->bindzero, GINT_TO_POINTER(fd), child->bindlast);
-            return 0;
+            g_hash_table_insert(child->bindzero, GINT_TO_POINTER(fd), address_dup(child->bindlast));
         }
-        whitelist = sydbox_config_get_network_whitelist_connect();
-        whitelist = g_slist_prepend(whitelist, child->bindlast);
-        sydbox_config_set_network_whitelist_connect(whitelist);
+        else {
+            whitelist = sydbox_config_get_network_whitelist_connect();
+            whitelist = g_slist_prepend(whitelist, address_dup(child->bindlast));
+            sydbox_config_set_network_whitelist_connect(whitelist);
+        }
     }
-    else
-        g_free(child->bindlast);
 
+    address_free(child->bindlast);
     child->bindlast = NULL;
     return 0;
 }

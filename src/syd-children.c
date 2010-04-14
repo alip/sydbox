@@ -115,7 +115,7 @@ void tchild_free_one(gpointer child_ptr)
         g_string_free(child->lastexec, TRUE);
     if (G_LIKELY(NULL != child->bindzero))
         g_hash_table_destroy(child->bindzero);
-    g_free(child->bindlast);
+    address_free(child->bindlast);
     g_free(child->cwd);
     g_free(child);
 }

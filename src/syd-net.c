@@ -38,6 +38,15 @@
 #include "syd-log.h"
 #include "syd-net.h"
 
+void address_free(struct sydbox_addr *addr)
+{
+    if (addr != NULL &&
+            addr->family == AF_UNIX &&
+            !addr->u.saun.abstract)
+        g_free(addr->u.saun.rsun_path);
+    g_free(addr);
+}
+
 bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr2)
 {
     if (addr1->family != addr2->family)
@@ -74,6 +83,11 @@ bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr
 struct sydbox_addr *address_dup(const struct sydbox_addr *src)
 {
     struct sydbox_addr *dest;
+
+    if (src == NULL) {
+        /* Nothing to do... */
+        return NULL;
+    }
 
     dest = g_new0(struct sydbox_addr, 1);
 

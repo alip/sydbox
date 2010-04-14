@@ -57,6 +57,8 @@ struct sydbox_addr {
     } u;
 };
 
+void address_free(struct sydbox_addr *addr);
+
 bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr2);
 
 struct sydbox_addr *address_dup(const struct sydbox_addr *src);
