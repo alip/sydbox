@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Fix getting/setting system call return values on IA64.
 * Regression: Binding a socket with an unsupported family caused sydbox to
   dump core. This is now fixed.
 

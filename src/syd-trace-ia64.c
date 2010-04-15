@@ -38,7 +38,6 @@
 #include <asm/ptrace_offsets.h>
 #include <asm/rse.h>
 #define ORIG_ACCUM      (PT_R15)
-#define ACCUM           (PT_R10)
 
 static int upeek_ia64(pid_t pid, int narg, long *res)
 {
@@ -93,14 +92,23 @@ int trace_set_syscall(pid_t pid, long scno)
 int trace_get_return(pid_t pid, long *res)
 {
     int save_errno;
+    long r8, r10;
 
-    if (G_UNLIKELY(0 > upeek(pid, ACCUM, res))) {
+    if (G_UNLIKELY(0 > upeek(pid, PT_R8, &r8))) {
         save_errno = errno;
-        g_info("failed to get return value for child %i: %s", pid, g_strerror (errno));
+        g_info("failed to get return value (r8) for child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
         return -1;
     }
 
+    if (G_UNLIKELY(0 > upeek(pid, PT_R10, &r10))) {
+        save_errno = errno;
+        g_info("failed to get return value (r10) for child %i: %s", pid, g_strerror(errno));
+        errno = save_errno;
+        return -1;
+    }
+
+    *res = (r10 != 0) ? -r8 : r8;
     return 0;
 }
 
@@ -109,8 +117,9 @@ int trace_set_return(pid_t pid, long val)
     int save_errno;
     long r8, r10;
 
-    r8 = -val;
-    r10 = val ? -1 : 0;
+    r8 = (val < 0) ? -val : val;
+    r10 = (val < 0) ? -1 : 0;
+
     if (G_UNLIKELY(0 != ptrace(PTRACE_POKEUSER, pid, PT_R8, r8))) {
         save_errno = errno;
         g_info("ptrace(PTRACE_POKEUSER,%i,PT_R8,%ld) failed: %s", pid, val, g_strerror(errno));

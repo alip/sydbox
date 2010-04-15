@@ -546,7 +546,11 @@ static void test13(void)
          * syscall(2) here.
          */
         ret = syscall(__NR_getpid);
-        _exit((ret == (mypid + 1)) ? EXIT_SUCCESS : ret);
+        if (ret != (mypid + 1)) {
+            g_printerr("ret = %d mypid: %d\n", ret, mypid);
+            _exit(EXIT_FAILURE);
+        }
+        _exit(EXIT_SUCCESS);
     }
     else { // parent
         waitpid(pid, &status, 0);
@@ -567,7 +571,7 @@ static void test13(void)
         /* Let the child exit and check her exit status. */
         trace_cont(pid);
         waitpid(pid, &status, 0);
-        XFAIL_UNLESS(WEXITSTATUS(status) == EXIT_SUCCESS, "child returned %d\n", WEXITSTATUS(status));
+        XFAIL_UNLESS(WEXITSTATUS(status) == EXIT_SUCCESS, "child returned non-zero\n");
     }
 }
 
