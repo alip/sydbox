@@ -5,7 +5,7 @@
 SYDBOX(1)
 =========
 :man source: sydbox
-:man version: 0.6.4
+:man version: 0.6.5
 :man manual: Sydbox Manual
 
 NAME

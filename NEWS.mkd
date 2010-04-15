@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.6.5
 * Ported to PPC, now PPC is a supported architecture.
 * More detailed logging for network sandboxing.
 * Fix the check for fcntl after bind.
