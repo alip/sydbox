@@ -3,7 +3,8 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
-* Fix problems related to the last bind address not belonging to one of the supported families
+* Regression: Binding a socket with an unsupported family caused sydbox to
+  dump core. This is now fixed.
 
 ### 0.6.5
 * Ported to PPC, now PPC is a supported architecture.
