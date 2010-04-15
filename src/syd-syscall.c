@@ -1028,7 +1028,9 @@ static void syscall_check_finalize(G_GNUC_UNUSED context_t *ctx, struct tchild *
     g_free(data->sargv);
     if (child->sandbox->network &&
             sydbox_config_get_network_auto_whitelist_bind() &&
-            data->result == RS_ALLOW) {
+            data->result == RS_ALLOW &&
+            data->addr != NULL &&
+            IS_SUPPORTED_FAMILY(data->addr->family)) {
         /* Store the bind address.
          * We'll use it again to whitelist it when the system call is exiting.
          */
@@ -1564,7 +1566,8 @@ int syscall_handle(context_t *ctx, struct tchild *child)
         else if (child->sandbox->network &&
                 sydbox_config_get_network_auto_whitelist_bind() &&
                 sflags > 0) {
-            if (sflags & DECODE_SOCKETCALL || sflags & BIND_CALL) {
+            if (child->bindlast != NULL &&
+                    (sflags & DECODE_SOCKETCALL || sflags & BIND_CALL)) {
                 if (0 > syscall_handle_bind(child, sflags))
                     return context_remove_child(ctx, child->pid);
             }
