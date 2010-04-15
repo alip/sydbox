@@ -438,6 +438,197 @@ static void test10(void)
 
 static void test11(void)
 {
+    int status;
+    long ret;
+    pid_t pid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+        /* From getpid(2):
+         * Since glibc version 2.3.4, the glibc wrapper function for getpid()
+         * caches PIDs, ...
+         */
+        /* Since the child has just called getpid() to send herself a SIGSTOP,
+         * calling it again won't call the system call hence we need to use
+         * syscall(2) here.
+         */
+        syscall(__NR_getpid);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child twice and it will stop at the end of next system call */
+        for (unsigned int i = 0; i < 2; i++) {
+            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            waitpid(pid, &status, 0);
+            XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+        }
+
+        /* Check the return value */
+        XFAIL_IF(0 > trace_get_return(pid, &ret), "trace_get_return() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(pid == ret, "pid: %d != returned pid: %ld", pid, ret);
+
+        trace_kill(pid);
+    }
+}
+
+static void test12(void)
+{
+    int status;
+    long ret;
+    pid_t pid;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+        open(NULL, 0); /* Should fail with -EFAULT */
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child twice and it will stop at the end of next system call */
+        for (unsigned int i = 0; i < 2; i++) {
+            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            waitpid(pid, &status, 0);
+            XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+        }
+
+        /* Check the return value */
+        XFAIL_IF(0 > trace_get_return(pid, &ret), "trace_get_return() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(-EFAULT == ret, "expected: %d got: %ld", -EFAULT, ret);
+
+        trace_kill(pid);
+    }
+}
+
+static void test13(void)
+{
+    int status;
+    pid_t pid, mypid, ret;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        mypid = getpid();
+        kill(mypid, SIGSTOP);
+        /* From getpid(2):
+         * Since glibc version 2.3.4, the glibc wrapper function for getpid()
+         * caches PIDs, ...
+         */
+        /* Since the child has just called getpid() to send herself a SIGSTOP,
+         * calling it again won't call the system call hence we need to use
+         * syscall(2) here.
+         */
+        ret = syscall(__NR_getpid);
+        _exit((ret == (mypid + 1)) ? EXIT_SUCCESS : ret);
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child twice and it will stop at the end of next system call */
+        for (unsigned int i = 0; i < 2; i++) {
+            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            waitpid(pid, &status, 0);
+            XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+        }
+
+        /* Set the return value */
+        XFAIL_IF(0 > trace_set_return(pid, pid + 1), "trace_set_return() failed: %s\n", g_strerror(errno));
+
+        /* Let the child exit and check her exit status. */
+        trace_cont(pid);
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WEXITSTATUS(status) == EXIT_SUCCESS, "child returned %d\n", WEXITSTATUS(status));
+    }
+}
+
+static void test14(void)
+{
+    int status;
+    pid_t pid, ret;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (0 > trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+        /* From getpid(2):
+         * Since glibc version 2.3.4, the glibc wrapper function for getpid()
+         * caches PIDs, ...
+         */
+        /* Since the child has just called getpid() to send herself a SIGSTOP,
+         * calling it again won't call the system call hence we need to use
+         * syscall(2) here.
+         */
+        ret = syscall(__NR_getpid);
+        if (ret > 0) {
+            g_printerr("ret: %d\n", ret);
+            _exit(EXIT_FAILURE);
+        }
+        else if (errno != ENAMETOOLONG) {
+            g_printerr("errno: %d (%s)\n", errno, g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        _exit(EXIT_SUCCESS);
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child twice and it will stop at the end of next system call */
+        for (unsigned int i = 0; i < 2; i++) {
+            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            waitpid(pid, &status, 0);
+            XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+        }
+
+        /* Set the return value */
+        XFAIL_IF(0 > trace_set_return(pid, -ENAMETOOLONG), "trace_set_return() failed: %s\n", g_strerror(errno));
+
+        /* Let the child exit and check her exit status. */
+        trace_cont(pid);
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WEXITSTATUS(status) == EXIT_SUCCESS, "child returned %d\n", WEXITSTATUS(status));
+    }
+}
+
+static void test15(void)
+{
     int ret, status;
     char *path;
     pid_t pid;
@@ -475,7 +666,7 @@ static void test11(void)
     }
 }
 
-static void test12(void)
+static void test16(void)
 {
     int ret, status;
     char *path;
@@ -514,7 +705,7 @@ static void test12(void)
     }
 }
 
-static void test13(void)
+static void test17(void)
 {
     int ret, status;
     char *path;
@@ -553,7 +744,7 @@ static void test13(void)
     }
 }
 
-static void test14(void)
+static void test18(void)
 {
     int ret, status;
     char *path;
@@ -592,7 +783,7 @@ static void test14(void)
     }
 }
 
-static void test15(void)
+static void test19(void)
 {
     int status;
     pid_t pid;
@@ -645,7 +836,7 @@ static void test15(void)
     }
 }
 
-static void test16(void)
+static void test20(void)
 {
     int status;
     long fd;
@@ -715,7 +906,7 @@ static void test16(void)
     }
 }
 
-static void test17(void)
+static void test21(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -790,7 +981,7 @@ static void test17(void)
     }
 }
 
-static void test18(void)
+static void test22(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -866,7 +1057,7 @@ static void test18(void)
     }
 }
 
-static void test19(void)
+static void test23(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -944,7 +1135,7 @@ static void test19(void)
 }
 
 #if HAVE_IPV6
-static void test20(void)
+static void test24(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -1049,19 +1240,24 @@ int main(int argc, char **argv)
     g_test_add_func("/trace/syscall/get", test9);
     g_test_add_func("/trace/syscall/set", test10);
 
-    g_test_add_func("/trace/path/get/first", test11);
-    g_test_add_func("/trace/path/get/second", test12);
-    g_test_add_func("/trace/path/get/third", test13);
-    g_test_add_func("/trace/path/get/fourth", test14);
+    g_test_add_func("/trace/return/get/success", test11);
+    g_test_add_func("/trace/return/get/fail", test12);
+    g_test_add_func("/trace/return/set/success", test13);
+    g_test_add_func("/trace/return/set/fail", test14);
 
-    g_test_add_func("/trace/stat/fake", test15);
+    g_test_add_func("/trace/path/get/first", test15);
+    g_test_add_func("/trace/path/get/second", test16);
+    g_test_add_func("/trace/path/get/third", test17);
+    g_test_add_func("/trace/path/get/fourth", test18);
 
-    g_test_add_func("/trace/socket/fd", test16);
-    g_test_add_func("/trace/socket/addr/unix", test17);
-    g_test_add_func("/trace/socket/addr/unix-abstract", test18);
-    g_test_add_func("/trace/socket/addr/inet", test19);
+    g_test_add_func("/trace/stat/fake", test19);
+
+    g_test_add_func("/trace/socket/fd", test20);
+    g_test_add_func("/trace/socket/addr/unix", test21);
+    g_test_add_func("/trace/socket/addr/unix-abstract", test22);
+    g_test_add_func("/trace/socket/addr/inet", test23);
 #if HAVE_IPV6
-    g_test_add_func("/trace/socket/addr/inet6", test20);
+    g_test_add_func("/trace/socket/addr/inet6", test24);
 #endif /* HAVE_IPV6 */
 
     return g_test_run();
