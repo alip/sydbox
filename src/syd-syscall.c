@@ -1029,6 +1029,8 @@ static void syscall_check_finalize(G_GNUC_UNUSED context_t *ctx, struct tchild *
     if (child->sandbox->network &&
             sydbox_config_get_network_auto_whitelist_bind() &&
             data->result == RS_ALLOW &&
+            (sflags & BIND_CALL ||
+             (sflags & DECODE_SOCKETCALL && data->socket_subcall == SOCKET_SUBCALL_BIND)) &&
             data->addr != NULL &&
             IS_SUPPORTED_FAMILY(data->addr->family)) {
         /* Store the bind address.

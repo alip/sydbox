@@ -97,6 +97,7 @@ struct sydbox_addr *address_dup(const struct sydbox_addr *src)
             dest->u.saun.abstract = src->u.saun.abstract;
             dest->u.saun.exact = src->u.saun.exact;
             strncpy(dest->u.saun.sun_path, src->u.saun.sun_path, PATH_MAX);
+            dest->u.saun.rsun_path = g_strdup(src->u.saun.rsun_path);
             break;
         case AF_INET:
             dest->u.sa.netmask = src->u.sa.netmask;
