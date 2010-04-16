@@ -1569,12 +1569,12 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                 sydbox_config_get_network_auto_whitelist_bind() &&
                 sflags > 0) {
             if (child->bindlast != NULL &&
-                    (sflags & DECODE_SOCKETCALL || sflags & BIND_CALL)) {
+                    (sflags & (DECODE_SOCKETCALL | BIND_CALL))) {
                 if (0 > syscall_handle_bind(child, sflags))
                     return context_remove_child(ctx, child->pid);
             }
             if (g_hash_table_size(child->bindzero) > 0) {
-                if (sflags & DECODE_SOCKETCALL || sflags & GETSOCKNAME_CALL) {
+                if (sflags & (DECODE_SOCKETCALL | GETSOCKNAME_CALL)) {
                     if (0 > syscall_handle_getsockname(child, sflags))
                         return context_remove_child(ctx, child->pid);
                 }
