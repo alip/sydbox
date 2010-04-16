@@ -43,7 +43,7 @@
 // Event handlers
 static int xsetup(context_t *ctx, struct tchild *child)
 {
-    if (0 > trace_setup(child->pid)) {
+    if (!trace_setup(child->pid)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to set tracing options: %s", g_strerror(errno));
             g_printerr("failed to set tracing options: %s\n", g_strerror (errno));
@@ -58,7 +58,7 @@ static int xsetup(context_t *ctx, struct tchild *child)
 
 static int xsyscall(context_t *ctx, struct tchild *child)
 {
-    if (0 > trace_syscall(child->pid, 0)) {
+    if (!trace_syscall(child->pid, 0)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i: %s", child->pid, g_strerror (errno));
             g_printerr("failed to resume child %i: %s\n", child->pid, g_strerror (errno));
@@ -75,7 +75,7 @@ static int xfork(context_t *ctx, struct tchild *child)
     struct tchild *newchild;
 
     // Get new child's pid
-    if (G_UNLIKELY(0 > trace_geteventmsg(child->pid, &childpid))) {
+    if (G_UNLIKELY(!trace_geteventmsg(child->pid, &childpid))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to get the pid of the newborn child: %s", g_strerror(errno));
             g_printerr("failed to get the pid of the newborn child: %s\n", g_strerror (errno));
@@ -115,7 +115,7 @@ static int xgenuine(context_t * ctx, struct tchild *child, int status)
     g_debug("child %i received genuine signal %d", child->pid, sig);
 #endif /* HAVE_STRSIGNAL */
 
-    if (G_UNLIKELY(0 > trace_syscall(child->pid, sig))) {
+    if (G_UNLIKELY(!trace_syscall(child->pid, sig))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i after genuine signal: %s", child->pid, g_strerror(errno));
             g_printerr("failed to resume child %i after genuine signal: %s\n", child->pid, g_strerror(errno));
@@ -137,7 +137,7 @@ static int xunknown(context_t *ctx, struct tchild *child, int status)
     g_info("unknown signal %#x received from child %i", sig, child->pid);
 #endif /* HAVE_STRSIGNAL */
 
-    if (G_UNLIKELY(0 > trace_syscall(child->pid, sig))) {
+    if (G_UNLIKELY(!trace_syscall(child->pid, sig))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i after unknown signal %#x: %s",
                     child->pid, sig, g_strerror(errno));

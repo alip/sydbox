@@ -56,7 +56,7 @@ unsigned int trace_event(int status)
     return E_UNKNOWN;
 }
 
-int trace_me(void)
+bool trace_me(void)
 {
     int save_errno;
 
@@ -64,12 +64,12 @@ int trace_me(void)
         save_errno = errno;
         g_info("failed to set tracing: %s", g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
-    return 0;
+    return true;
 }
 
-int trace_setup(pid_t pid)
+bool trace_setup(pid_t pid)
 {
     int save_errno;
 
@@ -83,12 +83,12 @@ int trace_setup(pid_t pid)
         save_errno = errno;
         g_info("setting tracing options failed for child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
-    return 0;
+    return true;
 }
 
-int trace_cont(pid_t pid)
+bool trace_cont(pid_t pid)
 {
     int save_errno;
 
@@ -96,12 +96,12 @@ int trace_cont(pid_t pid)
         save_errno = errno;
         g_info("failed to continue child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
-    return 0;
+    return true;
 }
 
-int trace_kill(pid_t pid)
+bool trace_kill(pid_t pid)
 {
     int save_errno;
 
@@ -109,12 +109,12 @@ int trace_kill(pid_t pid)
         save_errno = errno;
         g_info("failed to kill child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
-    return 0;
+    return true;
 }
 
-int trace_syscall(pid_t pid, int data)
+bool trace_syscall(pid_t pid, int data)
 {
     int save_errno;
 
@@ -122,13 +122,12 @@ int trace_syscall(pid_t pid, int data)
         save_errno = errno;
         g_info("failed to resume child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
-
-    return 0;
+    return true;
 }
 
-int trace_geteventmsg(pid_t pid, void *data)
+bool trace_geteventmsg(pid_t pid, void *data)
 {
     int save_errno;
 
@@ -136,8 +135,8 @@ int trace_geteventmsg(pid_t pid, void *data)
         save_errno = errno;
         g_info("failed to get event message of child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
-    return 0;
+    return true;
 }
 

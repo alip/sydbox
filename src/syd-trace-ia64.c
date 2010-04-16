@@ -61,7 +61,7 @@ inline int trace_personality(G_GNUC_UNUSED pid_t pid)
     return 0;
 }
 
-int trace_get_syscall(pid_t pid, long *scno)
+bool trace_get_syscall(pid_t pid, long *scno)
 {
     int save_errno;
 
@@ -69,13 +69,13 @@ int trace_get_syscall(pid_t pid, long *scno)
         save_errno = errno;
         g_info("failed to get syscall number for child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
-int trace_set_syscall(pid_t pid, long scno)
+bool trace_set_syscall(pid_t pid, long scno)
 {
     int save_errno;
 
@@ -83,13 +83,13 @@ int trace_set_syscall(pid_t pid, long scno)
         save_errno = errno;
         g_info("failed to set syscall number to %ld for child %i: %s", scno, pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
-int trace_get_return(pid_t pid, long *res)
+bool trace_get_return(pid_t pid, long *res)
 {
     int save_errno;
     long r8, r10;
@@ -98,21 +98,21 @@ int trace_get_return(pid_t pid, long *res)
         save_errno = errno;
         g_info("failed to get return value (r8) for child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
 
     if (G_UNLIKELY(0 > upeek(pid, PT_R10, &r10))) {
         save_errno = errno;
         g_info("failed to get return value (r10) for child %i: %s", pid, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
 
     *res = (r10 != 0) ? -r8 : r8;
-    return 0;
+    return true;
 }
 
-int trace_set_return(pid_t pid, long val)
+bool trace_set_return(pid_t pid, long val)
 {
     int save_errno;
     long r8, r10;
@@ -124,19 +124,20 @@ int trace_set_return(pid_t pid, long val)
         save_errno = errno;
         g_info("ptrace(PTRACE_POKEUSER,%i,PT_R8,%ld) failed: %s", pid, val, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
+
     if (G_UNLIKELY(0 != ptrace(PTRACE_POKEUSER, pid, PT_R10, r10))) {
         save_errno = errno;
         g_info("ptrace(PTRACE_POKEUSER,%i,PT_R10,%ld) failed: %s", pid, val, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
-int trace_get_arg(pid_t pid, G_GNUC_UNUSED int personality, int arg, long *res)
+bool trace_get_arg(pid_t pid, G_GNUC_UNUSED int personality, int arg, long *res)
 {
     int save_errno;
 
@@ -146,10 +147,10 @@ int trace_get_arg(pid_t pid, G_GNUC_UNUSED int personality, int arg, long *res)
         save_errno = errno;
         g_info("failed to get argument %d for child %i: %s", arg, pid, strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
 char *trace_get_path(pid_t pid, G_GNUC_UNUSED int personality, int arg)
@@ -234,7 +235,7 @@ char *trace_get_argv_as_string(pid_t pid, G_GNUC_UNUSED int personality, int arg
     return g_string_free(res, FALSE);
 }
 
-int trace_fake_stat(pid_t pid, G_GNUC_UNUSED int personality)
+bool trace_fake_stat(pid_t pid, G_GNUC_UNUSED int personality)
 {
     int n, m, save_errno;
     long addr = 0;
@@ -248,7 +249,7 @@ int trace_fake_stat(pid_t pid, G_GNUC_UNUSED int personality)
         save_errno = errno;
         g_info("failed to get address of argument %d: %s", 1, g_strerror(errno));
         errno = save_errno;
-        return -1;
+        return false;
     }
 
     memset(&fakebuf, 0, sizeof(struct stat));
@@ -265,7 +266,7 @@ int trace_fake_stat(pid_t pid, G_GNUC_UNUSED int personality)
             save_errno = errno;
             g_info("failed to set argument 1 to %p for child %i: %s", (void *) fakeptr, pid, g_strerror(errno));
             errno = save_errno;
-            return -1;
+            return false;
         }
         ++n;
         ++fakeptr;
@@ -278,10 +279,11 @@ int trace_fake_stat(pid_t pid, G_GNUC_UNUSED int personality)
             save_errno = errno;
             g_info("failed to set argument 1 to %p for child %i: %s", (void *) fakeptr, pid, g_strerror(errno));
             errno = save_errno;
-            return -1;
+            return false;
         }
     }
-    return 0;
+
+    return true;
 }
 
 int trace_decode_socketcall(pid_t pid, G_GNUC_UNUSED int personality)
@@ -312,6 +314,7 @@ bool trace_get_fd(pid_t pid, G_GNUC_UNUSED int personality,
         errno = save_errno;
         return false;
     }
+
     return true;
 }
 

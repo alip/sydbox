@@ -178,7 +178,7 @@ static gchar *get_groupname (void)
 G_GNUC_NORETURN
 static void sydbox_execute_child(G_GNUC_UNUSED int argc, char **argv)
 {
-    if (trace_me() < 0) {
+    if (!trace_me()) {
         g_printerr("failed to set tracing: %s\n", g_strerror(errno));
         _exit(-1);
     }
@@ -226,7 +226,7 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
     g_assert(WIFSTOPPED(status));
     g_assert(WSTOPSIG(status) == SIGTRAP);
 
-    if (0 > trace_setup(pid)) {
+    if (!trace_setup(pid)) {
         g_critical("failed to setup tracing options: %s", g_strerror(errno));
         g_printerr("failed to setup tracing options: %s\n", g_strerror(errno));
         exit(-1);
@@ -270,7 +270,7 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
     g_string_append(eldest->lastexec, "])");
 
     g_info ("child %i is ready to go, resuming", pid);
-    if (0 > trace_syscall(pid, 0)) {
+    if (!trace_syscall(pid, 0)) {
         trace_kill(pid);
         g_critical("failed to resume eldest child %i: %s", pid, g_strerror(errno));
         g_printerr("failed to resume eldest child %i: %s\n", pid, g_strerror(errno));

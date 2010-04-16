@@ -78,7 +78,7 @@ static void test1(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -105,7 +105,7 @@ static void test2(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -116,10 +116,10 @@ static void test2(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, it will stop at the next system call. */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "failed to resume child: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "failed to resume child: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
@@ -139,7 +139,7 @@ static void test3(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -156,10 +156,10 @@ static void test3(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, it will stop at the fork() */
-        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
@@ -180,7 +180,7 @@ static void test4(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -197,10 +197,10 @@ static void test4(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, it will stop at the vfork() */
-        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
@@ -223,7 +223,7 @@ static void test5(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -237,10 +237,10 @@ static void test5(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, it will stop at the execve() */
-        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
@@ -261,7 +261,7 @@ static void test6(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -272,10 +272,10 @@ static void test6(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, it will receive a SIGINT */
-        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
 
         /* Check the event */
@@ -295,7 +295,7 @@ static void test7(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -306,10 +306,10 @@ static void test7(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, it will exit normally */
-        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
 
         /* Check the event */
@@ -329,7 +329,7 @@ static void test8(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -340,10 +340,10 @@ static void test8(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child and kill it with a signal */
-        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
         kill(pid, SIGKILL);
         waitpid(pid, &status, 0);
 
@@ -365,7 +365,7 @@ static void test9(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -377,15 +377,15 @@ static void test9(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child and it will stop at the next system call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
         /* Check the system call number */
-        XFAIL_IF(0 > trace_get_syscall(pid, &sno), "failed to get system call: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_get_syscall(pid, &sno), "failed to get system call: %s\n", g_strerror(errno));
         XFAIL_UNLESS(__NR_open == sno, "expected __NR_open, got %d\n", sno);
 
         trace_kill(pid);
@@ -402,7 +402,7 @@ static void test10(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -414,22 +414,22 @@ static void test10(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child and it will stop at the next system call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
-        XFAIL_IF(0 > trace_set_syscall(pid, 0xbadca11), "failed to set system call: %s", g_strerror(errno));
+        XFAIL_UNLESS(trace_set_syscall(pid, 0xbadca11), "failed to set system call: %s", g_strerror(errno));
 
         /* Resume the child and it will stop at the end of the system call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
         /* Check the system call number */
-        XFAIL_IF(0 > trace_get_syscall(pid, &sno), "failed to get system call: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_get_syscall(pid, &sno), "failed to get system call: %s\n", g_strerror(errno));
         XFAIL_UNLESS(0xbadca11 == sno, "expected 0xbadca11, got %d\n", sno);
 
         trace_kill(pid);
@@ -446,7 +446,7 @@ static void test11(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -466,17 +466,17 @@ static void test11(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child twice and it will stop at the end of next system call */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }
 
         /* Check the return value */
-        XFAIL_IF(0 > trace_get_return(pid, &ret), "trace_get_return() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_get_return(pid, &ret), "trace_get_return() failed: %s\n", g_strerror(errno));
         XFAIL_UNLESS(pid == ret, "pid: %d != returned pid: %ld", pid, ret);
 
         trace_kill(pid);
@@ -493,7 +493,7 @@ static void test12(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -505,17 +505,17 @@ static void test12(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child twice and it will stop at the end of next system call */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }
 
         /* Check the return value */
-        XFAIL_IF(0 > trace_get_return(pid, &ret), "trace_get_return() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_get_return(pid, &ret), "trace_get_return() failed: %s\n", g_strerror(errno));
         XFAIL_UNLESS(-EFAULT == ret, "expected: %d got: %ld", -EFAULT, ret);
 
         trace_kill(pid);
@@ -531,7 +531,7 @@ static void test13(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -556,17 +556,17 @@ static void test13(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child twice and it will stop at the end of next system call */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }
 
         /* Set the return value */
-        XFAIL_IF(0 > trace_set_return(pid, pid + 1), "trace_set_return() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_set_return(pid, pid + 1), "trace_set_return() failed: %s\n", g_strerror(errno));
 
         /* Let the child exit and check her exit status. */
         trace_cont(pid);
@@ -584,7 +584,7 @@ static void test14(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -612,17 +612,17 @@ static void test14(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child twice and it will stop at the end of next system call */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }
 
         /* Set the return value */
-        XFAIL_IF(0 > trace_set_return(pid, -ENAMETOOLONG), "trace_set_return() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_set_return(pid, -ENAMETOOLONG), "trace_set_return() failed: %s\n", g_strerror(errno));
 
         /* Let the child exit and check her exit status. */
         trace_cont(pid);
@@ -641,7 +641,7 @@ static void test15(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -653,10 +653,10 @@ static void test15(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child and it will stop at the next system call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
@@ -680,7 +680,7 @@ static void test16(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -692,10 +692,10 @@ static void test16(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child and it will stop at the next system call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
@@ -719,7 +719,7 @@ static void test17(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -731,10 +731,10 @@ static void test17(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child and it will stop at the next system call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
@@ -758,7 +758,7 @@ static void test18(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -770,10 +770,10 @@ static void test18(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child and it will stop at the next system call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
@@ -797,7 +797,7 @@ static void test19(void)
     if (0 > pid)
         XFAIL("fork() failed: %s\n", g_strerror(errno));
     else if (0 == pid) { // child
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -815,25 +815,25 @@ static void test19(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child and it will stop at the next system call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
 
         /* Fake the stat argument and deny the system call */
-        XFAIL_IF(0 > trace_fake_stat(pid, CHECK_PERSONALITY), "trace_fake_stat() failed: %s\n", g_strerror(errno));
-        XFAIL_IF(0 > trace_set_syscall(pid, 0xbadca11), "failed to deny stat: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_fake_stat(pid, CHECK_PERSONALITY), "trace_fake_stat() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_set_syscall(pid, 0xbadca11), "failed to deny stat: %s\n", g_strerror(errno));
 
         /* Resume the child, it will stop at the end of stat() call */
-        XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
-        XFAIL_IF(0 > trace_set_return(pid, 0), "trace_set_return() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_set_return(pid, 0), "trace_set_return() failed: %s\n", g_strerror(errno));
 
         /* Resume the child, it will exit */
-        XFAIL_IF(0 > trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_cont(pid), "trace_cont() failed: %s\n", g_strerror(errno));
         waitpid(pid, &status, 0);
         XFAIL_UNLESS(WIFEXITED(status), "child didn't exit");
         XFAIL_UNLESS(WEXITSTATUS(status) == EXIT_SUCCESS, "failed to fake stat argument");
@@ -871,7 +871,7 @@ static void test20(void)
         strcpy(addr.sun_path, "/dev/null");
         len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -892,17 +892,17 @@ static void test20(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, until the connect() call. */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }
 
         /* Check the fd argument */
-        XFAIL_IF(!trace_get_fd(pid, CHECK_PERSONALITY, DECODE_SOCKETCALL, &fd),
+        XFAIL_UNLESS(trace_get_fd(pid, CHECK_PERSONALITY, DECODE_SOCKETCALL, &fd),
                 "failed to get file descriptor: %s\n", g_strerror(errno));
         XFAIL_UNLESS(fd == realfd, "wrong file descriptor got:%d expected:%d\n", fd, realfd);
 
@@ -939,7 +939,7 @@ static void test21(void)
         strcpy(addr.sun_path, "/dev/null");
         len = strlen(addr.sun_path) + sizeof(addr.sun_family);
 
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -961,11 +961,11 @@ static void test21(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, until the connect() call. */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }
@@ -1015,7 +1015,7 @@ static void test22(void)
         len = strlen(addr.sun_path) + sizeof(addr.sun_family);
         addr.sun_path[0] = '\0';
 
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -1037,11 +1037,11 @@ static void test22(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, until the connect() call. */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }
@@ -1090,7 +1090,7 @@ static void test23(void)
         inet_pton(AF_INET, "127.0.0.1", &(addr.sin_addr));
         addr.sin_port = htons(23456);
 
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -1113,11 +1113,11 @@ static void test23(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, until the connect() call. */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }
@@ -1168,7 +1168,7 @@ static void test24(void)
         inet_pton(AF_INET6, "::1", &(addr.sin6_addr));
         addr.sin6_port = htons(23456);
 
-        if (0 > trace_me()) {
+        if (!trace_me()) {
             g_printerr("trace_me() failed: %s\n", g_strerror(errno));
             _exit(EXIT_FAILURE);
         }
@@ -1191,11 +1191,11 @@ static void test24(void)
         waitpid(pid, &status, 0);
 
         XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
-        XFAIL_IF(0 > trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
 
         /* Resume the child, until the connect() call. */
         for (unsigned int i = 0; i < 2; i++) {
-            XFAIL_IF(0 > trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+            XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
             waitpid(pid, &status, 0);
             XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
         }

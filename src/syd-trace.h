@@ -97,71 +97,71 @@ unsigned int trace_event(int status);
 
 /**
  * Indicates that this process is to be traced by its parent.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_me(void);
+bool trace_me(void);
 
 /**
  * Sets up ptrace() options.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_setup(pid_t pid);
+bool trace_setup(pid_t pid);
 
 /**
  * Lets the given child continue its execution untraced.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_cont(pid_t pid);
+bool trace_cont(pid_t pid);
 
 /**
  * Kills the given child.
- * Returns 0 on success or if child is already dead, -1 on failure and sets
- * errno accordingly.
+ * Returns true on success or if child is already dead, false on failure and
+ * sets errno accordingly.
  */
-int trace_kill(pid_t pid);
+bool trace_kill(pid_t pid);
 
 /**
  * Restarts the child and arranges it to stop at the next system call.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_syscall(pid_t pid, int data);
+bool trace_syscall(pid_t pid, int data);
 
 /**
  * Retrieve a message (as an unsigned long) about the ptrace event that just
  * happened.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_geteventmsg(pid_t pid, void *data);
+bool trace_geteventmsg(pid_t pid, void *data);
 
 /**
  * Get the system call number and place it in scno.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_get_syscall(pid_t pid, long *scno);
+bool trace_get_syscall(pid_t pid, long *scno);
 
 /**
  * Set the system call to the given value.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_set_syscall(pid_t pid, long scno);
+bool trace_set_syscall(pid_t pid, long scno);
 
 /**
  * Get the system call return value and place it in res.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_get_return(pid_t pid, long *res);
+bool trace_get_return(pid_t pid, long *res);
 
 /**
  * Set the system call return value to the given value.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_set_return(pid_t pid, long val);
+bool trace_set_return(pid_t pid, long val);
 
 /**
  * Get the given argument and place it in res.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_get_arg(pid_t pid, int personality, int arg, long *res);
+bool trace_get_arg(pid_t pid, int personality, int arg, long *res);
 
 /**
  * Get the requested path argument.
@@ -177,12 +177,14 @@ char *trace_get_argv_as_string(pid_t pid, int personality, int arg);
 
 /**
  * Fake the stat buffer.
- * Returns 0 on success, -1 on failure and sets errno accordingly.
+ * Returns true on success, false on failure and sets errno accordingly.
  */
-int trace_fake_stat(pid_t pid, int personality);
+bool trace_fake_stat(pid_t pid, int personality);
 
 /**
  * Decode a socketcall to its subcalls.
+ * Returns the decoded socketcall number on success, -1 on failure and sets
+ * errno accordingly.
  */
 int trace_decode_socketcall(pid_t pid, int personality);
 

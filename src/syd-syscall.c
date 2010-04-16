@@ -126,7 +126,7 @@ static bool syscall_get_path(pid_t pid, int personality, int narg, struct checkd
 static bool syscall_get_dirfd(struct tchild *child, int narg, struct checkdata *data)
 {
     long dfd;
-    if (G_UNLIKELY(0 > trace_get_arg(child->pid, child->personality, narg, &dfd))) {
+    if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, narg, &dfd))) {
         data->result = RS_ERROR;
         data->save_errno = errno;
         if (ESRCH == errno)
@@ -279,7 +279,7 @@ static void syscall_check_flags(struct tchild *child, struct checkdata *data)
 
     if (sflags & OPEN_MODE || sflags & OPEN_MODE_AT) {
         int arg = sflags & OPEN_MODE ? 1 : 2;
-        if (G_UNLIKELY(0 > trace_get_arg(child->pid, child->personality, arg, &(data->open_flags)))) {
+        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, arg, &(data->open_flags)))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -293,7 +293,7 @@ static void syscall_check_flags(struct tchild *child, struct checkdata *data)
     }
     else {
         int arg = sflags & ACCESS_MODE ? 1 : 2;
-        if (G_UNLIKELY(0 > trace_get_arg(child->pid, child->personality, arg, &(data->access_flags)))) {
+        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, arg, &(data->access_flags)))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -533,7 +533,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
 
     if (data->result == RS_MAGIC) {
         g_debug("stat(\"%s\") is magic, faking stat buffer", path);
-        if (G_UNLIKELY(0 > trace_fake_stat(child->pid, child->personality))) {
+        if (G_UNLIKELY(!trace_fake_stat(child->pid, child->personality))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -607,7 +607,7 @@ static void syscall_check_resolve(struct tchild *child, struct checkdata *data)
         data->resolve = false;
     else if (sflags & IF_AT_SYMLINK_FOLLOW4) {
         long symflags;
-        if (G_UNLIKELY(0 > trace_get_arg(child->pid, child->personality, 4, &symflags))) {
+        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, 4, &symflags))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -621,7 +621,7 @@ static void syscall_check_resolve(struct tchild *child, struct checkdata *data)
     else if (sflags & IF_AT_SYMLINK_NOFOLLOW3 || sflags & IF_AT_SYMLINK_NOFOLLOW4) {
         long symflags;
         int arg = sflags & IF_AT_SYMLINK_NOFOLLOW3 ? 3 : 4;
-        if (G_UNLIKELY(0 > trace_get_arg(child->pid, child->personality, arg, &symflags))) {
+        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, arg, &symflags))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -634,7 +634,7 @@ static void syscall_check_resolve(struct tchild *child, struct checkdata *data)
     }
     else if (sflags & IF_AT_REMOVEDIR2) {
         long rmflags;
-        if (G_UNLIKELY(0 > trace_get_arg(child->pid, child->personality, 2, &rmflags))) {
+        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, 2, &rmflags))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -1050,7 +1050,7 @@ static int syscall_handle_badcall(struct tchild *child)
 {
     g_debug("restoring real call number for denied system call %lu(%s)", child->sno, sname);
     // Restore real call number and return our error code
-    if (0 > trace_set_syscall(child->pid, child->sno)) {
+    if (!trace_set_syscall(child->pid, child->sno)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error setting system call using ptrace()
              * child is still alive, hence the error is fatal.
@@ -1062,7 +1062,7 @@ static int syscall_handle_badcall(struct tchild *child)
         // Child is dead.
         return -1;
     }
-    if (0 > trace_set_return(child->pid, child->retval)) {
+    if (!trace_set_return(child->pid, child->retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error setting return code using ptrace()
              * child is still alive, hence the error is fatal.
@@ -1085,7 +1085,7 @@ static int syscall_handle_chdir(struct tchild *child)
 {
     long retval;
 
-    if (0 > trace_get_return(child->pid, &retval)) {
+    if (!trace_get_return(child->pid, &retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * child is still alive, hence the error is fatal.
@@ -1111,7 +1111,7 @@ static int syscall_handle_chdir(struct tchild *child)
              */
             retval = -errno;
             g_debug("pgetcwd() failed: %s", g_strerror(errno));
-            if (0 > trace_set_return(child->pid, retval)) {
+            if (!trace_set_return(child->pid, retval)) {
                 if (G_UNLIKELY(ESRCH != errno)) {
                     /* Error setting return code using ptrace()
                      * child is still alive, hence the error is fatal.
@@ -1152,7 +1152,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
     long fd, retval;
     GSList *whitelist;
 
-    if (0 > trace_get_return(child->pid, &retval)) {
+    if (!trace_get_return(child->pid, &retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * child is still alive, hence the error is fatal.
@@ -1250,7 +1250,7 @@ static int syscall_handle_getsockname(struct tchild *child, int flags)
     GSList *whitelist;
     struct sydbox_addr *addr, *addr_new;
 
-    if (0 > trace_get_return(child->pid, &retval)) {
+    if (!trace_get_return(child->pid, &retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * Silently ignore it.
@@ -1335,7 +1335,7 @@ static int syscall_handle_dup(struct tchild *child)
     long oldfd, newfd;
     struct sydbox_addr *addr;
 
-    if (0 > trace_get_return(child->pid, &newfd)) {
+    if (!trace_get_return(child->pid, &newfd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * Silently ignore it.
@@ -1352,7 +1352,7 @@ static int syscall_handle_dup(struct tchild *child)
         return 0;
     }
 
-    if (0 > trace_get_arg(child->pid, child->personality, 0, &oldfd)) {
+    if (!trace_get_arg(child->pid, child->personality, 0, &oldfd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting first argument using ptrace()
              * Silently ignore it.
@@ -1380,7 +1380,7 @@ static int syscall_handle_fcntl(struct tchild *child)
     long oldfd, newfd, cmd;
     struct sydbox_addr *addr;
 
-    if (0 > trace_get_return(child->pid, &newfd)) {
+    if (!trace_get_return(child->pid, &newfd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * Silently ignore it.
@@ -1397,7 +1397,7 @@ static int syscall_handle_fcntl(struct tchild *child)
         return 0;
     }
 
-    if (0 > trace_get_arg(child->pid, child->personality, 1, &cmd)) {
+    if (!trace_get_arg(child->pid, child->personality, 1, &cmd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting first argument using ptrace()
              * Silently ignore it.
@@ -1416,7 +1416,7 @@ static int syscall_handle_fcntl(struct tchild *child)
         return 0;
     }
 
-    if (0 > trace_get_arg(child->pid, child->personality, 0, &oldfd)) {
+    if (!trace_get_arg(child->pid, child->personality, 0, &oldfd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting first argument using ptrace()
              * Silently ignore it.
@@ -1452,7 +1452,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
          * Get the system call number of child.
          * Save it in child->sno.
          */
-        if (0 > trace_get_syscall(child->pid, &sno)) {
+        if (!trace_get_syscall(child->pid, &sno)) {
             if (G_UNLIKELY(ESRCH != errno)) {
                 /* Error getting system call using ptrace()
                  * child is still alive, hence the error is fatal.
@@ -1528,7 +1528,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                 case RS_DENY:
                     g_debug("denying access to system call %lu(%s)", sno, sname);
                     child->flags |= TCHILD_DENYSYSCALL;
-                    if (0 > trace_set_syscall(child->pid, BAD_SYSCALL)) {
+                    if (!trace_set_syscall(child->pid, BAD_SYSCALL)) {
                         if (G_UNLIKELY(ESRCH != errno)) {
                             g_critical("failed to set system call: %s", g_strerror(errno));
                             g_printerr("failed to set system call: %s\n", g_strerror(errno));
