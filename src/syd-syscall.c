@@ -60,8 +60,7 @@
 #endif /* HAVE_IPV6 */
 #define IS_NET_CALL(fl)             ((fl) & (BIND_CALL | CONNECT_CALL | SENDTO_CALL | DECODE_SOCKETCALL))
 
-#define MODE_STRING(flags)                                                      \
-    ((flags) & OPEN_MODE || (flags) & OPEN_MODE_AT) ? "O_WRONLY/O_RDWR" : "..."
+#define MODE_STRING(fl) ((fl) & (OPEN_MODE | OPEN_MODE_AT) ? "O_WRONLY/O_RDWR" : "...")
 
 enum {
     RS_ALLOW,
@@ -213,7 +212,7 @@ static void syscall_check_start(G_GNUC_UNUSED context_t *ctx, struct tchild *chi
 {
     g_debug("starting check for system call %lu(%s), child %i", sno, sname, child->pid);
 
-    if (sflags & CHECK_PATH || sflags & MAGIC_STAT) {
+    if (sflags & (CHECK_PATH | MAGIC_STAT)) {
         if (!syscall_get_path(child->pid, child->personality, 0, data))
             return;
     }
@@ -273,11 +272,10 @@ static void syscall_check_flags(struct tchild *child, struct checkdata *data)
 {
     if (G_UNLIKELY(RS_ALLOW != data->result))
         return;
-    else if (!(sflags & OPEN_MODE || sflags & OPEN_MODE_AT
-                || sflags & ACCESS_MODE || sflags & ACCESS_MODE_AT))
+    else if (!(sflags & (OPEN_MODE | OPEN_MODE_AT | ACCESS_MODE | ACCESS_MODE_AT)))
         return;
 
-    if (sflags & OPEN_MODE || sflags & OPEN_MODE_AT) {
+    if (sflags & (OPEN_MODE | OPEN_MODE_AT)) {
         int arg = sflags & OPEN_MODE ? 1 : 2;
         if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, arg, &(data->open_flags)))) {
             data->result = RS_ERROR;
