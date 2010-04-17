@@ -41,7 +41,7 @@
 #include "syd-trace.h"
 
 // Event handlers
-static int xsetup(context_t *ctx, struct tchild *child)
+static int event_setup(context_t *ctx, struct tchild *child)
 {
     if (!trace_setup(child->pid)) {
         if (G_UNLIKELY(ESRCH != errno)) {
@@ -56,7 +56,7 @@ static int xsetup(context_t *ctx, struct tchild *child)
     return 0;
 }
 
-static int xsyscall(context_t *ctx, struct tchild *child)
+static int event_syscall(context_t *ctx, struct tchild *child)
 {
     if (!trace_syscall(child->pid, 0)) {
         if (G_UNLIKELY(ESRCH != errno)) {
@@ -69,7 +69,7 @@ static int xsyscall(context_t *ctx, struct tchild *child)
     return 0;
 }
 
-static int xfork(context_t *ctx, struct tchild *child)
+static int event_fork(context_t *ctx, struct tchild *child)
 {
     unsigned long childpid;
     struct tchild *newchild;
@@ -100,12 +100,12 @@ static int xfork(context_t *ctx, struct tchild *child)
          */
         g_debug("prematurely born child %i inherits sandbox data from her parent %i", newchild->pid, child->pid);
         tchild_inherit(newchild, child);
-        xsyscall(ctx, newchild);
+        event_syscall(ctx, newchild);
     }
     return 0;
 }
 
-static int xgenuine(context_t * ctx, struct tchild *child, int status)
+static int event_genuine(context_t * ctx, struct tchild *child, int status)
 {
     int sig = WSTOPSIG(status);
 
@@ -127,7 +127,7 @@ static int xgenuine(context_t * ctx, struct tchild *child, int status)
     return 0;
 }
 
-static int xunknown(context_t *ctx, struct tchild *child, int status)
+static int event_unknown(context_t *ctx, struct tchild *child, int status)
 {
     int sig = WSTOPSIG(status);
 
@@ -184,21 +184,21 @@ int trace_loop(context_t *ctx)
                      */
                     g_debug("setting up prematurely born child %i", pid);
                     child = tchild_new(ctx->children, pid, false);
-                    if (0 != xsetup(ctx, child))
+                    if (0 != event_setup(ctx, child))
                         return exit_code;
                 }
                 else {
                     g_debug("setting up child %i", child->pid);
-                    if (0 != xsetup(ctx, child))
+                    if (0 != event_setup(ctx, child))
                         return exit_code;
-                    if (0 != xsyscall(ctx, child))
+                    if (0 != event_syscall(ctx, child))
                         return exit_code;
                 }
                 break;
             case E_SYSCALL:
                 if (0 != syscall_handle(ctx, child))
                     return exit_code;
-                if (0 != xsyscall(ctx, child))
+                if (0 != event_syscall(ctx, child))
                     return exit_code;
                 break;
             case E_FORK:
@@ -208,9 +208,9 @@ int trace_loop(context_t *ctx)
                         (event == E_FORK)
                             ? "fork"
                             : (event == E_VFORK) ? "vfork" : "clone");
-                if (0 != xfork(ctx, child))
+                if (0 != event_fork(ctx, child))
                     return exit_code;
-                if (0 != xsyscall(ctx, child))
+                if (0 != event_syscall(ctx, child))
                     return exit_code;
                 break;
             case E_EXEC:
@@ -229,11 +229,11 @@ int trace_loop(context_t *ctx)
                     exit(-1);
                 }
                 g_debug("updated child %i's personality to %s mode", child->pid, dispatch_mode(child->personality));
-                if (0 != xsyscall(ctx, child))
+                if (0 != event_syscall(ctx, child))
                     return exit_code;
                 break;
             case E_GENUINE:
-                if (0 != xgenuine(ctx, child, status))
+                if (0 != event_genuine(ctx, child, status))
                     return exit_code;
                 break;
             case E_EXIT:
@@ -283,7 +283,7 @@ int trace_loop(context_t *ctx)
                 tchild_delete(ctx->children, pid);
                 break;
             case E_UNKNOWN:
-                if (0 != xunknown(ctx, child, status))
+                if (0 != event_unknown(ctx, child, status))
                     return exit_code;
                 break;
             default:
