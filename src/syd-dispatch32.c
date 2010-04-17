@@ -83,6 +83,6 @@ const char *dispatch_name32(int sno)
 
 inline bool dispatch_chdir32(int sno)
 {
-    return IS_CHDIR(sno);
+    return (__NR_chdir == sno) || (__NR_fchdir == sno);
 }
 

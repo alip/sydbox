@@ -104,6 +104,6 @@ inline const char *dispatch_mode(G_GNUC_UNUSED int personality)
 
 inline bool dispatch_chdir(G_GNUC_UNUSED int personality, int sno)
 {
-    return IS_CHDIR(sno);
+    return (__NR_chdir == sno) || (__NR_fchdir == sno);
 }
 

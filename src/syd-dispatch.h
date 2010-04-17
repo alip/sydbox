@@ -26,7 +26,6 @@
 #include "config.h"
 #endif // HAVE_CONFIG_H
 
-#define IS_CHDIR(_sno)      (__NR_chdir == (_sno) || __NR_fchdir == (_sno))
 #define UNKNOWN_SYSCALL     "unknown"
 
 #if defined(I386) || defined(IA64) || defined(POWERPC) || defined(POWERPC64)
