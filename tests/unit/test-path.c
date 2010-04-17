@@ -25,6 +25,8 @@
 #include "syd-config.h"
 #include "syd-path.h"
 
+#include "test-helpers.h"
+
 static void test1(void)
 {
     GSList *pathlist = NULL;
@@ -89,20 +91,9 @@ static void test5(void)
 
     pathnode_free(&pathlist);
 
-    if (!seen_foo) {
-        g_printerr("did not find 'foo' in path list");
-        g_assert(seen_foo);
-    }
-
-    if (!seen_bar) {
-        g_printerr("did not find 'bar' in path list");
-        g_assert(seen_bar);
-    }
-
-    if (!seen_baz) {
-        g_printerr("did not find 'baz' in path list");
-        g_assert(seen_baz);
-    }
+    XFAIL_UNLESS(seen_foo, "did not find 'foo' in path list");
+    XFAIL_UNLESS(seen_bar, "did not find 'bar' in path list");
+    XFAIL_UNLESS(seen_baz, "did not find 'baz' in path list");
 }
 
 static void test6(void)
