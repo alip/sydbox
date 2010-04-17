@@ -122,14 +122,12 @@ void tchild_free_one(gpointer child_ptr)
 
 void tchild_kill_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_UNUSED void *userdata)
 {
-    pid_t pid = GPOINTER_TO_INT(pid_ptr);
-    trace_kill(pid);
+    trace_kill(GPOINTER_TO_INT(pid_ptr));
 }
 
 void tchild_cont_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_UNUSED void *userdata)
 {
-    pid_t pid = GPOINTER_TO_INT(pid_ptr);
-    trace_cont(pid);
+    trace_cont(GPOINTER_TO_INT(pid_ptr));
 }
 
 void tchild_delete(GHashTable *children, pid_t pid)
