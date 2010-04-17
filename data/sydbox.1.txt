@@ -212,6 +212,11 @@ according to the command. Currently there's one type of magic commands:
   * */dev/sydbox*                   stat'ing this path succeeds if magic commands are allowed.
   * */dev/sydbox/enabled*           stat'ing this path succeeds if path sandboxing is on, fails otherwise.
 
+RETURN VALUE
+------------
+sydbox returns the return code of the executed program under most cases. In case the program is killed with a signal
+sydbox returns 128 + *SIGNAL*.
+
 SEE ALSO
 --------
 ptrace(1)
