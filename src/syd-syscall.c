@@ -1563,20 +1563,14 @@ int syscall_handle(context_t *ctx, struct tchild *child)
             if (0 > syscall_handle_chdir(child))
                 return context_remove_child(ctx, child->pid);
         }
-        else if (child->sandbox->network &&
-                sydbox_config_get_network_auto_whitelist_bind() &&
-                sflags > 0) {
+        else if (child->sandbox->network && sydbox_config_get_network_auto_whitelist_bind()) {
             if (child->bindlast != NULL &&
                     (sflags & (DECODE_SOCKETCALL | BIND_CALL))) {
                 if (0 > syscall_handle_bind(child, sflags))
                     return context_remove_child(ctx, child->pid);
             }
             if (g_hash_table_size(child->bindzero) > 0) {
-                if (sflags & (DECODE_SOCKETCALL | GETSOCKNAME_CALL)) {
-                    if (0 > syscall_handle_getsockname(child, sflags))
-                        return context_remove_child(ctx, child->pid);
-                }
-                else if (sflags & DUP_CALL) {
+                if (dispatch_dup(child->personality, sno)) {
                     /* Child is exiting a system call that may have duplicated a file
                      * descriptor in child->bindzero. Update file descriptor
                      * information.
@@ -1584,12 +1578,16 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                     if (0 > syscall_handle_dup(child))
                         return context_remove_child(ctx, child->pid);
                 }
-                else if (sflags & FCNTL_CALL) {
+                else if (dispatch_fcntl(child->personality, sno)) {
                     /* Child is exiting a system call that may have duplicated a file
                      * descriptor in child->bindzero. Update file descriptor
                      * information.
                      */
                     if (0 > syscall_handle_fcntl(child))
+                        return context_remove_child(ctx, child->pid);
+                }
+                else if (sflags & (DECODE_SOCKETCALL | GETSOCKNAME_CALL)) {
+                    if (0 > syscall_handle_getsockname(child, sflags))
                         return context_remove_child(ctx, child->pid);
                 }
             }

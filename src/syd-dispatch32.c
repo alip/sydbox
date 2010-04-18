@@ -86,3 +86,17 @@ inline bool dispatch_chdir32(int sno)
     return (__NR_chdir == sno) || (__NR_fchdir == sno);
 }
 
+inline bool dispatch_dup32(int sno)
+{
+#if defined(__NR_dup3)
+    return (__NR_dup == sno) || (__NR_dup2 == sno) || (__NR_dup3 == sno);
+#else
+    return (__NR_dup == sno) || (__NR_dup2 == sno);
+#endif
+}
+
+inline bool dispatch_fcntl32(int sno)
+{
+    return (__NR_fcntl == sno);
+}
+

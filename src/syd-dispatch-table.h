@@ -22,7 +22,10 @@
 
 #include "syd-flags.h"
 
-// System call dispatch table
+/* System call dispatch table
+ * If the system call doesn't need to be stopped at the beginning, do NOT add
+ * it to this table. Add a dispatch_* function instead like dispatch_chdir().
+ */
 static const struct syscall_def {
     int no;
     int flags;
@@ -96,12 +99,6 @@ static const struct syscall_def {
 #if defined(__NR_sendto)
     {__NR_sendto,       SENDTO_CALL},
 #endif
-    {__NR_dup,          DUP_CALL},
-    {__NR_dup2,         DUP_CALL},
-#if defined(__NR_dup3)
-    {__NR_dup3,         DUP_CALL},
-#endif
-    {__NR_fcntl,        FCNTL_CALL},
     {__NR_execve,       EXEC_CALL},
     {-1,                -1},
 };

@@ -50,9 +50,7 @@
 #define BIND_CALL               (1 << 26) // Check if the bind() call matches the accepted bind IPs
 #define GETSOCKNAME_CALL        (1 << 27) // Check if the getsockname() call reveals bind zero port
 #define SENDTO_CALL             (1 << 28) // Check if the sendto() call matches the accepted sendto IPs
-#define DUP_CALL                (1 << 29) // Check if the dup() or dup2() call duplicates any fds in bindzero
-#define FCNTL_CALL              (1 << 30) // Check if the fcntl() call duplicates any fds in bindzero
-#define EXEC_CALL               (1 << 31) // Allowing the system call depends on the exec flag
+#define EXEC_CALL               (1 << 29) // Allowing the system call depends on the exec flag
 
 #endif // SYDBOX_GUARD_FLAGS_H
 

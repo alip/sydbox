@@ -107,3 +107,17 @@ inline bool dispatch_chdir(G_GNUC_UNUSED int personality, int sno)
     return (__NR_chdir == sno) || (__NR_fchdir == sno);
 }
 
+inline bool dispatch_dup(G_GNUC_UNUSED int personality, int sno)
+{
+#if defined(__NR_dup3)
+    return (__NR_dup == sno) || (__NR_dup2 == sno) || (__NR_dup3 == sno);
+#else
+    return (__NR_dup == sno) || (__NR_dup2 == sno);
+#endif
+}
+
+inline bool dispatch_fcntl(G_GNUC_UNUSED int personality, int sno)
+{
+    return (__NR_fcntl == sno);
+}
+
