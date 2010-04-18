@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -34,11 +34,11 @@
 #include "syd-net.h"
 #include "syd-wrappers.h"
 
-context_t *context_new (void)
+context_t *context_new(void)
 {
     context_t *ctx;
 
-    ctx = (context_t *) g_new0(context_t, 1);
+    ctx = (context_t *) g_new(context_t, 1);
 
     ctx->children = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, tchild_free_one);
 
@@ -56,7 +56,7 @@ void context_free(context_t *ctx)
 
 int context_remove_child(context_t * const ctx, pid_t pid)
 {
-    g_info("removing child %d from context", pid);
+    g_info("removing child %i from context", pid);
     g_hash_table_remove(ctx->children, GINT_TO_POINTER(pid));
 
     return (0 == g_hash_table_size(ctx->children)) ? -1 : 0;
