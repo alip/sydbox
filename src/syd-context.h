@@ -2,7 +2,7 @@
 
 /**
  * Copyright 2009 Saleem Abdulrasool <compnerd@compnerd.org>
- * Copyright 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -24,10 +24,12 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
+#include <glib.h>
+
 typedef struct
 {
-    pid_t eldest;               // first child's pid is kept to determine return code.
-    GHashTable *children;       // list of children
+    pid_t eldest;         // First child's pid is kept to determine return code.
+    GHashTable *children; // List of children
 } context_t;
 
 context_t *context_new(void);
