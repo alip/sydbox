@@ -3,6 +3,12 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.6.7
+* Regression: Duplicating network address information introduced a bug which
+  cause sydbox to hang. This is now fixed.
+* Added more unit tests.
+* Miscellaneous performance fixes.
+
 ### 0.6.6
 * Fix getting/setting system call return values on IA64.
 * Regression: Binding a socket with an unsupported family caused sydbox to
