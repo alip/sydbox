@@ -274,7 +274,7 @@ int trace_decode_socketcall(pid_t pid, int personality)
     int save_errno;
     long addr;
 
-     if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][0], &addr))) {
+    if (G_UNLIKELY(0 > upeek(pid, syscall_args[personality][0], &addr))) {
         save_errno = errno;
         g_info("failed to get address of argument 0: %s", g_strerror(errno));
         errno = save_errno;
