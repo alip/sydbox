@@ -100,3 +100,13 @@ inline bool dispatch_fcntl32(int sno)
     return (__NR_fcntl == sno);
 }
 
+inline bool dispatch_maygetsockname32(int sno, bool *decode)
+{
+    if (__NR_socketcall == sno) {
+        if (decode != NULL)
+            *decode = true;
+        return true;
+    }
+    return false;
+}
+

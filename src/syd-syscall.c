@@ -1241,7 +1241,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
 /**
  * getsockname(2) handler
  */
-static int syscall_handle_getsockname(struct tchild *child, int flags)
+static int syscall_handle_getsockname(struct tchild *child, bool decode)
 {
     int subcall;
     long fd, retval;
@@ -1261,11 +1261,11 @@ static int syscall_handle_getsockname(struct tchild *child, int flags)
     }
 
     if (0 != retval) {
-        /* getsockname() call failed, ignore it */
+        g_debug("getsockname() call failed for child %i, ignoring", child->pid);
         return 0;
     }
 
-    if (flags & DECODE_SOCKETCALL) {
+    if (decode) { /* socketcall() */
         subcall = trace_decode_socketcall(child->pid, child->personality);
         if (0 > subcall) {
             if (G_UNLIKELY(ESRCH != errno)) {
@@ -1283,10 +1283,8 @@ static int syscall_handle_getsockname(struct tchild *child, int flags)
 
         addr_new = trace_get_addr(child->pid, child->personality, 1, true, &fd);
     }
-    else if (flags & GETSOCKNAME_CALL)
+    else /* getsockname() */
         addr_new = trace_get_addr(child->pid, child->personality, 1, false, &fd);
-    else
-        g_assert_not_reached();
 
     if (addr_new == NULL) {
         /* Error getting fd using ptrace()
@@ -1306,11 +1304,15 @@ static int syscall_handle_getsockname(struct tchild *child, int flags)
         case AF_INET:
             addr->u.sa.port[0] = addr_new->u.sa.port[0];
             addr->u.sa.port[1] = addr_new->u.sa.port[0];
+            g_debug("whitelisting last bind address with revealed bind port %d for connect",
+                    addr->u.sa.port[0]);
             break;
 #if HAVE_IPV6
         case AF_INET6:
             addr->u.sa6.port[0] = addr_new->u.sa6.port[0];
             addr->u.sa6.port[1] = addr_new->u.sa6.port[1];
+            g_debug("whitelisting last bind address with revealed bind port %d for connect",
+                    addr->u.sa6.port[0]);
             break;
 #endif /* HAVE_IPV6 */
         default:
@@ -1441,7 +1443,7 @@ static int syscall_handle_fcntl(struct tchild *child)
  */
 int syscall_handle(context_t *ctx, struct tchild *child)
 {
-    bool entering;
+    bool decode, entering;
     struct checkdata data;
 
     entering = !(child->flags & TCHILD_INSYSCALL);
@@ -1570,7 +1572,11 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                     return context_remove_child(ctx, child->pid);
             }
             if (g_hash_table_size(child->bindzero) > 0) {
-                if (dispatch_dup(child->personality, sno)) {
+                if (dispatch_maygetsockname(child->personality, sno, &decode)) {
+                    if (0 > syscall_handle_getsockname(child, decode))
+                        return context_remove_child(ctx, child->pid);
+                }
+                else if (dispatch_dup(child->personality, sno)) {
                     /* Child is exiting a system call that may have duplicated a file
                      * descriptor in child->bindzero. Update file descriptor
                      * information.
@@ -1584,10 +1590,6 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                      * information.
                      */
                     if (0 > syscall_handle_fcntl(child))
-                        return context_remove_child(ctx, child->pid);
-                }
-                else if (sflags & (DECODE_SOCKETCALL | GETSOCKNAME_CALL)) {
-                    if (0 > syscall_handle_getsockname(child, sflags))
                         return context_remove_child(ctx, child->pid);
                 }
             }

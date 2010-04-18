@@ -37,6 +37,7 @@ const char *dispatch_mode(int personality);
 bool dispatch_chdir(int personality, int sno);
 bool dispatch_dup(int personality, int sno);
 bool dispatch_fcntl(int personality, int sno);
+bool dispatch_maygetsockname(int personality, int sno, bool *decode);
 #elif defined(X86_64)
 void dispatch_init32(void);
 void dispatch_init64(void);
@@ -52,6 +53,8 @@ bool dispatch_dup32(int sno);
 bool dispatch_dup64(int sno);
 bool dispatch_fcntl32(int sno);
 bool dispatch_fcntl64(int sno);
+bool dispatch_maygetsockname32(int sno, bool *decode);
+bool dispatch_maygetsockname64(int sno, bool *decode);
 
 #define dispatch_init()     \
     do {                    \
@@ -75,6 +78,10 @@ bool dispatch_fcntl64(int sno);
     ((personality) == 0) ? dispatch_dup32((sno)) : dispatch_dup64((sno))
 #define dispatch_fcntl(personality, sno) \
     ((personality) == 0) ? dispatch_fcntl32((sno)) : dispatch_fcntl64((sno))
+#define dispatch_maygetsockname(personality, sno, decode) \
+    ((personality) == 0)                                  \
+        ? dispatch_maygetsockname32((sno), (decode))      \
+        : dispatch_maygetsockname64((sno), (decode))
 
 #else
 #error unsupported architecture

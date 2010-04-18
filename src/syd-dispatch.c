@@ -121,3 +121,24 @@ inline bool dispatch_fcntl(G_GNUC_UNUSED int personality, int sno)
     return (__NR_fcntl == sno);
 }
 
+inline bool dispatch_maygetsockname(G_GNUC_UNUSED int personality, int sno, bool *decode)
+{
+#if defined(I386) || defined(POWERPC) || defined(POWERPC64)
+    if (__NR_socketcall == sno) {
+        if (decode != NULL)
+            *decode = true;
+        return true;
+    }
+    return false;
+#elif defined(IA64)
+    if (__NR_getsockname == sno) {
+        if (decode != NULL)
+            *decode = false;
+        return true;
+    }
+    return false;
+#else
+#error unsupported architecture
+#endif
+}
+
