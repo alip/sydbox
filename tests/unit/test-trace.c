@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -633,6 +634,240 @@ static void test14(void)
 
 static void test15(void)
 {
+    int status;
+    long arg;
+    pid_t pid, ret;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (!trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+
+        read(13, NULL, 0);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the beginning of next system call. */
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the argument */
+        XFAIL_UNLESS(trace_get_arg(pid, CHECK_PERSONALITY, 0, &arg), "trace_get_arg() failed: %s\n",
+                g_strerror(errno));
+        XFAIL_UNLESS(arg == 13, "got %ld expected 13\n");
+
+        trace_kill(pid);
+    }
+}
+
+static void test16(void)
+{
+    int status;
+    long arg;
+    pid_t pid, ret;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (!trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+
+        mmap(NULL, 13, 0, 0, 0, 0);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the beginning of next system call. */
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the argument */
+        XFAIL_UNLESS(trace_get_arg(pid, CHECK_PERSONALITY, 1, &arg), "trace_get_arg() failed: %s\n",
+                g_strerror(errno));
+        XFAIL_UNLESS(arg == 13, "got %ld expected 13\n");
+
+        trace_kill(pid);
+    }
+}
+
+static void test17(void)
+{
+    int status;
+    long arg;
+    pid_t pid, ret;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (!trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+
+        mmap(NULL, 0, 13, 0, 0, 0);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the beginning of next system call. */
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the argument */
+        XFAIL_UNLESS(trace_get_arg(pid, CHECK_PERSONALITY, 2, &arg), "trace_get_arg() failed: %s\n",
+                g_strerror(errno));
+        XFAIL_UNLESS(arg == 13, "got %ld expected 13\n");
+
+        trace_kill(pid);
+    }
+}
+
+static void test18(void)
+{
+    int status;
+    long arg;
+    pid_t pid, ret;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (!trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+
+        mmap(NULL, 0, 0, 13, 0, 0);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the beginning of next system call. */
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the argument */
+        XFAIL_UNLESS(trace_get_arg(pid, CHECK_PERSONALITY, 3, &arg), "trace_get_arg() failed: %s\n",
+                g_strerror(errno));
+        XFAIL_UNLESS(arg == 13, "got %ld expected 13\n");
+
+        trace_kill(pid);
+    }
+}
+
+static void test19(void)
+{
+    int status;
+    long arg;
+    pid_t pid, ret;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (!trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+
+        mmap(NULL, 0, 0, 0, 13, 0);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the beginning of next system call. */
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the argument */
+        XFAIL_UNLESS(trace_get_arg(pid, CHECK_PERSONALITY, 4, &arg), "trace_get_arg() failed: %s\n",
+                g_strerror(errno));
+        XFAIL_UNLESS(arg == 13, "got %ld expected 13\n");
+
+        trace_kill(pid);
+    }
+}
+
+static void test20(void)
+{
+    int status;
+    long arg;
+    pid_t pid, ret;
+
+    pid = fork();
+    if (0 > pid)
+        XFAIL("fork() failed: %s\n", g_strerror(errno));
+    else if (0 == pid) { // child
+        if (!trace_me()) {
+            g_printerr("trace_me() failed: %s\n", g_strerror(errno));
+            _exit(EXIT_FAILURE);
+        }
+        kill(getpid(), SIGSTOP);
+
+        mmap(NULL, 0, 0, 0, 0, 13);
+        pause();
+    }
+    else { // parent
+        waitpid(pid, &status, 0);
+
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGSTOP\n");
+        XFAIL_UNLESS(trace_setup(pid), "failed to set tracing options: %s\n", g_strerror(errno));
+
+        /* Resume the child, it will stop at the beginning of next system call. */
+        XFAIL_UNLESS(trace_syscall(pid, 0), "trace_syscall() failed: %s\n", g_strerror(errno));
+        waitpid(pid, &status, 0);
+        XFAIL_UNLESS(WIFSTOPPED(status), "child didn't stop by sending itself SIGTRAP\n");
+
+        /* Check the argument */
+        XFAIL_UNLESS(trace_get_arg(pid, CHECK_PERSONALITY, 5, &arg), "trace_get_arg() failed: %s\n",
+                g_strerror(errno));
+        XFAIL_UNLESS(arg == 13, "got %ld expected 13\n");
+
+        trace_kill(pid);
+    }
+}
+
+static void test21(void)
+{
     int ret, status;
     char *path;
     pid_t pid;
@@ -670,7 +905,7 @@ static void test15(void)
     }
 }
 
-static void test16(void)
+static void test22(void)
 {
     int ret, status;
     char *path;
@@ -709,7 +944,7 @@ static void test16(void)
     }
 }
 
-static void test17(void)
+static void test23(void)
 {
     int ret, status;
     char *path;
@@ -748,7 +983,7 @@ static void test17(void)
     }
 }
 
-static void test18(void)
+static void test24(void)
 {
     int ret, status;
     char *path;
@@ -787,7 +1022,7 @@ static void test18(void)
     }
 }
 
-static void test19(void)
+static void test25(void)
 {
     int status;
     pid_t pid;
@@ -840,7 +1075,7 @@ static void test19(void)
     }
 }
 
-static void test20(void)
+static void test26(void)
 {
     int status;
     long fd;
@@ -910,7 +1145,7 @@ static void test20(void)
     }
 }
 
-static void test21(void)
+static void test27(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -985,7 +1220,7 @@ static void test21(void)
     }
 }
 
-static void test22(void)
+static void test28(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -1061,7 +1296,7 @@ static void test22(void)
     }
 }
 
-static void test23(void)
+static void test29(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -1139,7 +1374,7 @@ static void test23(void)
 }
 
 #if HAVE_IPV6
-static void test24(void)
+static void test30(void)
 {
     int status, pfd[2];
     pid_t pid;
@@ -1249,19 +1484,26 @@ int main(int argc, char **argv)
     g_test_add_func("/trace/return/set/success", test13);
     g_test_add_func("/trace/return/set/fail", test14);
 
-    g_test_add_func("/trace/path/get/first", test15);
-    g_test_add_func("/trace/path/get/second", test16);
-    g_test_add_func("/trace/path/get/third", test17);
-    g_test_add_func("/trace/path/get/fourth", test18);
+    g_test_add_func("/trace/arg/get/first", test15);
+    g_test_add_func("/trace/arg/get/second", test16);
+    g_test_add_func("/trace/arg/get/third", test17);
+    g_test_add_func("/trace/arg/get/fourth", test18);
+    g_test_add_func("/trace/arg/get/fifth", test19);
+    g_test_add_func("/trace/arg/get/sixth", test20);
 
-    g_test_add_func("/trace/stat/fake", test19);
+    g_test_add_func("/trace/path/get/first", test21);
+    g_test_add_func("/trace/path/get/second", test22);
+    g_test_add_func("/trace/path/get/third", test23);
+    g_test_add_func("/trace/path/get/fourth", test24);
 
-    g_test_add_func("/trace/socket/fd", test20);
-    g_test_add_func("/trace/socket/addr/unix", test21);
-    g_test_add_func("/trace/socket/addr/unix-abstract", test22);
-    g_test_add_func("/trace/socket/addr/inet", test23);
+    g_test_add_func("/trace/stat/fake", test25);
+
+    g_test_add_func("/trace/socket/fd", test26);
+    g_test_add_func("/trace/socket/addr/unix", test27);
+    g_test_add_func("/trace/socket/addr/unix-abstract", test28);
+    g_test_add_func("/trace/socket/addr/inet", test29);
 #if HAVE_IPV6
-    g_test_add_func("/trace/socket/addr/inet6", test24);
+    g_test_add_func("/trace/socket/addr/inet6", test30);
 #endif /* HAVE_IPV6 */
 
     return g_test_run();
