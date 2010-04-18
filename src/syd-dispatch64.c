@@ -97,7 +97,11 @@ inline bool dispatch_dup64(int sno)
 
 inline bool dispatch_fcntl64(int sno)
 {
+#if defined(__NR_fcntl64)
+    return (__NR_fcntl == sno) || (__NR_fcntl64 == sno);
+#else
     return (__NR_fcntl == sno);
+#endif
 }
 
 inline bool dispatch_maygetsockname64(int sno, bool *decode)
