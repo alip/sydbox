@@ -23,9 +23,9 @@
 
 #include <sys/types.h>
 
-char *pgetcwd(pid_t pid);
+char *proc_getcwd(pid_t pid);
 
-char *pgetdir(pid_t pid, int dfd);
+char *proc_getdir(pid_t pid, int dfd);
 
 #endif /* !SYDBOX_GUARD_PROC_H */
 

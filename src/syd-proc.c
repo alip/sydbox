@@ -32,7 +32,7 @@
 #include "syd-proc.h"
 #include "syd-wrappers.h"
 
-char *pgetcwd(pid_t pid)
+char *proc_getcwd(pid_t pid)
 {
     int ret;
     char *cwd;
@@ -56,7 +56,7 @@ char *pgetcwd(pid_t pid)
     return NULL;
 }
 
-char *pgetdir(pid_t pid, int dfd) {
+char *proc_getdir(pid_t pid, int dfd) {
     int ret;
     char *dir;
     char linkdir[128];

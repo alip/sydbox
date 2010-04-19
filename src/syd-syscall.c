@@ -116,8 +116,8 @@ static bool syscall_get_path(pid_t pid, int personality, int narg, struct checkd
  * Returns FALSE and sets data->result to RS_ERROR and data->save_errno to
  * errno on failure.
  * If dirfd is AT_FDCWD it copies child->cwd to data->dirfdlist[narg].
- * Otherwise tries to determine the directory using pgetdir().
- * If pgetdir() fails it sets data->result to RS_DENY and child->retval to
+ * Otherwise tries to determine the directory using proc_getdir().
+ * If proc_getdir() fails it sets data->result to RS_DENY and child->retval to
  * -errno and returns FALSE.
  * On success TRUE is returned and data->dirfdlist[narg] contains the directory
  * information about dirfd. This string should be freed after use.
@@ -136,11 +136,11 @@ static bool syscall_get_dirfd(struct tchild *child, int narg, struct checkdata *
     }
 
     if (AT_FDCWD != dfd) {
-        data->dirfdlist[narg] = pgetdir(child->pid, dfd);
+        data->dirfdlist[narg] = proc_getdir(child->pid, dfd);
         if (NULL == data->dirfdlist[narg]) {
             data->result = RS_DENY;
             child->retval = -errno;
-            g_debug("pgetdir() failed: %s", g_strerror(errno));
+            g_debug("proc_getdir() failed: %s", g_strerror(errno));
             g_debug("denying access to system call %lu(%s)", sno, sname);
             return false;
         }
@@ -1099,7 +1099,7 @@ static int syscall_handle_chdir(struct tchild *child)
         /* Child has successfully changed directory,
          * update current working directory.
          */
-        char *newcwd = pgetcwd(child->pid);
+        char *newcwd = proc_getcwd(child->pid);
         if (NULL == newcwd) {
             /* Failed to get current working directory of child.
              * Set errno of the child.
@@ -1108,7 +1108,7 @@ static int syscall_handle_chdir(struct tchild *child)
              * errno doesn't change that fact.
              */
             retval = -errno;
-            g_debug("pgetcwd() failed: %s", g_strerror(errno));
+            g_debug("proc_getcwd() failed: %s", g_strerror(errno));
             if (!trace_set_return(child->pid, retval)) {
                 if (G_UNLIKELY(ESRCH != errno)) {
                     /* Error setting return code using ptrace()
