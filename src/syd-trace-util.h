@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
  * you can redistribute it and/or modify it under the terms of the GNU General
@@ -19,6 +19,8 @@
 
 #ifndef SYDBOX_GUARD_UTIL_H
 #define SYDBOX_GUARD_UTIL_H 1
+
+#include <sys/types.h>
 
 int upeek(pid_t pid, long off, long *res);
 int umoven(pid_t pid, long addr, char *dest, size_t len);
