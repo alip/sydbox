@@ -54,7 +54,7 @@ static const struct syscall_def {
     {__NR_mknod,        CHECK_PATH | MUST_CREAT},
     {__NR_access,       CHECK_PATH | ACCESS_MODE},
     {__NR_rename,       CHECK_PATH | CHECK_PATH2 | CAN_CREAT2 | DONT_RESOLV},
-    {__NR_rmdir,        CHECK_PATH},
+    {__NR_rmdir,        CHECK_PATH | DONT_RESOLV},
     {__NR_symlink,      CHECK_PATH2 | MUST_CREAT2 | DONT_RESOLV},
     {__NR_truncate,     CHECK_PATH},
 #if defined(__NR_truncate64)

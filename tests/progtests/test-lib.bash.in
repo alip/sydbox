@@ -110,6 +110,7 @@ remove_log=true
 # see.emily.play/       (Directory)
 # see.emily.play/gnome  (Normal file)
 # its.not.the.same      (Symbolic link to see.emily.play/gnome)
+# i.am.the.eggman       (Dangling symlink to i.am.the.walrus)
 #
 # no_create_files environment variable can be set to prevent creation.
 # If a test suite creates a file that has to be cleaned add it to the
@@ -150,6 +151,14 @@ if [[ -z "$no_create_files" ]]; then
         die "ln -s see.emily.play/gnome its.not.the.same (no symbolic link)"
     else
         clean_files+=( "its.not.the.same" )
+    fi
+
+    if ! ln -s i.am.the.walrus i.am.the.eggman >> "${SYDBOX_LOG}" 2>&1; then
+        die "ln -s i.am.the.walrus i.am.the.eggman"
+    elif [[ ! -h i.am.the.eggman ]]; then
+        die "ln -s i.am.the.walrus i.am.the.eggman (no symbolic link)"
+    else
+        clean_files+=( "i.am.the.eggman" )
     fi
 fi
 
