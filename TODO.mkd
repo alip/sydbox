@@ -7,7 +7,6 @@
 
 ### Network support
   - Sandbox `sendmsg()` calls, currently we sandbox `connect()`, `bind()` and `sendto()`.
-  - Network aliases, like LOCAL etc.
 
 ### Porting
   - Port it to different architectures, currently we support:
