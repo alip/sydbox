@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.6.8
 * Added support for network aliases.
 * Fix handling of `rmdir()` which doesn't resolve symlinks.
 
