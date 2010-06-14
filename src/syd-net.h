@@ -67,7 +67,9 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle);
 
 char *address_to_string(const struct sydbox_addr *addr);
 
-struct sydbox_addr *address_from_string(const gchar *addr, bool canlog);
+struct sydbox_addr *address_from_string(const gchar *src, bool canlog);
+
+gchar **address_alias_expand(const gchar *src, bool canlog);
 
 #endif // SYDBOX_GUARD_NET_H
 

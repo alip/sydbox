@@ -14,11 +14,27 @@ if [[ 0 != $? ]]; then
 fi
 end_test
 
+start_test "t48-sandbox-network-bindzero-whitelist-LOOPBACK"
+SYDBOX_NET_WHITELIST_BIND=LOOPBACK@0 \
+sydbox -N -B -- ./t48_sandbox_network_bindzero_connect_tcp 127.0.0.1
+if [[ 0 != $? ]]; then
+    die "Failed to whitelist bindzero (LOOPBACK)"
+fi
+end_test
+
 start_test "t48-sandbox-network-bindzero-dup"
 SYDBOX_NET_WHITELIST_BIND=inet://127.0.0.1@0 \
 sydbox -N -B -- ./t48_sandbox_network_bindzero_dup_connect_tcp 127.0.0.1
 if [[ 0 != $? ]]; then
     die "Failed to whitelist bindzero address after dup()"
+fi
+end_test
+
+start_test "t48-sandbox-network-bindzero-dup-LOOPBACK"
+SYDBOX_NET_WHITELIST_BIND=LOOPBACK@0 \
+sydbox -N -B -- ./t48_sandbox_network_bindzero_dup_connect_tcp 127.0.0.1
+if [[ 0 != $? ]]; then
+    die "Failed to whitelist bindzero address after dup() (LOOPBACK)"
 fi
 end_test
 
@@ -30,6 +46,14 @@ if [[ 0 != $? ]]; then
 fi
 end_test
 
+start_test "t48-sandbox-network-bindzero-dup2-LOOPBACK"
+SYDBOX_NET_WHITELIST_BIND=LOOPBACK@0 \
+sydbox -N -B -- ./t48_sandbox_network_bindzero_dup2_connect_tcp 127.0.0.1
+if [[ 0 != $? ]]; then
+    die "Failed to whitelist bindzero address after dup2() (LOOPBACK)"
+fi
+end_test
+
 start_test "t48-sandbox-network-bindzero-dup3"
 SYDBOX_NET_WHITELIST_BIND=inet://127.0.0.1@0 \
 sydbox -N -B -- ./t48_sandbox_network_bindzero_dup3_connect_tcp 127.0.0.1
@@ -38,10 +62,26 @@ if [[ 0 != $? ]]; then
 fi
 end_test
 
+start_test "t48-sandbox-network-bindzero-dup3-LOOPBACK"
+SYDBOX_NET_WHITELIST_BIND=LOOPBACK@0 \
+sydbox -N -B -- ./t48_sandbox_network_bindzero_dup3_connect_tcp 127.0.0.1
+if [[ 0 != $? ]]; then
+    die "Failed to whitelist bindzero address after dup3() (LOOPBACK)"
+fi
+end_test
+
 start_test "t48-sandbox-network-bindzero-fdupfd"
 SYDBOX_NET_WHITELIST_BIND=inet://127.0.0.1@0 \
 sydbox -N -B -- ./t48_sandbox_network_bindzero_fdupfd_connect_tcp 127.0.0.1
 if [[ 0 != $? ]]; then
     die "Failed to whitelist bindzero address after fcntl(F_DUPFD)"
+fi
+end_test
+
+start_test "t48-sandbox-network-bindzero-fdupfd-LOOPBACK"
+SYDBOX_NET_WHITELIST_BIND=LOOPBACK@0 \
+sydbox -N -B -- ./t48_sandbox_network_bindzero_fdupfd_connect_tcp 127.0.0.1
+if [[ 0 != $? ]]; then
+    die "Failed to whitelist bindzero address after fcntl(F_DUPFD) (LOOPBACK)"
 fi
 end_test

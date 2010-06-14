@@ -133,6 +133,22 @@ The values can be in one of the following forms:
 - inet6://ipv6_address/NETMASK@PORT_RANGE
 
 where /NETMASK can be omitted and PORT_RANGE can either be a number or two numbers in the form BEGIN-END.
+In addition, there are a few network aliases that are expanded to network addresses. They are listed below:
+
+- *LOOPBACK* is expanded to *inet://127.0.0.0/8*
+- *LOOPBACK6* is expanded to *inet6://::1/8*
+- *LOCAL* is expanded to four addresses as defined in RFC1918:
+    * *inet://127.0.0.0/8*
+    * *inet://10.0.0.0/8*
+    * *inet://172.16.0.0/12*
+    * *inet://192.168.0.0/16*
+- *LOCAL6* is expanded to four addresses:
+    * *inet6://::1*
+    * *inet6://fe80::/7*
+    * *inet6://fc00::/7*
+    * *inet6://fec0::/7*
+
+So you may use *LOOPBACK@0* instead of *inet://127.0.0.0/8@0*
 
 SYDBOX_NET_WHITELIST_CONNECT
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -273,19 +273,24 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     filterlist = g_key_file_get_string_list(config_fd, "filter", "network", NULL, NULL);
     if (NULL != filterlist) {
         for (unsigned int i = 0; NULL != filterlist[i]; i++) {
-            struct sydbox_addr *addr;
-            addr = address_from_string(filterlist[i], false);
-            if (NULL == addr) {
-                g_printerr("error: malformed address `%s' at position %d of filter.network\n",
-                        filterlist[i], i);
-                g_strfreev(filterlist);
-                g_key_file_free(config_fd);
-                g_free(config_file);
-                g_free(config);
-                return false;
+            char **expaddr = address_alias_expand(filterlist[i], false);
+            for (unsigned int j = 0; NULL != expaddr[j]; j++) {
+                struct sydbox_addr *addr;
+                addr = address_from_string(expaddr[j], false);
+                if (NULL == addr) {
+                    g_printerr("error: malformed address `%s' at position %d of filter.network\n",
+                            expaddr[j], i);
+                    g_strfreev(expaddr);
+                    g_strfreev(filterlist);
+                    g_key_file_free(config_fd);
+                    g_free(config_file);
+                    g_free(config);
+                    return false;
+                }
+                sydbox_config_addfilter_net(addr);
+                g_free(addr);
             }
-            sydbox_config_addfilter_net(addr);
-            g_free(addr);
+            g_strfreev(expaddr);
         }
         g_strfreev(filterlist);
     }
@@ -429,18 +434,23 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     char **netwhitelist_bind = g_key_file_get_string_list(config_fd, "net", "whitelist_bind", NULL, NULL);
     if (NULL != netwhitelist_bind) {
         for (unsigned int i = 0; NULL != netwhitelist_bind[i]; i++) {
-            struct sydbox_addr *addr;
-            addr = address_from_string(netwhitelist_bind[i], false);
-            if (NULL == addr) {
-                g_printerr("error: malformed address `%s' at position %d of net.whitelist_bind\n",
-                        netwhitelist_bind[i], i);
-                g_strfreev(netwhitelist_bind);
-                g_key_file_free(config_fd);
-                g_free(config_file);
-                g_free(config);
-                return false;
+            char **expaddr = address_alias_expand(netwhitelist_bind[i], false);
+            for (unsigned int j = 0; NULL != expaddr[j]; j++) {
+                struct sydbox_addr *addr;
+                addr = address_from_string(expaddr[j], false);
+                if (NULL == addr) {
+                    g_printerr("error: malformed address `%s' at position %d of net.whitelist_bind\n",
+                            expaddr[j], i);
+                    g_strfreev(expaddr);
+                    g_strfreev(netwhitelist_bind);
+                    g_key_file_free(config_fd);
+                    g_free(config_file);
+                    g_free(config);
+                    return false;
+                }
+                config->network_whitelist_bind = g_slist_prepend(config->network_whitelist_bind, addr);
             }
-            config->network_whitelist_bind = g_slist_prepend(config->network_whitelist_bind, addr);
+            g_strfreev(expaddr);
         }
         g_strfreev(netwhitelist_bind);
     }
@@ -449,18 +459,23 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     char **netwhitelist_connect = g_key_file_get_string_list(config_fd, "net", "whitelist_connect", NULL, NULL);
     if (NULL != netwhitelist_connect) {
         for (unsigned int i = 0; NULL != netwhitelist_connect[i]; i++) {
-            struct sydbox_addr *addr;
-            addr = address_from_string(netwhitelist_connect[i], false);
-            if (NULL == addr) {
-                g_printerr("error: malformed address `%s' at position %d of net.whitelist_connect\n",
-                        netwhitelist_connect[i], i);
-                g_strfreev(netwhitelist_connect);
-                g_key_file_free(config_fd);
-                g_free(config_file);
-                g_free(config);
-                return false;
+            char **expaddr = address_alias_expand(netwhitelist_connect[i], false);
+            for (unsigned int j = 0; NULL != expaddr[j]; j++) {
+                struct sydbox_addr *addr;
+                addr = address_from_string(expaddr[j], false);
+                if (NULL == addr) {
+                    g_printerr("error: malformed address `%s' at position %d of net.whitelist_connect\n",
+                            expaddr[j], i);
+                    g_strfreev(expaddr);
+                    g_strfreev(netwhitelist_connect);
+                    g_key_file_free(config_fd);
+                    g_free(config_file);
+                    g_free(config);
+                    return false;
+                }
+                config->network_whitelist_connect = g_slist_prepend(config->network_whitelist_connect, addr);
             }
-            config->network_whitelist_connect = g_slist_prepend(config->network_whitelist_connect, addr);
+            g_strfreev(expaddr);
         }
         g_strfreev(netwhitelist_connect);
     }
@@ -483,17 +498,22 @@ void sydbox_config_update_from_environment(void)
     if (g_getenv(ENV_NET_WHITELIST_BIND)) {
         char **netwhitelist_bind = g_strsplit(g_getenv(ENV_NET_WHITELIST_BIND), ";", 0);
         for (unsigned int i = 0; NULL != netwhitelist_bind[i]; i++) {
-            struct sydbox_addr *addr;
-            addr = address_from_string(netwhitelist_bind[i], true);
-            if (NULL == addr) {
-                g_critical("error: malformed address `%s' at position %d of "ENV_NET_WHITELIST_BIND"\n",
-                        netwhitelist_bind[i], i);
-                g_printerr("error: malformed address `%s' at position %d of "ENV_NET_WHITELIST_BIND"\n",
-                        netwhitelist_bind[i], i);
-                g_strfreev(netwhitelist_bind);
-                exit(-1);
+            char **expaddr = address_alias_expand(netwhitelist_bind[i], true);
+            for (unsigned int j = 0; NULL != expaddr[j]; j++) {
+                struct sydbox_addr *addr;
+                addr = address_from_string(expaddr[j], true);
+                if (NULL == addr) {
+                    g_critical("error: malformed address `%s' at position %d of "ENV_NET_WHITELIST_BIND"\n",
+                            expaddr[j], i);
+                    g_printerr("error: malformed address `%s' at position %d of "ENV_NET_WHITELIST_BIND"\n",
+                            expaddr[j], i);
+                    g_strfreev(expaddr);
+                    g_strfreev(netwhitelist_bind);
+                    exit(-1);
+                }
+                config->network_whitelist_bind = g_slist_prepend(config->network_whitelist_bind, addr);
             }
-            config->network_whitelist_bind = g_slist_prepend(config->network_whitelist_bind, addr);
+            g_strfreev(expaddr);
         }
         g_strfreev(netwhitelist_bind);
     }
@@ -502,17 +522,22 @@ void sydbox_config_update_from_environment(void)
     if (g_getenv(ENV_NET_WHITELIST_CONNECT)) {
         char **netwhitelist_connect = g_strsplit(g_getenv(ENV_NET_WHITELIST_CONNECT), ";", 0);
         for (unsigned int i = 0; NULL != netwhitelist_connect[i]; i++) {
-            struct sydbox_addr *addr;
-            addr = address_from_string(netwhitelist_connect[i], true);
-            if (NULL == addr) {
-                g_critical("error: malformed address `%s' at position %d of "ENV_NET_WHITELIST_CONNECT"\n",
-                        netwhitelist_connect[i], i);
-                g_printerr("error: malformed address `%s' at position %d of "ENV_NET_WHITELIST_CONNECT"\n",
-                        netwhitelist_connect[i], i);
-                g_strfreev(netwhitelist_connect);
-                exit(-1);
+            char **expaddr = address_alias_expand(netwhitelist_connect[i], true);
+            for (unsigned int j = 0; NULL != expaddr[j]; j++) {
+                struct sydbox_addr *addr;
+                addr = address_from_string(expaddr[j], true);
+                if (NULL == addr) {
+                    g_critical("error: malformed address `%s' at position %d of "ENV_NET_WHITELIST_CONNECT"\n",
+                            expaddr[j], i);
+                    g_printerr("error: malformed address `%s' at position %d of "ENV_NET_WHITELIST_CONNECT"\n",
+                            expaddr[j], i);
+                    g_strfreev(expaddr);
+                    g_strfreev(netwhitelist_connect);
+                    exit(-1);
+                }
+                config->network_whitelist_connect = g_slist_prepend(config->network_whitelist_connect, addr);
             }
-            config->network_whitelist_connect = g_slist_prepend(config->network_whitelist_connect, addr);
+            g_strfreev(expaddr);
         }
         g_strfreev(netwhitelist_connect);
     }

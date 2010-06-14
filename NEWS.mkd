@@ -3,6 +3,9 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Added support for network aliases.
+* Fix handling of `rmdir()` which doesn't resolve symlinks.
+
 ### 0.6.7
 * Regression: Duplicating network address information introduced a bug which
   cause sydbox to hang. This is now fixed.

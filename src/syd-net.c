@@ -403,3 +403,55 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
     return saddr;
 }
 
+gchar **address_alias_expand(const gchar *src, bool canlog)
+{
+    const gchar *port;
+    gchar **addr;
+
+    if (0 == strncmp(src, "LOOPBACK@", 9)) {
+        port = src + 9;
+        addr = g_new(char *, 2);
+        addr[0] = g_strdup_printf("inet://127.0.0.0/8@%s", port);
+        addr[1] = NULL;
+        if (canlog)
+            g_info("Expanded LOOPBACK network alias");
+    }
+    else if (0 == strncmp(src, "LOOPBACK6@", 10)) {
+        port = src + 10;
+        addr = g_new(char *, 2);
+        addr[0] = g_strdup_printf("inet6://::1@%s", port);
+        addr[1] = NULL;
+        if (canlog)
+            g_info("Expanded LOOPBACK6 network alias");
+    }
+    else if (0 == strncmp(src, "LOCAL@", 6)) {
+        port = src + 6;
+        addr = g_new(char *, 5);
+        addr[0] = g_strdup_printf("inet://127.0.0.0/8@%s", port);
+        addr[1] = g_strdup_printf("inet://10.0.0.0/8@%s", port);
+        addr[2] = g_strdup_printf("inet://172.16.0.0/12@%s", port);
+        addr[3] = g_strdup_printf("inet://192.168.0.0/16@%s", port);
+        addr[4] = NULL;
+        if (canlog)
+            g_info("Expanded LOCAL network alias");
+    }
+    else if (0 == strncmp(src, "LOCAL6@", 7)) {
+        port = src + 7;
+        addr = g_new(char *, 5);
+        addr[0] = g_strdup_printf("inet6://::1@%s", port);
+        addr[1] = g_strdup_printf("inet6://fe80::/7@%s", port);
+        addr[2] = g_strdup_printf("inet6://fc00::/7@%s", port);
+        addr[3] = g_strdup_printf("inet6://fec0::/7@%s", port);
+        addr[4] = NULL;
+        if (canlog)
+            g_info("Expanded LOCAL6 network alias");
+    }
+    else {
+        addr = g_new(char *, 2);
+        addr[0] = g_strdup(src);
+        addr[1] = NULL;
+    }
+
+    return addr;
+}
+

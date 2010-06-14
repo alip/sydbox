@@ -75,6 +75,14 @@ if [[ 0 != $? ]]; then
 fi
 end_test
 
+start_test "t46-sandbox-network-deny-allow-whitelisted-bind-tcp-LOOPBACK"
+SYDBOX_NET_WHITELIST_BIND=LOOPBACK@$bind_port \
+sydbox -N -- ./t46_sandbox_network_bind_tcp 127.0.0.1 $bind_port
+if [[ 0 != $? ]]; then
+    die "Failed to allow bind to TCP socket by whitelisting LOOPBACK"
+fi
+end_test
+
 # Start a TCP server in background.
 has_tcp=false
 fail="tcp-server-failed"
@@ -151,6 +159,18 @@ if $has_tcp; then
     sydbox -N -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
     if [[ 0 != $? ]]; then
         die "Failed to allow connect to a TCP server by whitelisting"
+    fi
+else
+    say skip "No TCP server, skipping test"
+fi
+end_test
+
+start_test "t46-sandbox-network-deny-allow-whitelisted-connect-tcp-LOOPBACK"
+if $has_tcp; then
+    SYDBOX_NET_WHITELIST_CONNECT=LOOPBACK@$bind_port \
+    sydbox -N -- ./t46_sandbox_network_connect_tcp '127.0.0.1' $bind_port
+    if [[ 0 != $? ]]; then
+        die "Failed to allow connect to a TCP server by whitelisting LOOPBACK"
     fi
 else
     say skip "No TCP server, skipping test"

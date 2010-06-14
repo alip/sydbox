@@ -22,4 +22,12 @@ if [[ 0 != $? ]]; then
 fi
 end_test
 
+start_test "t47-sandbox-network-ipv6-deny-whitelisted-bind-LOOPBACK6"
+SYDBOX_NET_WHITELIST_BIND=LOOPBACK6@$bind_port \
+sydbox -N -- ./t47_sandbox_network_bind_ipv6 '::1' $bind_port
+if [[ 0 != $? ]]; then
+    die "Failed to allow binding to an IPV6 address by whitelisting LOOPBACK6"
+fi
+end_test
+
 # TODO: Write test cases for connect() as well.

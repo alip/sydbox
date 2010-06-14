@@ -318,6 +318,7 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     const char *rpath;
     char *rpath_sanitized;
     GSList *walk, *whitelist;
+    char **expaddr;
     struct sydbox_addr *addr;
 
     g_debug("checking if stat(\"%s\") is magic", path);
@@ -448,83 +449,107 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     else if (path_magic_addfilter_net(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_ADDFILTER_NET) - 1;
-        if ((addr = address_from_string(rpath, true)) == NULL)
-            g_warning("malformed filter address `%s'", rpath);
-        else {
-            sydbox_config_addfilter_net(addr);
-            g_free(addr);
-            g_info("approved addfilter_net(\"%s\") for child %i", rpath, child->pid);
+        expaddr = address_alias_expand(rpath, true);
+        for (unsigned i = 0; expaddr[i]; i++) {
+            if ((addr = address_from_string(expaddr[i], true)) == NULL)
+                g_warning("malformed filter address `%s'", expaddr[i]);
+            else {
+                sydbox_config_addfilter_net(addr);
+                g_free(addr);
+                g_info("approved addfilter_net(\"%s\") for child %i", expaddr[i], child->pid);
+            }
         }
+        g_strfreev(expaddr);
     }
     else if (path_magic_rmfilter_net(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_RMFILTER_NET) - 1;
-        if ((addr = address_from_string(rpath, true)) == NULL)
-            g_warning("malformed filter address `%s'", rpath);
-        else {
-            sydbox_config_rmfilter_net(addr);
-            g_free(addr);
-            g_info("approved rmfilter_net(\"%s\") for child %i", rpath, child->pid);
+        expaddr = address_alias_expand(rpath, true);
+        for (unsigned i = 0; expaddr[i]; i++) {
+            if ((addr = address_from_string(expaddr[i], true)) == NULL)
+                g_warning("malformed filter address `%s'", expaddr[i]);
+            else {
+                sydbox_config_rmfilter_net(addr);
+                g_free(addr);
+                g_info("approved rmfilter_net(\"%s\") for child %i", expaddr[i], child->pid);
+            }
         }
+        g_strfreev(expaddr);
     }
     else if (path_magic_net_whitelist_bind(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_NET_WHITELIST_BIND) - 1;
-        if ((addr = address_from_string(rpath, true)) == NULL)
-            g_warning("malformed whitelist address `%s'", rpath);
-        else {
-            whitelist = sydbox_config_get_network_whitelist_bind();
-            whitelist = g_slist_prepend(whitelist, addr);
-            sydbox_config_set_network_whitelist_bind(whitelist);
+        expaddr = address_alias_expand(rpath, true);
+        for (unsigned i = 0; expaddr[i]; i++) {
+            if ((addr = address_from_string(expaddr[i], true)) == NULL)
+                g_warning("malformed whitelist address `%s'", expaddr[i]);
+            else {
+                whitelist = sydbox_config_get_network_whitelist_bind();
+                whitelist = g_slist_prepend(whitelist, addr);
+                sydbox_config_set_network_whitelist_bind(whitelist);
+            }
         }
+        g_strfreev(expaddr);
     }
     else if (path_magic_net_unwhitelist_bind(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_NET_UNWHITELIST_BIND) - 1;
-        if ((addr = address_from_string(rpath, false)) == NULL)
-            g_warning("malformed whitelist address `%s'", rpath);
-        else {
-            whitelist = sydbox_config_get_network_whitelist_bind();
-            for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
-                if (address_cmp(walk->data, addr)) {
-                    whitelist = g_slist_remove_link(whitelist, walk);
-                    sydbox_config_set_network_whitelist_bind(whitelist);
-                    g_free(walk->data);
-                    g_slist_free(walk);
-                    g_info("approved unwhitelist/bind(\"%s\") for child %i", rpath, child->pid);
-                    break;
+        expaddr = address_alias_expand(rpath, true);
+        for (unsigned i = 0; expaddr[i]; i++) {
+            if ((addr = address_from_string(expaddr[i], false)) == NULL)
+                g_warning("malformed whitelist address `%s'", expaddr[i]);
+            else {
+                whitelist = sydbox_config_get_network_whitelist_bind();
+                for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
+                    if (address_cmp(walk->data, addr)) {
+                        whitelist = g_slist_remove_link(whitelist, walk);
+                        sydbox_config_set_network_whitelist_bind(whitelist);
+                        g_free(walk->data);
+                        g_slist_free(walk);
+                        g_info("approved unwhitelist/bind(\"%s\") for child %i", expaddr[i], child->pid);
+                        break;
+                    }
                 }
             }
         }
+        g_strfreev(expaddr);
     }
     else if (path_magic_net_whitelist_connect(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_NET_WHITELIST_CONNECT) - 1;
-        if ((addr = address_from_string(rpath, true)) == NULL)
-            g_warning("malformed whitelist address `%s'", rpath);
-        else {
-            whitelist = sydbox_config_get_network_whitelist_connect();
-            whitelist = g_slist_prepend(whitelist, addr);
-            sydbox_config_set_network_whitelist_connect(whitelist);
+        expaddr = address_alias_expand(rpath, true);
+        for (unsigned i = 0; expaddr[i]; i++) {
+            if ((addr = address_from_string(expaddr[i], true)) == NULL)
+                g_warning("malformed whitelist address `%s'", expaddr[i]);
+            else {
+                whitelist = sydbox_config_get_network_whitelist_connect();
+                whitelist = g_slist_prepend(whitelist, addr);
+                sydbox_config_set_network_whitelist_connect(whitelist);
+            }
         }
+        g_strfreev(expaddr);
     }
     else if (path_magic_net_unwhitelist_connect(path)) {
         data->result = RS_MAGIC;
         rpath = path + sizeof(CMD_NET_UNWHITELIST_CONNECT) - 1;
-        if ((addr = address_from_string(rpath, false)) == NULL)
-            g_warning("malformed whitelist address `%s'", rpath);
-        else {
-            whitelist = sydbox_config_get_network_whitelist_connect();
-            for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
-                if (address_cmp(walk->data, addr)) {
-                    whitelist = g_slist_remove_link(whitelist, walk);
-                    sydbox_config_set_network_whitelist_connect(whitelist);
-                    g_free(walk->data);
-                    g_slist_free(walk);
-                    g_info("approved unwhitelist/connect(\"%s\") for child %i", rpath, child->pid);
+        expaddr = address_alias_expand(rpath, true);
+        for (unsigned i = 0; expaddr[i]; i++) {
+            if ((addr = address_from_string(expaddr[i], false)) == NULL)
+                g_warning("malformed whitelist address `%s'", rpath);
+            else {
+                whitelist = sydbox_config_get_network_whitelist_connect();
+                for (walk = whitelist; walk != NULL; walk = g_slist_next(walk)) {
+                    if (address_cmp(walk->data, addr)) {
+                        whitelist = g_slist_remove_link(whitelist, walk);
+                        sydbox_config_set_network_whitelist_connect(whitelist);
+                        g_free(walk->data);
+                        g_slist_free(walk);
+                        g_info("approved unwhitelist/connect(\"%s\") for child %i", expaddr[i], child->pid);
+                    }
                 }
             }
         }
+        g_strfreev(expaddr);
     }
     else if (child->sandbox->path || !path_magic_enabled(path))
         data->result = RS_MAGIC;
