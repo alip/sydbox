@@ -44,6 +44,7 @@
 #define ENV_LOCK                    "SYDBOX_LOCK"
 #define ENV_NO_WAIT                 "SYDBOX_EXIT_WITH_ELDEST"
 #define ENV_NOWRAP_LSTAT            "SYDBOX_NOWRAP_LSTAT"
+#define ENV_USER_CONFIG             "SYDBOX_USER_CONFIG"
 
 /**
  * sydbox_config_load:

@@ -191,6 +191,11 @@ SYDBOX_NOWRAP_LSTAT
 If this variable is set, sydbox won't use its lstat() wrapper for too long paths.
 This is equivalent to the *-W* option.
 
+SYDBOX_USER_CONFIG
+~~~~~~~~~~~~~~~~~~
+If this variable is set, sydbox will use the config file supplied as a
+suppliment to any other config files sydbox would already use.
+
 MAGIC COMMANDS
 --------------
 Sydbox has a concept of magic commands to interact with it during its run.

@@ -86,34 +86,9 @@ static void sydbox_config_set_defaults(void)
     config->network_whitelist_connect = NULL;
 }
 
-bool sydbox_config_load(const gchar * const file, const gchar * const profile)
-{
-    gchar *config_file;
+static bool sydbox_config_load_local(const gchar * const config_file) {
     GKeyFile *config_fd;
     GError *config_error = NULL;
-
-    g_return_val_if_fail(!config, true);
-
-    // Initialize config structure
-    config = g_new0(struct sydbox_config, 1);
-
-    if (g_getenv(ENV_NO_CONFIG)) {
-        /* ENV_NO_CONFIG set, set the defaults,
-         * and return without parsing the configuration file.
-         */
-        sydbox_config_set_defaults();
-        return true;
-    }
-
-    // Figure out the path to the configuration file
-    if (file)
-        config_file = g_strdup(file);
-    else if (profile)
-        config_file = g_strdup_printf(DATADIR G_DIR_SEPARATOR_S "sydbox" G_DIR_SEPARATOR_S "%s.conf", profile);
-    else if (g_getenv(ENV_CONFIG))
-        config_file = g_strdup(g_getenv(ENV_CONFIG));
-    else
-        config_file = g_strdup(SYSCONFDIR G_DIR_SEPARATOR_S "sydbox.conf");
 
     // Initialize key file
     config_fd = g_key_file_new();
@@ -125,14 +100,12 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                  */
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 sydbox_config_set_defaults();
                 return true;
             default:
                 g_printerr("failed to parse config file: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
         }
@@ -146,7 +119,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("main.colour not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -169,7 +141,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("main.lock not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -192,7 +163,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("main.wait_all not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -215,7 +185,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("main.allow_proc_pid not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -237,7 +206,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("main.wrap_lstat not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -283,7 +251,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                     g_strfreev(expaddr);
                     g_strfreev(filterlist);
                     g_key_file_free(config_fd);
-                    g_free(config_file);
                     g_free(config);
                     return false;
                 }
@@ -306,7 +273,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("log.level not an integer: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -329,7 +295,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("sandbox.path not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -352,7 +317,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("sandbox.exec not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -375,7 +339,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("sandbox.network not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -415,7 +378,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                 g_printerr("net.auto_whitelist_bind not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
                 g_key_file_free(config_fd);
-                g_free(config_file);
                 g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
@@ -444,7 +406,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                     g_strfreev(expaddr);
                     g_strfreev(netwhitelist_bind);
                     g_key_file_free(config_fd);
-                    g_free(config_file);
                     g_free(config);
                     return false;
                 }
@@ -469,7 +430,6 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
                     g_strfreev(expaddr);
                     g_strfreev(netwhitelist_connect);
                     g_key_file_free(config_fd);
-                    g_free(config_file);
                     g_free(config);
                     return false;
                 }
@@ -482,8 +442,43 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
 
     // Cleanup and return
     g_key_file_free(config_fd);
-    g_free(config_file);
     return true;
+}
+
+bool sydbox_config_load(const gchar * const file, const gchar * const profile)
+{
+    gchar *config_file;
+    bool return_value;
+
+    g_return_val_if_fail(!config, true);
+
+    // Initialize config structure
+    config = g_new0(struct sydbox_config, 1);
+
+    if (g_getenv(ENV_NO_CONFIG)) {
+        /* ENV_NO_CONFIG set, set the defaults,
+         * and return without parsing the configuration file.
+         */
+        sydbox_config_set_defaults();
+        return true;
+    }
+
+    // Figure out the path to the configuration file
+    if (file)
+        config_file = g_strdup(file);
+    else if (profile)
+        config_file = g_strdup_printf(DATADIR G_DIR_SEPARATOR_S "sydbox" G_DIR_SEPARATOR_S "%s.conf", profile);
+    else if (g_getenv(ENV_CONFIG))
+        config_file = g_strdup(g_getenv(ENV_CONFIG));
+    else
+        config_file = g_strdup(SYSCONFDIR G_DIR_SEPARATOR_S "sydbox.conf");
+
+    return_value = sydbox_config_load_local(config_file);
+    if (return_value)
+        return_value = sydbox_config_load_local(g_getenv(ENV_USER_CONFIG));
+
+    g_free(config_file);
+    return return_value;
 }
 
 void sydbox_config_update_from_environment(void)

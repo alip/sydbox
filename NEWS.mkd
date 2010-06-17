@@ -3,6 +3,9 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Support a supplementary configuration file via **SYDBOX_USER_CONFIG**
+  environment variable.
+
 ### 0.6.8
 * Added support for network aliases.
 * Fix handling of `rmdir()` which doesn't resolve symlinks.

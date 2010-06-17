@@ -294,8 +294,8 @@ static int sydbox_internal_main(int argc, char **argv)
     g_atexit(cleanup);
 
     /*
-     * options are loaded from config file, updated from the environment, and
-     * then overridden by the user passed parameters.
+     * options are loaded from config file, user config file, updated from the
+     * environment, and then overridden by the user passed parameters.
      */
     if (!sydbox_config_load(config_file, config_profile))
         return EXIT_FAILURE;
