@@ -474,7 +474,7 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
         config_file = g_strdup(SYSCONFDIR G_DIR_SEPARATOR_S "sydbox.conf");
 
     return_value = sydbox_config_load_local(config_file);
-    if (return_value)
+    if (return_value && g_getenv(ENV_USER_CONFIG))
         return_value = sydbox_config_load_local(g_getenv(ENV_USER_CONFIG));
 
     g_free(config_file);
