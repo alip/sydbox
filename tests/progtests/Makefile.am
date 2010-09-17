@@ -23,7 +23,7 @@ if WANT_IPV6
 TESTS += t47-sandbox-network-ipv6.bash
 endif
 TESTS+= t48-sandbox-network-bindzero.bash t49-bind-unsupported-family.bash \
-	t50-rmdir-dangling-symlink.bash
+	t50-rmdir-dangling-symlink.bash t51-allow-proc-pid.bash
 
 EXTRA_DIST= $(TESTS)
 
@@ -52,7 +52,7 @@ endif
 check_PROGRAMS+= t48_sandbox_network_bindzero_connect_tcp t48_sandbox_network_bindzero_dup_connect_tcp \
 		 t48_sandbox_network_bindzero_dup2_connect_tcp t48_sandbox_network_bindzero_dup3_connect_tcp \
 		 t48_sandbox_network_bindzero_fdupfd_connect_tcp t49_bind_unsupported_family \
-		 t50_rmdir_dangling_symlink
+		 t50_rmdir_dangling_symlink t51_allow_proc_pid
 
 test_lib_bash_SOURCES= test-lib.bash.in
 

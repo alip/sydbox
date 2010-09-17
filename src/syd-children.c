@@ -39,7 +39,7 @@
 
 struct tchild *tchild_new(GHashTable *children, pid_t pid, bool eldest)
 {
-    gchar *proc_pid;
+    char proc_pid[32];
     struct tchild *child;
 
     g_debug("new child %i", pid);
@@ -61,12 +61,9 @@ struct tchild *tchild_new(GHashTable *children, pid_t pid, bool eldest)
     child->sandbox->exec_prefixes = NULL;
 
     if (!eldest && sydbox_config_get_allow_proc_pid()) {
-        /* Allow /proc/%d which is needed for processes to work reliably.
-         * FIXME: This path will be inherited by children as well.
-         */
-        proc_pid = g_strdup_printf("/proc/%i", pid);
+        /* Allow /proc/%d which is needed for processes to work reliably. */
+        snprintf(proc_pid, 32, "/proc/%i", pid);
         pathnode_new(&(child->sandbox->write_prefixes), proc_pid, false);
-        g_free(proc_pid);
     }
 
     g_hash_table_insert(children, GINT_TO_POINTER(pid), child);
