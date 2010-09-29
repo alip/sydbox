@@ -41,8 +41,8 @@
 #include "syd-log.h"
 #include "syd-loop.h"
 #include "syd-path.h"
+#include "syd-pink.h"
 #include "syd-syscall.h"
-#include "syd-trace.h"
 #include "syd-utils.h"
 #include "syd-wrappers.h"
 
@@ -178,7 +178,7 @@ static gchar *get_groupname (void)
 G_GNUC_NORETURN
 static void sydbox_execute_child(G_GNUC_UNUSED int argc, char **argv)
 {
-    if (!trace_me()) {
+    if (!pink_trace_me()) {
         g_printerr("failed to set tracing: %s\n", g_strerror(errno));
         _exit(-1);
     }
@@ -226,7 +226,7 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
     g_assert(WIFSTOPPED(status));
     g_assert(WSTOPSIG(status) == SIGTRAP);
 
-    if (!trace_setup(pid)) {
+    if (!pinkw_trace_setup_all(pid)) {
         g_critical("failed to setup tracing options: %s", g_strerror(errno));
         g_printerr("failed to setup tracing options: %s\n", g_strerror(errno));
         exit(-1);
@@ -234,13 +234,13 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
 
     ctx->eldest = pid;
     eldest = tchild_new(ctx->children, pid, true);
-    eldest->personality = trace_personality(pid);
-    if (0 > eldest->personality) {
-        g_critical("failed to determine personality of eldest child %i: %s", eldest->pid, g_strerror(errno));
-        g_printerr("failed to determine personality of eldest child %i: %s\n", eldest->pid, g_strerror(errno));
+    eldest->bitness = pink_bitness_get(pid);
+    if (PINK_BITNESS_UNKNOWN == eldest->bitness) {
+        g_critical("failed to determine bitness of the eldest child %i: %s", eldest->pid, g_strerror(errno));
+        g_printerr("failed to determine bitness of the eldest child %i: %s\n", eldest->pid, g_strerror(errno));
         exit(-1);
     }
-    g_debug("eldest child %i runs in %s mode", eldest->pid, dispatch_mode(eldest->personality));
+    g_debug("eldest child %i runs in %s mode", eldest->pid, pink_bitness_name(eldest->bitness));
     eldest->sandbox->path = sydbox_config_get_sandbox_path();
     eldest->sandbox->exec = sydbox_config_get_sandbox_exec();
     eldest->sandbox->network = sydbox_config_get_sandbox_network();
@@ -270,8 +270,8 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
     g_string_append(eldest->lastexec, "])");
 
     g_info ("child %i is ready to go, resuming", pid);
-    if (!trace_syscall(pid, 0)) {
-        trace_kill(pid);
+    if (!pink_trace_syscall(pid, 0)) {
+        pink_trace_kill(pid);
         g_critical("failed to resume eldest child %i: %s", pid, g_strerror(errno));
         g_printerr("failed to resume eldest child %i: %s\n", pid, g_strerror(errno));
         exit(-1);

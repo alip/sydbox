@@ -33,6 +33,7 @@
 #include <arpa/inet.h>
 
 #include <glib.h>
+#include <pinktrace/pink.h>
 
 #include "syd-config.h"
 #include "syd-log.h"
@@ -65,7 +66,7 @@ bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr
             if (addr1->u.sa.port[1] != addr2->u.sa.port[2])
                 return false;
             return (0 == memcmp(&addr1->u.sa.sin_addr, &addr2->u.sa.sin_addr, sizeof(struct in_addr)));
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
         case AF_INET6:
             if (addr1->u.sa6.netmask != addr2->u.sa6.netmask)
                 return false;
@@ -74,7 +75,7 @@ bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr
             if (addr1->u.sa6.port[1] != addr2->u.sa6.port[2])
                 return false;
             return (0 == memcmp(&addr1->u.sa6.sin6_addr, &addr2->u.sa6.sin6_addr, sizeof(struct in6_addr)));
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
         default:
             g_assert_not_reached();
     }
@@ -105,14 +106,14 @@ struct sydbox_addr *address_dup(const struct sydbox_addr *src)
             dest->u.sa.port[1] = src->u.sa.port[1];
             memcpy(&dest->u.sa.sin_addr, &src->u.sa.sin_addr, sizeof(struct in_addr));
             break;
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
         case AF_INET6:
             dest->u.sa6.netmask = src->u.sa6.netmask;
             dest->u.sa6.port[0] = src->u.sa6.port[0];
             dest->u.sa6.port[1] = src->u.sa6.port[1];
             memcpy(&dest->u.sa6.sin6_addr, &src->u.sa6.sin6_addr, sizeof(struct in6_addr));
             break;
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
         default:
             g_assert_not_reached();
     }
@@ -184,13 +185,13 @@ bool address_has(struct sydbox_addr *haystack, struct sydbox_addr *needle)
             ptr = (unsigned char *)&needle->u.sa.sin_addr;
             b = (unsigned char *)&haystack->u.sa.sin_addr;
             break;
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
         case AF_INET6:
             n = haystack->u.sa6.netmask;
             ptr = (unsigned char *)&needle->u.sa6.sin6_addr;
             b = (unsigned char *)&haystack->u.sa6.sin6_addr;
             break;
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
         default:
             return false;
     }
@@ -237,12 +238,12 @@ char *address_to_string(const struct sydbox_addr *addr)
             inet_ntop(AF_INET, &addr->u.sa.sin_addr, ip, sizeof(ip));
             return g_strdup_printf("{family=AF_INET addr=%s netmask=%d port_range=%d-%d}",
                     ip, addr->u.sa.netmask, addr->u.sa.port[0], addr->u.sa.port[1]);
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
         case AF_INET6:
             inet_ntop(AF_INET6, &addr->u.sa6.sin6_addr, ip, sizeof(ip));
             return g_strdup_printf("{family=AF_INET6 addr=%s netmask=%d port_range=%d-%d}",
                     ip, addr->u.sa6.netmask, addr->u.sa6.port[0], addr->u.sa6.port[1]);
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
         default:
             g_assert_not_reached();
     }
@@ -329,7 +330,7 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
         g_free(addr);
     }
     else if (0 == strncmp(src, "inet6://", 8)) {
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
         saddr->family = AF_INET6;
 
         addr = g_strdup(src + 8);
@@ -394,7 +395,7 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
         g_warning("inet6:// not supported (no IPV6 support)");
         g_free(saddr);
         return NULL;
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
     }
     else {
         g_free(saddr);

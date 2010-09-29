@@ -1,4 +1,4 @@
-SUBDIRS = . unit progtests
+SUBDIRS= . unit progtests
 
 check-valgrind:
 	$(MAKE) -C progtests check-valgrind

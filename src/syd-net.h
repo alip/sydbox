@@ -29,6 +29,7 @@
 #include <netinet/in.h>
 
 #include <glib.h>
+#include <pinktrace/pink.h>
 
 struct sydbox_addr {
     int family;
@@ -47,13 +48,13 @@ struct sydbox_addr {
             struct in_addr sin_addr;
         } sa;
 
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
         struct {
             int netmask;
             int port[2];
             struct in6_addr sin6_addr;
         } sa6;
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
     } u;
 };
 

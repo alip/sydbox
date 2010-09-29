@@ -75,7 +75,7 @@ static void test3(void)
     /* Fill the information of the parent */
     parent->cwd = g_strdup("/var/empty");
     parent->lastexec = g_string_assign(parent->lastexec, "./jonathan_livingston");
-    parent->personality = 3;
+    parent->bitness = PINK_BITNESS_64;
     parent->sandbox->path = false;
     parent->sandbox->exec = true;
     parent->sandbox->network = true;
@@ -89,7 +89,7 @@ static void test3(void)
     g_assert(!(child->flags & TCHILD_NEEDINHERIT));
     g_assert_cmpstr(child->cwd, ==, "/var/empty");
     g_assert_cmpstr(child->lastexec->str, ==, "./jonathan_livingston");
-    g_assert_cmpint(parent->personality, ==, 3);
+    g_assert_cmpint(child->bitness, ==, PINK_BITNESS_64);
     g_assert(!child->sandbox->path);
     g_assert(child->sandbox->exec);
     g_assert(child->sandbox->network);

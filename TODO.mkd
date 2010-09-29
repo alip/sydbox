@@ -1,6 +1,15 @@
 ## Sydbox TODO list
 
   - Libification, compnerd started this in `libsydbox` branch.
+    alip has started another variant of libification recently.
+    The plan is:
+       - Idea: Move all low-level `ptrace()` stuff to a ptrace-wrapper library
+         Status: Nearly done, check out http://dev.exherbo.org/~alip/pinktrace
+       - Idea: Make sydbox use pinktrace so we get this library tested well.
+         Status: Sydbox uses pinktrace in the **next** branch. Testing is needed.
+       - Idea: Implement a sandboxing library, called libsydbox, on top of
+         pinktrace. Make sydbox a simple client that uses libsydbox.
+         Status: Not done.
 
 ### Unit tests
   - We could always use more unit and/or program tests.

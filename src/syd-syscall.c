@@ -39,6 +39,7 @@
 #include <arpa/inet.h>
 
 #include <glib.h>
+#include <pinktrace/pink.h>
 
 #include "syd-config.h"
 #include "syd-flags.h"
@@ -46,18 +47,18 @@
 #include "syd-log.h"
 #include "syd-net.h"
 #include "syd-path.h"
+#include "syd-pink.h"
 #include "syd-proc.h"
 #include "syd-syscall.h"
-#include "syd-trace.h"
 #include "syd-utils.h"
 #include "syd-wrappers.h"
 
 #define BAD_SYSCALL                 0xbadca11
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET || (f) == AF_INET6)
 #else
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET)
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
 #define IS_NET_CALL(fl)             ((fl) & (BIND_CALL | CONNECT_CALL | SENDTO_CALL | DECODE_SOCKETCALL))
 
 #define MODE_STRING(fl) ((fl) & (OPEN_MODE | OPEN_MODE_AT) ? "O_WRONLY/O_RDWR" : "...")
@@ -82,7 +83,7 @@ struct checkdata {
     gchar *pathlist[4];         // Path arguments
     gchar *rpathlist[4];        // Path arguments (canonicalized)
 
-    int socket_subcall;         // Socketcall() subcall
+    long subcall;               // Socketcall() subcall
     struct sydbox_addr *addr;   // Destination address of socket call
 };
 
@@ -96,9 +97,9 @@ static const char *sname;
  * errno on failure.
  * Returns TRUE and updates data->pathlist[narg] on success.
  */
-static bool syscall_get_path(pid_t pid, int personality, int narg, struct checkdata *data)
+static bool syscall_get_path(pid_t pid, pink_bitness_t bitness, int narg, struct checkdata *data)
 {
-    data->pathlist[narg] = trace_get_path(pid, personality, narg);
+    data->pathlist[narg] = pink_decode_string_persistent(pid, bitness, narg);
     if (G_UNLIKELY(NULL == data->pathlist[narg])) {
         data->result = RS_ERROR;
         data->save_errno = errno;
@@ -125,7 +126,8 @@ static bool syscall_get_path(pid_t pid, int personality, int narg, struct checkd
 static bool syscall_get_dirfd(struct tchild *child, int narg, struct checkdata *data)
 {
     long dfd;
-    if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, narg, &dfd))) {
+
+    if (G_UNLIKELY(!pink_util_get_arg(child->pid, child->bitness, narg, &dfd))) {
         data->result = RS_ERROR;
         data->save_errno = errno;
         if (ESRCH == errno)
@@ -152,27 +154,24 @@ static bool syscall_get_dirfd(struct tchild *child, int narg, struct checkdata *
 
 static bool syscall_decode_net(struct tchild *child, struct checkdata *data)
 {
-    data->socket_subcall = trace_decode_socketcall(child->pid, child->personality);
-    if (0 > data->socket_subcall) {
+    if (!pink_decode_socket_call(child->pid, child->bitness, &data->subcall)) {
         data->result = RS_ERROR;
         data->save_errno = errno;
         return false;
     }
-    g_debug("Decoded socket subcall is %d", data->socket_subcall);
-    if (data->socket_subcall == SOCKET_SUBCALL_SOCKET)
-        sname = "socket";
-    else if (data->socket_subcall == SOCKET_SUBCALL_BIND || data->socket_subcall == SOCKET_SUBCALL_CONNECT) {
-        sname = (data->socket_subcall == SOCKET_SUBCALL_BIND) ? "bind" : "connect";
-        data->addr = trace_get_addr(child->pid, child->personality, 1, true, NULL);
+
+    sname = pink_name_socket_subcall(data->subcall);
+    g_debug("Decoded socket subcall is %ld(%s)", data->subcall, sname);
+    if (data->subcall == PINK_SOCKET_SUBCALL_BIND || data->subcall == PINK_SOCKET_SUBCALL_CONNECT) {
+        data->addr = pinkw_get_socket_addr(child->pid, child->bitness, 1, NULL);
         if (data->addr == NULL) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             return false;
         }
     }
-    else if (data->socket_subcall == SOCKET_SUBCALL_SENDTO) {
-        sname = "sendto";
-        data->addr = trace_get_addr(child->pid, child->personality, 4, true, NULL);
+    else if (data->subcall == PINK_SOCKET_SUBCALL_SENDTO) {
+        data->addr = pinkw_get_socket_addr(child->pid, child->bitness, 4, NULL);
         if (data->addr == NULL) {
             data->result = RS_ERROR;
             data->save_errno = errno;
@@ -186,21 +185,17 @@ static bool syscall_getaddr_net(struct tchild *child, struct checkdata *data)
 {
     if (sflags & DECODE_SOCKETCALL)
         return syscall_decode_net(child, data);
-    else if (sflags & (BIND_CALL | CONNECT_CALL)) {
-        data->addr = trace_get_addr(child->pid, child->personality, 1, false, NULL);
-        if (data->addr == NULL) {
-            data->result = RS_ERROR;
-            data->save_errno = errno;
-            return false;
-        }
-    }
-    else if (sflags & SENDTO_CALL) {
-        data->addr = trace_get_addr(child->pid, child->personality, 4, false, NULL);
-        if (data->addr == NULL) {
-            data->result = RS_ERROR;
-            data->save_errno = errno;
-            return false;
-        }
+    else if (sflags & (BIND_CALL | CONNECT_CALL))
+        data->addr = pinkw_get_socket_addr(child->pid, child->bitness, 1, NULL);
+    else if (sflags & SENDTO_CALL)
+        data->addr = pinkw_get_socket_addr(child->pid, child->bitness, 4, NULL);
+    else
+        return true;
+
+    if (data->addr == NULL) {
+        data->result = RS_ERROR;
+        data->save_errno = errno;
+        return false;
     }
     return true;
 }
@@ -213,27 +208,27 @@ static void syscall_check_start(G_GNUC_UNUSED context_t *ctx, struct tchild *chi
     g_debug("starting check for system call %lu(%s), child %i", sno, sname, child->pid);
 
     if (sflags & (CHECK_PATH | MAGIC_STAT)) {
-        if (!syscall_get_path(child->pid, child->personality, 0, data))
+        if (!syscall_get_path(child->pid, child->bitness, 0, data))
             return;
     }
     if (sflags & CHECK_PATH2) {
-        if (!syscall_get_path(child->pid, child->personality, 1, data))
+        if (!syscall_get_path(child->pid, child->bitness, 1, data))
             return;
     }
     if (sflags & CHECK_PATH_AT) {
-        if (!syscall_get_path(child->pid, child->personality, 1, data))
+        if (!syscall_get_path(child->pid, child->bitness, 1, data))
             return;
         if (!g_path_is_absolute(data->pathlist[1]) && !syscall_get_dirfd(child, 0, data))
             return;
     }
     if (sflags & CHECK_PATH_AT1) {
-        if (!syscall_get_path(child->pid, child->personality, 2, data))
+        if (!syscall_get_path(child->pid, child->bitness, 2, data))
             return;
         if (!g_path_is_absolute(data->pathlist[2]) && !syscall_get_dirfd(child, 1, data))
             return;
     }
     if (sflags & CHECK_PATH_AT2) {
-        if (!syscall_get_path(child->pid, child->personality, 3, data))
+        if (!syscall_get_path(child->pid, child->bitness, 3, data))
             return;
         if (!g_path_is_absolute(data->pathlist[3]) && !syscall_get_dirfd(child, 2, data))
             return;
@@ -242,9 +237,9 @@ static void syscall_check_start(G_GNUC_UNUSED context_t *ctx, struct tchild *chi
     if (child->sandbox->exec && sflags & EXEC_CALL) {
 #endif
     if (sflags & EXEC_CALL) {
-        if (!syscall_get_path(child->pid, child->personality, 0, data))
+        if (!syscall_get_path(child->pid, child->bitness, 0, data))
             return;
-        if ((data->sargv = trace_get_argv_as_string(child->pid, child->personality, 1)) == NULL)
+        if ((data->sargv = pinkw_stringify_argv(child->pid, child->bitness, 1)) == NULL)
             return;
         g_string_printf(child->lastexec, "execve(\"%s\", [%s])", data->pathlist[0], data->sargv);
     }
@@ -277,7 +272,7 @@ static void syscall_check_flags(struct tchild *child, struct checkdata *data)
 
     if (sflags & (OPEN_MODE | OPEN_MODE_AT)) {
         int arg = sflags & OPEN_MODE ? 1 : 2;
-        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, arg, &(data->open_flags)))) {
+        if (G_UNLIKELY(!pink_util_get_arg(child->pid, child->bitness, arg, &data->open_flags))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -291,7 +286,7 @@ static void syscall_check_flags(struct tchild *child, struct checkdata *data)
     }
     else {
         int arg = sflags & ACCESS_MODE ? 1 : 2;
-        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, arg, &(data->access_flags)))) {
+        if (G_UNLIKELY(!pink_util_get_arg(child->pid, child->bitness, arg, &data->access_flags))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -555,14 +550,14 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
         data->result = RS_MAGIC;
 
     if (data->result == RS_MAGIC) {
-        g_debug("stat(\"%s\") is magic, faking stat buffer", path);
-        if (G_UNLIKELY(!trace_fake_stat(child->pid, child->personality))) {
+        g_debug("stat(\"%s\") is magic, encoding stat buffer", path);
+        if (G_UNLIKELY(!pinkw_encode_stat(child->pid, child->bitness))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
-                g_debug("failed to fake stat buffer: %s", g_strerror(errno));
+                g_debug("failed to encode stat buffer: %s", g_strerror(errno));
             else
-                g_warning("failed to fake stat buffer: %s", g_strerror(errno));
+                g_warning("failed to encode stat buffer: %s", g_strerror(errno));
         }
         else {
             data->result = RS_DENY;
@@ -630,7 +625,7 @@ static void syscall_check_resolve(struct tchild *child, struct checkdata *data)
         data->resolve = false;
     else if (sflags & IF_AT_SYMLINK_FOLLOW4) {
         long symflags;
-        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, 4, &symflags))) {
+        if (G_UNLIKELY(!pink_util_get_arg(child->pid, child->bitness, 4, &symflags))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -644,7 +639,7 @@ static void syscall_check_resolve(struct tchild *child, struct checkdata *data)
     else if (sflags & IF_AT_SYMLINK_NOFOLLOW3 || sflags & IF_AT_SYMLINK_NOFOLLOW4) {
         long symflags;
         int arg = sflags & IF_AT_SYMLINK_NOFOLLOW3 ? 3 : 4;
-        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, arg, &symflags))) {
+        if (G_UNLIKELY(!pink_util_get_arg(child->pid, child->bitness, arg, &symflags))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -657,7 +652,7 @@ static void syscall_check_resolve(struct tchild *child, struct checkdata *data)
     }
     else if (sflags & IF_AT_REMOVEDIR2) {
         long rmflags;
-        if (G_UNLIKELY(!trace_get_arg(child->pid, child->personality, 2, &rmflags))) {
+        if (G_UNLIKELY(!pink_util_get_arg(child->pid, child->bitness, 2, &rmflags))) {
             data->result = RS_ERROR;
             data->save_errno = errno;
             if (ESRCH == errno)
@@ -917,8 +912,7 @@ static void syscall_handle_net(struct tchild *child, struct checkdata *data)
     GSList *whitelist, *walk;
     struct sydbox_addr *addr;
 
-    isbind = ((sflags & BIND_CALL) ||
-        ((sflags & DECODE_SOCKETCALL) && data->socket_subcall == SOCKET_SUBCALL_BIND));
+    isbind = ((sflags & BIND_CALL) || ((sflags & DECODE_SOCKETCALL) && data->subcall == PINK_SOCKET_SUBCALL_BIND));
     whitelist = isbind
         ? sydbox_config_get_network_whitelist_bind()
         : sydbox_config_get_network_whitelist_connect();
@@ -937,13 +931,13 @@ static void syscall_handle_net(struct tchild *child, struct checkdata *data)
                             data->addr->u.sa.port[1] <= addr->u.sa.port[1])
                         violation = false;
                     break;
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
                 case AF_INET6:
                     if (data->addr->u.sa6.port[0] >= addr->u.sa6.port[0] &&
                             data->addr->u.sa6.port[1] <= addr->u.sa6.port[1])
                         violation = false;
                     break;
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
                 default:
                     g_assert_not_reached();
             }
@@ -965,13 +959,13 @@ static void syscall_handle_net(struct tchild *child, struct checkdata *data)
                 sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET addr=%s port=%d}",
                         sname, ip, data->addr->u.sa.port[0]);
                 break;
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
             case AF_INET6:
                 inet_ntop(AF_INET6, &data->addr->u.sa6.sin6_addr, ip, sizeof(ip));
                 sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET6 addr=%s port=%d}",
                         sname, ip, data->addr->u.sa6.port[0]);
                 break;
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
             default:
                 g_assert_not_reached();
         }
@@ -983,8 +977,7 @@ static void syscall_handle_net(struct tchild *child, struct checkdata *data)
     }
 }
 
-static void syscall_check(G_GNUC_UNUSED context_t *ctx, struct tchild *child,
-        struct checkdata *data)
+static void syscall_check(G_GNUC_UNUSED context_t *ctx, struct tchild *child, struct checkdata *data)
 {
     if (G_UNLIKELY(RS_ALLOW != data->result))
         return;
@@ -1053,7 +1046,7 @@ static void syscall_check_finalize(G_GNUC_UNUSED context_t *ctx, struct tchild *
             sydbox_config_get_network_auto_whitelist_bind() &&
             data->result == RS_ALLOW &&
             (sflags & BIND_CALL ||
-             (sflags & DECODE_SOCKETCALL && data->socket_subcall == SOCKET_SUBCALL_BIND)) &&
+             (sflags & DECODE_SOCKETCALL && data->subcall == PINK_SOCKET_SUBCALL_BIND)) &&
             data->addr != NULL &&
             IS_SUPPORTED_FAMILY(data->addr->family)) {
         /* Store the bind address.
@@ -1073,7 +1066,7 @@ static int syscall_handle_badcall(struct tchild *child)
 {
     g_debug("restoring real call number for denied system call %lu(%s)", child->sno, sname);
     // Restore real call number and return our error code
-    if (!trace_set_syscall(child->pid, child->sno)) {
+    if (!pink_util_set_syscall(child->pid, child->bitness, child->sno)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error setting system call using ptrace()
              * child is still alive, hence the error is fatal.
@@ -1085,7 +1078,7 @@ static int syscall_handle_badcall(struct tchild *child)
         // Child is dead.
         return -1;
     }
-    if (!trace_set_return(child->pid, child->retval)) {
+    if (!pink_util_set_return(child->pid, child->retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error setting return code using ptrace()
              * child is still alive, hence the error is fatal.
@@ -1108,7 +1101,7 @@ static int syscall_handle_chdir(struct tchild *child)
 {
     long retval;
 
-    if (!trace_get_return(child->pid, &retval)) {
+    if (!pink_util_get_return(child->pid, &retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * child is still alive, hence the error is fatal.
@@ -1134,7 +1127,7 @@ static int syscall_handle_chdir(struct tchild *child)
              */
             retval = -errno;
             g_debug("proc_getcwd() failed: %s", g_strerror(errno));
-            if (!trace_set_return(child->pid, retval)) {
+            if (!pink_util_set_return(child->pid, retval)) {
                 if (G_UNLIKELY(ESRCH != errno)) {
                     /* Error setting return code using ptrace()
                      * child is still alive, hence the error is fatal.
@@ -1171,11 +1164,11 @@ static int syscall_handle_chdir(struct tchild *child)
  */
 static int syscall_handle_bind(struct tchild *child, int flags)
 {
-    int subcall, port;
-    long fd, retval;
+    int port;
+    long fd, retval, subcall;
     GSList *whitelist;
 
-    if (!trace_get_return(child->pid, &retval)) {
+    if (!pink_util_get_return(child->pid, &retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * child is still alive, hence the error is fatal.
@@ -1196,8 +1189,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
     }
 
     if (flags & DECODE_SOCKETCALL) {
-        subcall = trace_decode_socketcall(child->pid, child->personality);
-        if (0 > subcall) {
+        if (!pink_util_get_arg(child->pid, child->bitness, 0, &subcall)) {
             if (G_UNLIKELY(ESRCH != errno)) {
                 /* Error getting socket subcall using ptrace()
                  * child is still alive, hence the error is fatal.
@@ -1209,7 +1201,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
             // Child is dead.
             return -1;
         }
-        if (subcall != SOCKET_SUBCALL_BIND) {
+        if (subcall != PINK_SOCKET_SUBCALL_BIND) {
             address_free(child->bindlast);
             child->bindlast = NULL;
             return 0;
@@ -1224,11 +1216,11 @@ static int syscall_handle_bind(struct tchild *child, int flags)
             case AF_INET:
                 port = child->bindlast->u.sa.port[0];
                 break;
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
             case AF_INET6:
                 port = child->bindlast->u.sa6.port[0];
                 break;
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
             default:
                 g_assert_not_reached();
         }
@@ -1237,7 +1229,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
             /* Special case for binding to port zero.
              * We'll check the getsockname() call after this to get the port.
              */
-            if (!trace_get_fd(child->pid, child->personality, flags & DECODE_SOCKETCALL, &fd)) {
+            if (!pinkw_get_socket_fd(child->pid, child->bitness, &fd)) {
                 if (G_UNLIKELY(ESRCH != errno)) {
                     /* Error getting return code using ptrace()
                      * child is still alive, hence the error is fatal.
@@ -1268,12 +1260,11 @@ static int syscall_handle_bind(struct tchild *child, int flags)
  */
 static int syscall_handle_getsockname(struct tchild *child, bool decode)
 {
-    int subcall;
-    long fd, retval;
+    long fd, retval, subcall;
     GSList *whitelist;
     struct sydbox_addr *addr, *addr_new;
 
-    if (!trace_get_return(child->pid, &retval)) {
+    if (!pink_util_get_return(child->pid, &retval)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * Silently ignore it.
@@ -1291,8 +1282,7 @@ static int syscall_handle_getsockname(struct tchild *child, bool decode)
     }
 
     if (decode) { /* socketcall() */
-        subcall = trace_decode_socketcall(child->pid, child->personality);
-        if (0 > subcall) {
+        if (!pink_util_get_arg(child->pid, child->bitness, 0, &subcall)) {
             if (G_UNLIKELY(ESRCH != errno)) {
                 /* Error getting socket subcall using ptrace()
                  * Silently ignore it.
@@ -1303,13 +1293,13 @@ static int syscall_handle_getsockname(struct tchild *child, bool decode)
             // Child is dead.
             return -1;
         }
-        if (subcall != SOCKET_SUBCALL_GETSOCKNAME)
+        if (subcall != PINK_SOCKET_SUBCALL_GETSOCKNAME)
             return 0;
 
-        addr_new = trace_get_addr(child->pid, child->personality, 1, true, &fd);
+        addr_new = pinkw_get_socket_addr(child->pid, child->bitness, 1, &fd);
     }
     else /* getsockname() */
-        addr_new = trace_get_addr(child->pid, child->personality, 1, false, &fd);
+        addr_new = pinkw_get_socket_addr(child->pid, child->bitness, 1, &fd);
 
     if (addr_new == NULL) {
         /* Error getting fd using ptrace()
@@ -1332,14 +1322,14 @@ static int syscall_handle_getsockname(struct tchild *child, bool decode)
             g_debug("whitelisting last bind address with revealed bind port %d for connect",
                     addr->u.sa.port[0]);
             break;
-#if HAVE_IPV6
+#if PINKTRACE_HAVE_IPV6
         case AF_INET6:
             addr->u.sa6.port[0] = addr_new->u.sa6.port[0];
             addr->u.sa6.port[1] = addr_new->u.sa6.port[1];
             g_debug("whitelisting last bind address with revealed bind port %d for connect",
                     addr->u.sa6.port[0]);
             break;
-#endif /* HAVE_IPV6 */
+#endif /* PINKTRACE_HAVE_IPV6 */
         default:
             g_assert_not_reached();
     }
@@ -1360,7 +1350,7 @@ static int syscall_handle_dup(struct tchild *child)
     long oldfd, newfd;
     struct sydbox_addr *addr;
 
-    if (!trace_get_return(child->pid, &newfd)) {
+    if (!pink_util_get_return(child->pid, &newfd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * Silently ignore it.
@@ -1377,7 +1367,7 @@ static int syscall_handle_dup(struct tchild *child)
         return 0;
     }
 
-    if (!trace_get_arg(child->pid, child->personality, 0, &oldfd)) {
+    if (!pink_util_get_arg(child->pid, child->bitness, 0, &oldfd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting first argument using ptrace()
              * Silently ignore it.
@@ -1405,7 +1395,7 @@ static int syscall_handle_fcntl(struct tchild *child)
     long oldfd, newfd, cmd;
     struct sydbox_addr *addr;
 
-    if (!trace_get_return(child->pid, &newfd)) {
+    if (!pink_util_get_return(child->pid, &newfd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting return code using ptrace()
              * Silently ignore it.
@@ -1422,12 +1412,12 @@ static int syscall_handle_fcntl(struct tchild *child)
         return 0;
     }
 
-    if (!trace_get_arg(child->pid, child->personality, 1, &cmd)) {
+    if (!pink_util_get_arg(child->pid, child->bitness, 1, &cmd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting first argument using ptrace()
              * Silently ignore it.
              */
-            g_debug("failed to get fcntl command: %s", g_strerror(errno));
+            g_debug("failed to decode fcntl command: %s", g_strerror(errno));
             return 0;
         }
         // Child is dead.
@@ -1441,7 +1431,7 @@ static int syscall_handle_fcntl(struct tchild *child)
         return 0;
     }
 
-    if (!trace_get_arg(child->pid, child->personality, 0, &oldfd)) {
+    if (!pink_util_get_arg(child->pid, child->bitness, 0, &oldfd)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             /* Error getting first argument using ptrace()
              * Silently ignore it.
@@ -1477,7 +1467,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
          * Get the system call number of child.
          * Save it in child->sno.
          */
-        if (!trace_get_syscall(child->pid, &sno)) {
+        if (!pink_util_get_syscall(child->pid, child->bitness, &sno)) {
             if (G_UNLIKELY(ESRCH != errno)) {
                 /* Error getting system call using ptrace()
                  * child is still alive, hence the error is fatal.
@@ -1490,13 +1480,13 @@ int syscall_handle(context_t *ctx, struct tchild *child)
             return context_remove_child(ctx, child->pid);
         }
         child->sno = sno;
-        sname = dispatch_name(child->personality, sno);
-        sflags = dispatch_lookup(child->personality, sno);
+        sname = pink_name_syscall(sno, child->bitness);
+        sflags = dispatch_lookup(sno, child->bitness);
     }
     else {
         sno = child->sno;
-        sname = dispatch_name(child->personality, sno);
-        sflags = dispatch_lookup(child->personality, sno);
+        sname = pink_name_syscall(sno, child->bitness);
+        sflags = dispatch_lookup(sno, child->bitness);
     }
 
     if (entering) {
@@ -1553,7 +1543,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                 case RS_DENY:
                     g_debug("denying access to system call %lu(%s)", sno, sname);
                     child->flags |= TCHILD_DENYSYSCALL;
-                    if (!trace_set_syscall(child->pid, BAD_SYSCALL)) {
+                    if (!pink_util_set_syscall(child->pid, child->bitness, BAD_SYSCALL)) {
                         if (G_UNLIKELY(ESRCH != errno)) {
                             g_critical("failed to set system call: %s", g_strerror(errno));
                             g_printerr("failed to set system call: %s\n", g_strerror(errno));
@@ -1583,7 +1573,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                 return context_remove_child(ctx, child->pid);
             child->flags &= ~TCHILD_DENYSYSCALL;
         }
-        else if (dispatch_chdir(child->personality, sno)) {
+        else if (dispatch_chdir(sno, child->bitness)) {
             /* Child is exiting a system call that may have changed its current
              * working directory. Update current working directory.
              */
@@ -1597,11 +1587,11 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                     return context_remove_child(ctx, child->pid);
             }
             if (g_hash_table_size(child->bindzero) > 0) {
-                if (dispatch_maygetsockname(child->personality, sno, &decode)) {
+                if (dispatch_maygetsockname(sno, child->bitness, &decode)) {
                     if (0 > syscall_handle_getsockname(child, decode))
                         return context_remove_child(ctx, child->pid);
                 }
-                else if (dispatch_dup(child->personality, sno)) {
+                else if (dispatch_dup(sno, child->bitness)) {
                     /* Child is exiting a system call that may have duplicated a file
                      * descriptor in child->bindzero. Update file descriptor
                      * information.
@@ -1609,7 +1599,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                     if (0 > syscall_handle_dup(child))
                         return context_remove_child(ctx, child->pid);
                 }
-                else if (dispatch_fcntl(child->personality, sno)) {
+                else if (dispatch_fcntl(sno, child->bitness)) {
                     /* Child is exiting a system call that may have duplicated a file
                      * descriptor in child->bindzero. Update file descriptor
                      * information.

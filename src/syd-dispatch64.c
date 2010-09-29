@@ -26,16 +26,7 @@
 #include "syd-dispatch.h"
 #include "syd-dispatch-table.h"
 
-static const struct syscall_name {
-    int no;
-    const char *name;
-} sysnames[] = {
-#include "syd-syscallent64.h"
-    {-1,    NULL}
-};
-
 static GHashTable *flags64 = NULL;
-static GHashTable *names64 = NULL;
 
 void dispatch_init64(void)
 {
@@ -44,11 +35,6 @@ void dispatch_init64(void)
         for (unsigned int i = 0; -1 != syscalls[i].no; i++)
             g_hash_table_insert(flags64, GINT_TO_POINTER(syscalls[i].no), GINT_TO_POINTER(syscalls[i].flags));
     }
-    if (names64 == NULL) {
-        names64 = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-        for (unsigned int i = 0; NULL != sysnames[i].name; i++)
-            g_hash_table_insert(names64, GINT_TO_POINTER(sysnames[i].no), g_strdup(sysnames[i].name));
-    }
 }
 
 void dispatch_free64(void)
@@ -56,10 +42,6 @@ void dispatch_free64(void)
     if (flags64 != NULL) {
         g_hash_table_destroy(flags64);
         flags64 = NULL;
-    }
-    if (names64 != NULL) {
-        g_hash_table_destroy(names64);
-        names64 = NULL;
     }
 }
 
@@ -72,21 +54,14 @@ int dispatch_lookup64(int sno)
     return (f == NULL) ? -1 : GPOINTER_TO_INT(f);
 }
 
-const char *dispatch_name64(int sno)
-{
-    const char *sname;
-
-    g_assert(names64 != NULL);
-    sname = (const char *) g_hash_table_lookup(names64, GINT_TO_POINTER(sno));
-    return sname ? sname : UNKNOWN_SYSCALL;
-}
-
-inline bool dispatch_chdir64(int sno)
+inline
+bool dispatch_chdir64(int sno)
 {
     return (__NR_chdir == sno) || (__NR_fchdir == sno);
 }
 
-inline bool dispatch_dup64(int sno)
+inline
+bool dispatch_dup64(int sno)
 {
 #if defined(__NR_dup3)
     return (__NR_dup == sno) || (__NR_dup2 == sno) || (__NR_dup3 == sno);
@@ -95,7 +70,8 @@ inline bool dispatch_dup64(int sno)
 #endif
 }
 
-inline bool dispatch_fcntl64(int sno)
+inline
+bool dispatch_fcntl64(int sno)
 {
 #if defined(__NR_fcntl64)
     return (__NR_fcntl == sno) || (__NR_fcntl64 == sno);
@@ -104,7 +80,8 @@ inline bool dispatch_fcntl64(int sno)
 #endif
 }
 
-inline bool dispatch_maygetsockname64(int sno, bool *decode)
+inline
+bool dispatch_maygetsockname64(int sno, bool *decode)
 {
     if (__NR_getsockname == sno) {
         if (decode != NULL)

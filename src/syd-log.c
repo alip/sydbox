@@ -33,8 +33,7 @@
 static FILE *fd = NULL;
 static bool initialized = false;
 
-static inline void sydbox_log_output (const gchar *log_domain,
-        GLogLevelFlags log_level, const gchar *message)
+static inline void sydbox_log_output (const gchar *log_domain, GLogLevelFlags log_level, const gchar *message)
 {
     const gchar *prefix;
 

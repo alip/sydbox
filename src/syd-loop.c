@@ -30,20 +30,20 @@
 #include <sys/wait.h>
 
 #include <glib.h>
+#include <pinktrace/pink.h>
 
 #include "syd-children.h"
 #include "syd-config.h"
-#include "syd-dispatch.h"
 #include "syd-log.h"
 #include "syd-loop.h"
+#include "syd-pink.h"
 #include "syd-proc.h"
 #include "syd-syscall.h"
-#include "syd-trace.h"
 
 // Event handlers
 static int event_setup(context_t *ctx, struct tchild *child)
 {
-    if (!trace_setup(child->pid)) {
+    if (!pinkw_trace_setup_all(child->pid)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to set tracing options: %s", g_strerror(errno));
             g_printerr("failed to set tracing options: %s\n", g_strerror (errno));
@@ -58,7 +58,7 @@ static int event_setup(context_t *ctx, struct tchild *child)
 
 static int event_syscall(context_t *ctx, struct tchild *child)
 {
-    if (!trace_syscall(child->pid, 0)) {
+    if (!pink_trace_syscall(child->pid, 0)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i: %s", child->pid, g_strerror (errno));
             g_printerr("failed to resume child %i: %s\n", child->pid, g_strerror (errno));
@@ -75,7 +75,7 @@ static int event_fork(context_t *ctx, struct tchild *child)
     struct tchild *newchild;
 
     // Get new child's pid
-    if (G_UNLIKELY(!trace_geteventmsg(child->pid, &childpid))) {
+    if (G_UNLIKELY(!pink_trace_geteventmsg(child->pid, &childpid))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to get the pid of the newborn child: %s", g_strerror(errno));
             g_printerr("failed to get the pid of the newborn child: %s\n", g_strerror (errno));
@@ -115,7 +115,7 @@ static int event_genuine(context_t * ctx, struct tchild *child, int status)
     g_debug("child %i received genuine signal %d", child->pid, sig);
 #endif /* HAVE_STRSIGNAL */
 
-    if (G_UNLIKELY(!trace_syscall(child->pid, sig))) {
+    if (G_UNLIKELY(!pink_trace_syscall(child->pid, sig))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i after genuine signal: %s", child->pid, g_strerror(errno));
             g_printerr("failed to resume child %i after genuine signal: %s\n", child->pid, g_strerror(errno));
@@ -137,7 +137,7 @@ static int event_unknown(context_t *ctx, struct tchild *child, int status)
     g_info("unknown signal %#x received from child %i", sig, child->pid);
 #endif /* HAVE_STRSIGNAL */
 
-    if (G_UNLIKELY(!trace_syscall(child->pid, sig))) {
+    if (G_UNLIKELY(!pink_trace_syscall(child->pid, sig))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to resume child %i after unknown signal %#x: %s",
                     child->pid, sig, g_strerror(errno));
@@ -154,8 +154,8 @@ static int event_unknown(context_t *ctx, struct tchild *child, int status)
 int trace_loop(context_t *ctx)
 {
     int status, exit_code;
-    unsigned int event;
     pid_t pid;
+    pink_event_t event;
     struct tchild *child;
 
     exit_code = EXIT_SUCCESS;
@@ -171,11 +171,11 @@ int trace_loop(context_t *ctx)
             }
         }
         child = tchild_find(ctx->children, pid);
-        event = trace_event(status);
-        g_assert(NULL != child || E_STOP == event || E_EXIT == event || E_EXIT_SIGNAL == event);
+        event = pink_event_decide(status);
+        g_assert(NULL != child || PINK_EVENT_STOP == event || PINK_EVENT_EXIT_GENUINE == event || PINK_EVENT_EXIT_SIGNAL == event);
 
         switch(event) {
-            case E_STOP:
+            case PINK_EVENT_STOP:
                 g_debug("child %i stopped", pid);
                 if (NULL == child) {
                     /* Child is born before PTRACE_EVENT_FORK.
@@ -195,25 +195,22 @@ int trace_loop(context_t *ctx)
                         return exit_code;
                 }
                 break;
-            case E_SYSCALL:
+            case PINK_EVENT_SYSCALL:
                 if (0 != syscall_handle(ctx, child))
                     return exit_code;
                 if (0 != event_syscall(ctx, child))
                     return exit_code;
                 break;
-            case E_FORK:
-            case E_VFORK:
-            case E_CLONE:
-                g_debug("child %i called %s()", pid,
-                        (event == E_FORK)
-                            ? "fork"
-                            : (event == E_VFORK) ? "vfork" : "clone");
+            case PINK_EVENT_FORK:
+            case PINK_EVENT_VFORK:
+            case PINK_EVENT_CLONE:
+                g_debug("child %i called %s", pid, pink_event_name(event));
                 if (0 != event_fork(ctx, child))
                     return exit_code;
                 if (0 != event_syscall(ctx, child))
                     return exit_code;
                 break;
-            case E_EXEC:
+            case PINK_EVENT_EXEC:
                 g_debug("child %i called execve()", pid);
                 // Check for exec_lock
                 if (G_UNLIKELY(LOCK_PENDING == child->sandbox->lock)) {
@@ -221,22 +218,22 @@ int trace_loop(context_t *ctx)
                     child->sandbox->lock = LOCK_SET;
                 }
 
-                // Update child's personality
-                child->personality = trace_personality(child->pid);
-                if (0 > child->personality) {
-                    g_critical("failed to determine personality of child %i: %s", child->pid, g_strerror(errno));
-                    g_printerr("failed to determine personality of child %i: %s\n", child->pid, g_strerror(errno));
+                // Update child's bitness
+                child->bitness = pink_bitness_get(child->pid);
+                if (PINK_BITNESS_UNKNOWN == child->bitness) {
+                    g_critical("failed to determine bitness of child %i: %s", child->pid, g_strerror(errno));
+                    g_printerr("failed to determine bitness of child %i: %s\n", child->pid, g_strerror(errno));
                     exit(-1);
                 }
-                g_debug("updated child %i's personality to %s mode", child->pid, dispatch_mode(child->personality));
+                g_debug("updated child %i's bitness to %s mode", child->pid, pink_bitness_name(child->bitness));
                 if (0 != event_syscall(ctx, child))
                     return exit_code;
                 break;
-            case E_GENUINE:
+            case PINK_EVENT_GENUINE:
                 if (0 != event_genuine(ctx, child, status))
                     return exit_code;
                 break;
-            case E_EXIT:
+            case PINK_EVENT_EXIT_GENUINE:
                 if (G_UNLIKELY(ctx->eldest == pid)) {
                     // Eldest child, keep return value.
                     exit_code = WEXITSTATUS(status);
@@ -245,7 +242,7 @@ int trace_loop(context_t *ctx)
                     else
                         g_info("eldest child %i exited with return code %d", pid, exit_code);
                     if (!sydbox_config_get_wait_all()) {
-                        g_hash_table_foreach(ctx->children, tchild_cont_one, NULL);
+                        g_hash_table_foreach(ctx->children, tchild_resume_one, NULL);
                         g_hash_table_destroy(ctx->children);
                         ctx->children = NULL;
                         return exit_code;
@@ -255,7 +252,7 @@ int trace_loop(context_t *ctx)
                     g_debug("child %i exited with return code %d", pid, WEXITSTATUS(status));
                 tchild_delete(ctx->children, pid);
                 break;
-            case E_EXIT_SIGNAL:
+            case PINK_EVENT_EXIT_SIGNAL:
                 if (G_UNLIKELY(ctx->eldest == pid)) {
                     exit_code = 128 + WTERMSIG(status);
 #ifdef HAVE_STRSIGNAL
@@ -265,7 +262,7 @@ int trace_loop(context_t *ctx)
                     g_message("eldest child %i exited with signal %d", pid, WTERMSIG(status));
 #endif /* HAVE_STRSIGNAL */
                     if (!sydbox_config_get_wait_all()) {
-                        g_hash_table_foreach(ctx->children, tchild_cont_one, NULL);
+                        g_hash_table_foreach(ctx->children, tchild_resume_one, NULL);
                         g_hash_table_destroy(ctx->children);
                         ctx->children = NULL;
                         return exit_code;
@@ -282,7 +279,7 @@ int trace_loop(context_t *ctx)
 
                 tchild_delete(ctx->children, pid);
                 break;
-            case E_UNKNOWN:
+            case PINK_EVENT_UNKNOWN:
                 if (0 != event_unknown(ctx, child, status))
                     return exit_code;
                 break;

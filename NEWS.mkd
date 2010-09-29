@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Use *pinktrace* library instead of low-level ptrace() functions.
 * Support a supplementary configuration file via **SYDBOX_USER_CONFIG**
   environment variable.
 

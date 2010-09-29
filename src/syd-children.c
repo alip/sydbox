@@ -25,16 +25,18 @@
 
 #include <errno.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <glib.h>
+#include <pinktrace/pink.h>
 
 #include "syd-children.h"
 #include "syd-config.h"
 #include "syd-log.h"
 #include "syd-path.h"
-#include "syd-trace.h"
+#include "syd-pink.h"
 #include "syd-net.h"
 
 struct tchild *tchild_new(GHashTable *children, pid_t pid, bool eldest)
@@ -61,7 +63,7 @@ struct tchild *tchild_new(GHashTable *children, pid_t pid, bool eldest)
     child->sandbox->exec_prefixes = NULL;
 
     if (!eldest && sydbox_config_get_allow_proc_pid()) {
-        /* Allow /proc/%d which is needed for processes to work reliably. */
+        /* Allow /proc/%i which is needed for processes to work reliably. */
         snprintf(proc_pid, 32, "/proc/%i", pid);
         pathnode_new(&(child->sandbox->write_prefixes), proc_pid, false);
     }
@@ -84,7 +86,7 @@ void tchild_inherit(struct tchild *child, struct tchild *parent)
     }
 
     child->lastexec = g_string_assign(child->lastexec, parent->lastexec->str);
-    child->personality = parent->personality;
+    child->bitness = parent->bitness;
     child->sandbox->path = parent->sandbox->path;
     child->sandbox->exec = parent->sandbox->exec;
     child->sandbox->network = parent->sandbox->network;
@@ -119,12 +121,12 @@ void tchild_free_one(gpointer child_ptr)
 
 void tchild_kill_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_UNUSED void *userdata)
 {
-    trace_kill(GPOINTER_TO_INT(pid_ptr));
+    pink_trace_kill(GPOINTER_TO_INT(pid_ptr));
 }
 
-void tchild_cont_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_UNUSED void *userdata)
+void tchild_resume_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_UNUSED void *userdata)
 {
-    trace_cont(GPOINTER_TO_INT(pid_ptr));
+    pinkw_trace_resume(GPOINTER_TO_INT(pid_ptr));
 }
 
 void tchild_delete(GHashTable *children, pid_t pid)

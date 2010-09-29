@@ -25,21 +25,12 @@
 #include <asm/unistd.h>
 
 #include <glib.h>
+#include <pinktrace/pink.h>
 
-#include "syd-flags.h"
 #include "syd-dispatch.h"
 #include "syd-dispatch-table.h"
 
-static const struct syscall_name {
-    int no;
-    const char *name;
-} sysnames[] = {
-#include "syd-syscallent.h"
-    {-1,    NULL}
-};
-
 static GHashTable *flags = NULL;
-static GHashTable *names = NULL;
 
 void dispatch_init(void)
 {
@@ -47,11 +38,6 @@ void dispatch_init(void)
         flags = g_hash_table_new(g_direct_hash, g_direct_equal);
         for (unsigned int i = 0; -1 != syscalls[i].no; i++)
             g_hash_table_insert(flags, GINT_TO_POINTER(syscalls[i].no), GINT_TO_POINTER(syscalls[i].flags));
-    }
-    if (names == NULL) {
-        names = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-        for (unsigned int i = 0; NULL != sysnames[i].name; i++)
-            g_hash_table_insert(names, GINT_TO_POINTER(sysnames[i].no), g_strdup(sysnames[i].name));
     }
 }
 
@@ -61,13 +47,9 @@ void dispatch_free(void)
         g_hash_table_destroy(flags);
         flags = NULL;
     }
-    if (names != NULL) {
-        g_hash_table_destroy(names);
-        names = NULL;
-    }
 }
 
-int dispatch_lookup(G_GNUC_UNUSED int personality, int sno)
+int dispatch_lookup(int sno, G_GNUC_UNUSED pink_bitness_t bitness)
 {
     gpointer f;
 
@@ -76,38 +58,14 @@ int dispatch_lookup(G_GNUC_UNUSED int personality, int sno)
     return (f == NULL) ? -1 : GPOINTER_TO_INT(f);
 }
 
-const char *dispatch_name(G_GNUC_UNUSED int personality, int sno)
-{
-    const char *sname;
-
-    g_assert(names != NULL);
-    sname = (const char *) g_hash_table_lookup(names, GINT_TO_POINTER(sno));
-    return sname ? sname : UNKNOWN_SYSCALL;
-}
-
-inline const char *dispatch_mode(G_GNUC_UNUSED int personality)
-{
-    const char *mode;
-#if defined(I386)
-    mode = "32 bit";
-#elif defined(IA64)
-    mode = "64 bit";
-#elif defined(POWERPC64)
-    mode = "64 bit";
-#elif defined(POWERPC)
-    mode = "32 bit";
-#else
-#error unsupported architecture
-#endif
-    return mode;
-}
-
-inline bool dispatch_chdir(G_GNUC_UNUSED int personality, int sno)
+inline
+bool dispatch_chdir(int sno, G_GNUC_UNUSED pink_bitness_t bitness)
 {
     return (__NR_chdir == sno) || (__NR_fchdir == sno);
 }
 
-inline bool dispatch_dup(G_GNUC_UNUSED int personality, int sno)
+inline
+bool dispatch_dup(int sno, G_GNUC_UNUSED pink_bitness_t bitness)
 {
 #if defined(__NR_dup3)
     return (__NR_dup == sno) || (__NR_dup2 == sno) || (__NR_dup3 == sno);
@@ -116,7 +74,8 @@ inline bool dispatch_dup(G_GNUC_UNUSED int personality, int sno)
 #endif
 }
 
-inline bool dispatch_fcntl(G_GNUC_UNUSED int personality, int sno)
+inline
+bool dispatch_fcntl(int sno, G_GNUC_UNUSED pink_bitness_t bitness)
 {
 #if defined(__NR_fcntl64)
     return (__NR_fcntl == sno) || (__NR_fcntl64 == sno);
@@ -125,16 +84,17 @@ inline bool dispatch_fcntl(G_GNUC_UNUSED int personality, int sno)
 #endif
 }
 
-inline bool dispatch_maygetsockname(G_GNUC_UNUSED int personality, int sno, bool *decode)
+inline
+bool dispatch_maygetsockname(int sno, G_GNUC_UNUSED pink_bitness_t bitness, bool *decode)
 {
-#if defined(I386) || defined(POWERPC) || defined(POWERPC64)
+#if defined(__NR_socketcall)
     if (__NR_socketcall == sno) {
         if (decode != NULL)
             *decode = true;
         return true;
     }
     return false;
-#elif defined(IA64)
+#elif defined(__NR_getsockname)
     if (__NR_getsockname == sno) {
         if (decode != NULL)
             *decode = false;
@@ -142,7 +102,7 @@ inline bool dispatch_maygetsockname(G_GNUC_UNUSED int personality, int sno, bool
     }
     return false;
 #else
-#error unsupported architecture
+#error wtf? neither socketcall() nor getsockname() defined
 #endif
 }
 

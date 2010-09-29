@@ -25,6 +25,7 @@
 #include <sys/types.h>
 
 #include <glib.h>
+#include <pinktrace/pink.h>
 
 #include "syd-net.h"
 
@@ -54,9 +55,9 @@ struct tdata
 
 struct tchild
 {
-    int personality;         // Personality (0 = 32bit, 1 = 64bit etc.)
     int flags;               // TCHILD_ flags
     pid_t pid;               // Process ID of the child.
+    pink_bitness_t bitness;  // Bitness (32bit, 64bit etc.)
     char *cwd;               // Child's current working directory.
     unsigned long sno;       // Last system call called by child.
     long retval;             // Replaced system call will return this value.
@@ -74,7 +75,7 @@ void tchild_free_one(gpointer child_ptr);
 
 void tchild_kill_one(gpointer pid_ptr, gpointer child_ptr, void *userdata);
 
-void tchild_cont_one(gpointer pid_ptr, gpointer child_ptr, void *userdata);
+void tchild_resume_one(gpointer pid_ptr, gpointer child_ptr, void *userdata);
 
 void tchild_delete(GHashTable *children, pid_t pid);
 

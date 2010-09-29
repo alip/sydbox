@@ -22,23 +22,21 @@
 
 #include <stdbool.h>
 
+#include <pinktrace/pink.h>
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif // HAVE_CONFIG_H
 
-#define UNKNOWN_SYSCALL     "unknown"
-
-#if defined(I386) || defined(IA64) || defined(POWERPC) || defined(POWERPC64)
+#if PINKTRACE_BITNESS_COUNT_SUPPORTED == 1
 void dispatch_init(void);
 void dispatch_free(void);
-int dispatch_lookup(int personality, int sno);
-const char *dispatch_name(int personality, int sno);
-const char *dispatch_mode(int personality);
-bool dispatch_chdir(int personality, int sno);
-bool dispatch_dup(int personality, int sno);
-bool dispatch_fcntl(int personality, int sno);
-bool dispatch_maygetsockname(int personality, int sno, bool *decode);
-#elif defined(X86_64)
+int dispatch_lookup(int sno, pink_bitness_t bitness);
+bool dispatch_chdir(int sno, pink_bitness_t bitness);
+bool dispatch_dup(int sno, pink_bitness_t bitness);
+bool dispatch_fcntl(int sno, pink_bitness_t bitness);
+bool dispatch_maygetsockname(int sno, pink_bitness_t bitness, bool *decode);
+#elif PINKTRACE_BITNESS_COUNT_SUPPORTED == 2
 void dispatch_init32(void);
 void dispatch_init64(void);
 void dispatch_free32(void);
@@ -66,25 +64,21 @@ bool dispatch_maygetsockname64(int sno, bool *decode);
         dispatch_free32();  \
         dispatch_free64();  \
     } while (0)
-#define dispatch_lookup(personality, sno) \
-    ((personality) == 0) ? dispatch_lookup32((sno)) : dispatch_lookup64((sno))
-#define dispatch_name(personality, sno) \
-    ((personality) == 0) ? dispatch_name32((sno)) : dispatch_name64((sno))
-#define dispatch_mode(personality) \
-    ((personality) == 0) ? "32 bit" : "64 bit"
-#define dispatch_chdir(personality, sno) \
-    ((personality) == 0) ? dispatch_chdir32((sno)) : dispatch_chdir64((sno))
-#define dispatch_dup(personality, sno) \
-    ((personality) == 0) ? dispatch_dup32((sno)) : dispatch_dup64((sno))
-#define dispatch_fcntl(personality, sno) \
-    ((personality) == 0) ? dispatch_fcntl32((sno)) : dispatch_fcntl64((sno))
-#define dispatch_maygetsockname(personality, sno, decode) \
-    ((personality) == 0)                                  \
-        ? dispatch_maygetsockname32((sno), (decode))      \
+#define dispatch_lookup(sno, bitness) \
+    ((bitness) == PINK_BITNESS_32) ? dispatch_lookup32((sno)) : dispatch_lookup64((sno))
+#define dispatch_chdir(sno, bitness) \
+    ((bitness) == PINK_BITNESS_32) ? dispatch_chdir32((sno)) : dispatch_chdir64((sno))
+#define dispatch_dup(sno, bitness) \
+    ((bitness) == PINK_BITNESS_32) ? dispatch_dup32((sno)) : dispatch_dup64((sno))
+#define dispatch_fcntl(sno, bitness) \
+    ((bitness) == PINK_BITNESS_32) ? dispatch_fcntl32((sno)) : dispatch_fcntl64((sno))
+#define dispatch_maygetsockname(sno, bitness, decode) \
+    ((bitness) == PINK_BITNESS_32)                    \
+        ? dispatch_maygetsockname32((sno), (decode))  \
         : dispatch_maygetsockname64((sno), (decode))
 
 #else
-#error unsupported architecture
+#error unsupported bitness count
 #endif
 
 #endif // SYDBOX_GUARD_DISPATCH_H
