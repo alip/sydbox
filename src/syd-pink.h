@@ -27,7 +27,6 @@
 #include "syd-net.h"
 
 bool pinkw_trace_setup_all(pid_t pid);
-bool pinkw_trace_resume(pid_t pid);
 bool pinkw_encode_stat(pid_t pid, pink_bitness_t bitness);
 struct sydbox_addr *pinkw_get_socket_addr(pid_t pid, pink_bitness_t bitness, unsigned ind, long *fd);
 char *pinkw_stringify_argv(pid_t pid, pink_bitness_t bitness, unsigned ind);

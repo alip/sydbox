@@ -38,12 +38,6 @@ bool pinkw_trace_setup_all(pid_t pid)
                 | PINK_TRACE_OPTION_EXEC);
 }
 
-inline
-bool pinkw_trace_resume(pid_t pid)
-{
-    return pink_trace_cont(pid, 0, (char *)1);
-}
-
 bool pinkw_encode_stat(pid_t pid, pink_bitness_t bitness)
 {
     struct stat buf;

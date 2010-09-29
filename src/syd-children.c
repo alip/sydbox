@@ -126,7 +126,7 @@ void tchild_kill_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_
 
 void tchild_resume_one(gpointer pid_ptr, G_GNUC_UNUSED gpointer child_ptr, G_GNUC_UNUSED void *userdata)
 {
-    pinkw_trace_resume(GPOINTER_TO_INT(pid_ptr));
+    pink_trace_resume(GPOINTER_TO_INT(pid_ptr), 0);
 }
 
 void tchild_delete(GHashTable *children, pid_t pid)
