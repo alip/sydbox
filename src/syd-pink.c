@@ -56,18 +56,6 @@ bool pinkw_encode_stat(pid_t pid, pink_bitness_t bitness)
     return pink_encode_simple(pid, bitness, 1, &buf, sizeof(struct stat));
 }
 
-/* TODO: Move this function to pinktrace */
-bool pinkw_get_socket_fd(pid_t pid, pink_bitness_t bitness, long *fd)
-{
-    long arg;
-
-    g_assert(fd != NULL);
-
-    if (pink_has_socketcall(bitness))
-        return pink_util_get_arg(pid, bitness, 1, &arg) && pink_util_move(pid, arg, fd);
-    return pink_util_get_arg(pid, bitness, 0, fd);
-}
-
 struct sydbox_addr *pinkw_get_socket_addr(pid_t pid, pink_bitness_t bitness, unsigned ind, long *fd)
 {
     pink_socket_address_t addr;

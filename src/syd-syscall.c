@@ -1229,7 +1229,7 @@ static int syscall_handle_bind(struct tchild *child, int flags)
             /* Special case for binding to port zero.
              * We'll check the getsockname() call after this to get the port.
              */
-            if (!pinkw_get_socket_fd(child->pid, child->bitness, &fd)) {
+            if (!pink_decode_socket_fd(child->pid, child->bitness, 0, &fd)) {
                 if (G_UNLIKELY(ESRCH != errno)) {
                     /* Error getting return code using ptrace()
                      * child is still alive, hence the error is fatal.
