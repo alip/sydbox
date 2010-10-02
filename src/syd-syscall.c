@@ -53,7 +53,6 @@
 #include "syd-utils.h"
 #include "syd-wrappers.h"
 
-#define BAD_SYSCALL                 0xbadca11
 #if PINKTRACE_HAVE_IPV6
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET || (f) == AF_INET6)
 #else
@@ -1057,7 +1056,7 @@ static void syscall_check_finalize(G_GNUC_UNUSED context_t *ctx, struct tchild *
     address_free(data->addr);
 }
 
-/* BAD_SYSCALL handler for system calls.
+/* Denied system call handler for system calls.
  * This function restores real call number for the denied system call and sets
  * return code.
  * Returns nonzero if child is dead, zero otherwise.
@@ -1543,7 +1542,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                 case RS_DENY:
                     g_debug("denying access to system call %lu(%s)", sno, sname);
                     child->flags |= TCHILD_DENYSYSCALL;
-                    if (!pink_util_set_syscall(child->pid, child->bitness, BAD_SYSCALL)) {
+                    if (!pink_util_set_syscall(child->pid, child->bitness, PINKTRACE_INVALID_SYSCALL)) {
                         if (G_UNLIKELY(ESRCH != errno)) {
                             g_critical("failed to set system call: %s", g_strerror(errno));
                             g_printerr("failed to set system call: %s\n", g_strerror(errno));
