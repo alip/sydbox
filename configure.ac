@@ -402,21 +402,34 @@ AC_MSG_RESULT([$pinktrace_bitness_count_supported])
 AM_CONDITIONAL(BITNESS_TWO, test x"$pinktrace_bitness_count_supported" = x"2")
 dnl }}}
 
-dnl {{{ Check for pinktrace's IPV6 support
-AC_MSG_CHECKING([whether pinktrace was compiled with IPV6 support])
-old_CPPFLAGS="${CPPFLAGS}"
-CPPFLAGS="${CPPFLAGS} ${pkg_cv_pinktrace_CFLAGS}"
-AC_PREPROC_IFELSE([
-#include <pinktrace/pink.h>
-#if PINKTRACE_HAVE_IPV6 == 0
-#error nope
-#endif
-],
-	[pinktrace_have_ipv6=yes],
-	[pinktrace_have_ipv6=no])
-CPPFLAGS="${old_CPPFLAGS}"
-AC_MSG_RESULT([$pinktrace_have_ipv6])
-AM_CONDITIONAL(WANT_IPV6, test x"$pinktrace_have_ipv6" = x"yes")
+dnl {{{ Check for IPV6 support
+AC_ARG_ENABLE([ipv6],
+			  [AS_HELP_STRING([--disable-ipv6],
+							  [disable IPV6 support])],
+			  WANT_IPV6="$enableval",
+			  WANT_IPV6="yes")
+if test x"$WANT_IPV6" = x"yes" ; then
+	AC_MSG_CHECKING([whether pinktrace was compiled with IPV6 support])
+	old_CPPFLAGS="${CPPFLAGS}"
+	CPPFLAGS="${CPPFLAGS} ${pkg_cv_pinktrace_CFLAGS}"
+	AC_PREPROC_IFELSE([
+	#include <pinktrace/pink.h>
+	#if PINKTRACE_HAVE_IPV6 == 0
+	#error nope
+	#endif
+	],
+		[pinktrace_have_ipv6=yes],
+		[pinktrace_have_ipv6=no])
+	CPPFLAGS="${old_CPPFLAGS}"
+	AC_MSG_RESULT([$pinktrace_have_ipv6])
+	if test x"$pinktrace_have_ipv6" = x"no" ; then
+		AC_MSG_ERROR([--enable-ipv6 requires pinktrace IPV6 support])
+	fi
+	AC_DEFINE([SYDBOX_HAVE_IPV6], 1, [Define for IPV6 support])
+else
+	AC_DEFINE([SYDBOX_HAVE_IPV6], 0, [Define for IPV6 support])
+fi
+AM_CONDITIONAL(WANT_IPV6, test x"$WANT_IPV6" = x"yes")
 dnl }}}
 
 dnl {{{ Check for Perl
@@ -427,7 +440,7 @@ dnl {{{ Use AM_SILENT_RULES if available
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 dnl }}}
 
-dnl {{{ output
+dnl {{{ Output
 AM_CONFIG_HEADER(config.h)
 AC_OUTPUT(
 	Makefile

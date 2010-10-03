@@ -77,14 +77,14 @@ struct sydbox_addr *pinkw_get_socket_addr(pid_t pid, pink_bitness_t bitness, uns
             saddr->u.sa.netmask = 32;
             memcpy(&saddr->u.sa.sin_addr, &addr.u.sa_in.sin_addr, sizeof(struct in_addr));
             break;
-#if PINKTRACE_HAVE_IPV6
+#if SYDBOX_HAVE_IPV6
         case AF_INET6:
             saddr->u.sa6.port[0] = ntohs(addr.u.sa6.sin6_port);
             saddr->u.sa6.port[1] = saddr->u.sa6.port[0];
             saddr->u.sa6.netmask = 64;
             memcpy(&saddr->u.sa6.sin6_addr, &addr.u.sa6.sin6_addr, sizeof(struct in6_addr));
             break;
-#endif /* PINKTRACE_HAVE_IPV6 */
+#endif /* SYDBOX_HAVE_IPV6 */
         default:
             /* nothing */
             ;

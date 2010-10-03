@@ -53,11 +53,11 @@
 #include "syd-utils.h"
 #include "syd-wrappers.h"
 
-#if PINKTRACE_HAVE_IPV6
+#if SYDBOX_HAVE_IPV6
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET || (f) == AF_INET6)
 #else
 #define IS_SUPPORTED_FAMILY(f)      ((f) == AF_UNIX || (f) == AF_INET)
-#endif /* PINKTRACE_HAVE_IPV6 */
+#endif /* SYDBOX_HAVE_IPV6 */
 #define IS_NET_CALL(fl)             ((fl) & (BIND_CALL | CONNECT_CALL | SENDTO_CALL | DECODE_SOCKETCALL))
 
 #define MODE_STRING(fl) ((fl) & (OPEN_MODE | OPEN_MODE_AT) ? "O_WRONLY/O_RDWR" : "...")
@@ -930,13 +930,13 @@ static void syscall_handle_net(struct tchild *child, struct checkdata *data)
                             data->addr->u.sa.port[1] <= addr->u.sa.port[1])
                         violation = false;
                     break;
-#if PINKTRACE_HAVE_IPV6
+#if SYDBOX_HAVE_IPV6
                 case AF_INET6:
                     if (data->addr->u.sa6.port[0] >= addr->u.sa6.port[0] &&
                             data->addr->u.sa6.port[1] <= addr->u.sa6.port[1])
                         violation = false;
                     break;
-#endif /* PINKTRACE_HAVE_IPV6 */
+#endif /* SYDBOX_HAVE_IPV6 */
                 default:
                     g_assert_not_reached();
             }
@@ -958,13 +958,13 @@ static void syscall_handle_net(struct tchild *child, struct checkdata *data)
                 sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET addr=%s port=%d}",
                         sname, ip, data->addr->u.sa.port[0]);
                 break;
-#if PINKTRACE_HAVE_IPV6
+#if SYDBOX_HAVE_IPV6
             case AF_INET6:
                 inet_ntop(AF_INET6, &data->addr->u.sa6.sin6_addr, ip, sizeof(ip));
                 sydbox_access_violation_net(child, data->addr, "%s{family=AF_INET6 addr=%s port=%d}",
                         sname, ip, data->addr->u.sa6.port[0]);
                 break;
-#endif /* PINKTRACE_HAVE_IPV6 */
+#endif /* SYDBOX_HAVE_IPV6 */
             default:
                 g_assert_not_reached();
         }
@@ -1215,11 +1215,11 @@ static int syscall_handle_bind(struct tchild *child, int flags)
             case AF_INET:
                 port = child->bindlast->u.sa.port[0];
                 break;
-#if PINKTRACE_HAVE_IPV6
+#if SYDBOX_HAVE_IPV6
             case AF_INET6:
                 port = child->bindlast->u.sa6.port[0];
                 break;
-#endif /* PINKTRACE_HAVE_IPV6 */
+#endif /* SYDBOX_HAVE_IPV6 */
             default:
                 g_assert_not_reached();
         }
@@ -1321,14 +1321,14 @@ static int syscall_handle_getsockname(struct tchild *child, bool decode)
             g_debug("whitelisting last bind address with revealed bind port %d for connect",
                     addr->u.sa.port[0]);
             break;
-#if PINKTRACE_HAVE_IPV6
+#if SYDBOX_HAVE_IPV6
         case AF_INET6:
             addr->u.sa6.port[0] = addr_new->u.sa6.port[0];
             addr->u.sa6.port[1] = addr_new->u.sa6.port[1];
             g_debug("whitelisting last bind address with revealed bind port %d for connect",
                     addr->u.sa6.port[0]);
             break;
-#endif /* PINKTRACE_HAVE_IPV6 */
+#endif /* SYDBOX_HAVE_IPV6 */
         default:
             g_assert_not_reached();
     }
