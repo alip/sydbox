@@ -3,6 +3,11 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.7.1
+* Require pinktrace-0.0.3
+* Use pink\_decode\_string\_array\_member() from *pinktrace*
+* Remove the EFAULT hack for NULL path arguments, now that *pinktrace* is fixed
+
 ### 0.7.0
 * Use *pinktrace* library instead of low-level ptrace() functions.
 * Support a supplementary configuration file via **SYDBOX_USER_CONFIG**
