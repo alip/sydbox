@@ -92,18 +92,14 @@ struct sydbox_addr *pinkw_get_socket_addr(pid_t pid, pink_bitness_t bitness, uns
     return saddr;
 }
 
-/* TODO: Consider moving this to pinktrace as well. */
 char *pinkw_stringify_argv(pid_t pid, pink_bitness_t bitness, unsigned ind)
 {
+    bool nil;
+    unsigned i;
     int save_errno;
-    char *s;
-    const char *sep;
     long addr;
-    union {
-        unsigned int p32;
-        unsigned long p64;
-        char data[sizeof(long)];
-    } cp;
+    char buf[256];
+    const char *sep;
     GString *res;
 
     if (!pink_util_get_arg(pid, bitness, ind, &addr)) {
@@ -114,33 +110,22 @@ char *pinkw_stringify_argv(pid_t pid, pink_bitness_t bitness, unsigned ind)
     }
 
     res = g_string_new("");
-    cp.p64 = 1;
-    for (sep = "";;sep = ", ") {
-        if (!pink_util_moven(pid, addr, cp.data, (bitness == PINK_BITNESS_32) ? 4 : 8)) {
-            g_string_append_printf(res, "%#lx", addr);
+    for (i = 0, nil = false, sep = "";;sep=", ") {
+        if (!pink_decode_string_array_member(pid, bitness, addr, ++i, buf, 256, &nil)) {
+            g_string_append(res, "...");
             return g_string_free(res, FALSE);
         }
-        if (bitness == PINK_BITNESS_32)
-            cp.p64 = cp.p32;
-        if (cp.p64 == 0)
-            break;
-
         g_string_append(res, sep);
-        s = (char *)g_malloc(sizeof(char) * 256);
-        s[255] = '\0';
-        if (pink_util_moven(pid, cp.p64, s, 256)) {
-            g_string_append_printf(res, "%#lx", cp.p64);
-            g_free(s);
+        g_string_append_c(res, '"');
+        g_string_append(res, buf);
+        g_string_append_c(res, '"');
+
+        if (nil)
+            break;
+        else if (i > 64) {
+            g_string_append_printf(res, "%s...", sep);
             break;
         }
-        g_string_append_c(res, '"');
-        g_string_append(res, s);
-        g_string_append_c(res, '"');
-        g_free(s);
-
-        addr += (bitness == PINK_BITNESS_32) ? 4 : 8;
     }
-    if (cp.p64)
-        g_string_append_printf(res, "%s...", sep);
     return g_string_free(res, FALSE);
 }
