@@ -98,14 +98,21 @@ static const char *sname;
  */
 static bool syscall_get_path(pid_t pid, pink_bitness_t bitness, int narg, struct checkdata *data)
 {
+    errno = 0;
     data->pathlist[narg] = pink_decode_string_persistent(pid, bitness, narg);
     if (G_UNLIKELY(NULL == data->pathlist[narg])) {
         data->result = RS_ERROR;
-        data->save_errno = errno;
-        if (ESRCH == errno || EIO == errno || EFAULT == errno)
-            g_debug("failed to grab string from argument %d: %s", narg, g_strerror(errno));
-        else
-            g_warning("failed to grab string from argument %d: %s", narg, g_strerror(errno));
+        if (errno) {
+            data->save_errno = errno;
+            if (ESRCH == errno)
+                g_debug("failed to grab string from argument %d: %s", narg, g_strerror(errno));
+            else
+                g_warning("failed to grab string from argument %d: %s", narg, g_strerror(errno));
+        }
+        else {
+            data->save_errno = EFAULT;
+            g_debug("path argument %d is NULL", narg);
+        }
         return false;
     }
     g_debug("path argument %d is `%s'", narg, data->pathlist[narg]);
