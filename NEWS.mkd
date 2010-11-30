@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.7.2
 * Restrict variables loaded from configuration file supplied via **SYDBOX_USER_CONFIG**
 
 ### 0.7.1
