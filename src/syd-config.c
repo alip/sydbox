@@ -825,6 +825,9 @@ int sydbox_config_rmfilter_net(const struct sydbox_addr *filter)
 
 void sydbox_config_rmfilter_all(void)
 {
+    if (!config)
+        return;
+
     g_slist_foreach(config->filters, (GFunc)g_free, NULL);
     g_slist_free(config->filters);
     config->filters = NULL;
@@ -838,6 +841,9 @@ void sydbox_config_rmfilter_all(void)
 
 void sydbox_config_rmwhitelist_all(void)
 {
+    if (!config)
+        return;
+
     g_slist_foreach(config->network_whitelist_bind, (GFunc)g_free, NULL);
     g_slist_foreach(config->network_whitelist_connect, (GFunc)g_free, NULL);
     g_slist_free(config->network_whitelist_bind);
