@@ -86,30 +86,24 @@ static void sydbox_config_set_defaults(void)
     config->network_whitelist_connect = NULL;
 }
 
-static bool sydbox_config_load_local(const gchar * const config_file) {
+static GKeyFile *sydbox_config_open(const gchar * const config_file, GError **config_error)
+{
     GKeyFile *config_fd;
-    GError *config_error = NULL;
 
     // Initialize key file
     config_fd = g_key_file_new();
-    if (!g_key_file_load_from_file(config_fd, config_file, G_KEY_FILE_NONE, &config_error)) {
-        switch (config_error->code) {
-            case G_FILE_ERROR_NOENT:
-                /* Configuration file not found!
-                 * Set the defaults and return true.
-                 */
-                g_error_free(config_error);
-                g_key_file_free(config_fd);
-                sydbox_config_set_defaults();
-                return true;
-            default:
-                g_printerr("failed to parse config file: %s\n", config_error->message);
-                g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
-                return false;
-        }
+    if (!g_key_file_load_from_file(config_fd, config_file, G_KEY_FILE_NONE, config_error)) {
+        g_key_file_free(config_fd);
+        return NULL;
     }
+    return config_fd;
+}
+
+static bool sydbox_config_load_settings(GKeyFile *config_fd)
+{
+    GError *config_error = NULL;
+
+    g_assert(config_fd != NULL);
 
     // Get main.colour
     config->colourise_output = g_key_file_get_boolean(config_fd, "main", "colour", &config_error);
@@ -118,8 +112,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
                 g_printerr("main.colour not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
             case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
@@ -140,8 +132,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
                 g_printerr("main.lock not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
             case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
@@ -162,8 +152,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
                 g_printerr("main.wait_all not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
             case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
@@ -184,8 +172,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
                 g_printerr("main.allow_proc_pid not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
             case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
@@ -205,8 +191,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
             case G_KEY_FILE_ERROR_INVALID_VALUE:
                 g_printerr("main.wrap_lstat not a boolean: %s\n", config_error->message);
                 g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
                 return false;
             case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
             case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
@@ -219,6 +203,117 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
                 break;
         }
     }
+
+    // Get log.file
+    config->logfile = g_key_file_get_string(config_fd, "log", "file", NULL);
+
+    // Get log.level
+    config->verbosity = g_key_file_get_integer(config_fd, "log", "level", &config_error);
+    if (config_error) {
+        switch (config_error->code) {
+            case G_KEY_FILE_ERROR_INVALID_VALUE:
+                g_printerr("log.level not an integer: %s\n", config_error->message);
+                g_error_free(config_error);
+                return false;
+            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
+            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
+                g_error_free(config_error);
+                config_error = NULL;
+                config->verbosity = 1;
+                break;
+            default:
+                g_assert_not_reached();
+                break;
+        }
+    }
+
+    // Get sandbox.path
+    config->sandbox_path = g_key_file_get_boolean(config_fd, "sandbox", "path", &config_error);
+    if (config_error) {
+        switch (config_error->code) {
+            case G_KEY_FILE_ERROR_INVALID_VALUE:
+                g_printerr("sandbox.path not a boolean: %s\n", config_error->message);
+                g_error_free(config_error);
+                return false;
+            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
+            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
+                g_error_free(config_error);
+                config_error = NULL;
+                config->sandbox_path = true;
+                break;
+            default:
+                g_assert_not_reached();
+                break;
+        }
+    }
+
+    // Get sandbox.exec
+    config->sandbox_exec = g_key_file_get_boolean(config_fd, "sandbox", "exec", &config_error);
+    if (config_error) {
+        switch (config_error->code) {
+            case G_KEY_FILE_ERROR_INVALID_VALUE:
+                g_printerr("sandbox.exec not a boolean: %s\n", config_error->message);
+                g_error_free(config_error);
+                return false;
+            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
+            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
+                g_error_free(config_error);
+                config_error = NULL;
+                config->sandbox_exec = false;
+                break;
+            default:
+                g_assert_not_reached();
+                break;
+        }
+    }
+
+    // Get sandbox.network
+    config->sandbox_network = g_key_file_get_boolean(config_fd, "sandbox", "network", &config_error);
+    if (config_error) {
+        switch (config_error->code) {
+            case G_KEY_FILE_ERROR_INVALID_VALUE:
+                g_printerr("sandbox.network not a boolean: %s\n", config_error->message);
+                g_error_free(config_error);
+                return false;
+            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
+            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
+                g_error_free(config_error);
+                config_error = NULL;
+                config->sandbox_network = false;
+                break;
+            default:
+                g_assert_not_reached();
+                break;
+        }
+    }
+
+    // Get net.auto_whitelist_bind
+    config->network_auto_whitelist_bind = g_key_file_get_boolean(config_fd,
+            "net", "auto_whitelist_bind", &config_error);
+    if (config_error) {
+        switch (config_error->code) {
+            case G_KEY_FILE_ERROR_INVALID_VALUE:
+                g_printerr("net.auto_whitelist_bind not a boolean: %s\n", config_error->message);
+                g_error_free(config_error);
+                return false;
+            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
+            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
+                g_error_free(config_error);
+                config_error = NULL;
+                config->network_auto_whitelist_bind = false;
+                break;
+            default:
+                g_assert_not_reached();
+                break;
+        }
+    }
+
+    return true;
+}
+
+static bool sydbox_config_load_lists(GKeyFile *config_fd)
+{
+    g_assert(config_fd != NULL);
 
     // Get filter.path
     char **filterlist;
@@ -250,8 +345,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
                             expaddr[j], i);
                     g_strfreev(expaddr);
                     g_strfreev(filterlist);
-                    g_key_file_free(config_fd);
-                    g_free(config);
                     return false;
                 }
                 sydbox_config_addfilter_net(addr);
@@ -260,97 +353,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
             g_strfreev(expaddr);
         }
         g_strfreev(filterlist);
-    }
-
-    // Get log.file
-    config->logfile = g_key_file_get_string(config_fd, "log", "file", NULL);
-
-    // Get log.level
-    config->verbosity = g_key_file_get_integer(config_fd, "log", "level", &config_error);
-    if (config_error) {
-        switch (config_error->code) {
-            case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("log.level not an integer: %s\n", config_error->message);
-                g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
-                return false;
-            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
-            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
-                g_error_free(config_error);
-                config_error = NULL;
-                config->verbosity = 1;
-                break;
-            default:
-                g_assert_not_reached();
-                break;
-        }
-    }
-
-    // Get sandbox.path
-    config->sandbox_path = g_key_file_get_boolean(config_fd, "sandbox", "path", &config_error);
-    if (config_error) {
-        switch (config_error->code) {
-            case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("sandbox.path not a boolean: %s\n", config_error->message);
-                g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
-                return false;
-            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
-            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
-                g_error_free(config_error);
-                config_error = NULL;
-                config->sandbox_path = true;
-                break;
-            default:
-                g_assert_not_reached();
-                break;
-        }
-    }
-
-    // Get sandbox.exec
-    config->sandbox_exec = g_key_file_get_boolean(config_fd, "sandbox", "exec", &config_error);
-    if (config_error) {
-        switch (config_error->code) {
-            case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("sandbox.exec not a boolean: %s\n", config_error->message);
-                g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
-                return false;
-            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
-            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
-                g_error_free(config_error);
-                config_error = NULL;
-                config->sandbox_exec = false;
-                break;
-            default:
-                g_assert_not_reached();
-                break;
-        }
-    }
-
-    // Get sandbox.network
-    config->sandbox_network = g_key_file_get_boolean(config_fd, "sandbox", "network", &config_error);
-    if (config_error) {
-        switch (config_error->code) {
-            case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("sandbox.network not a boolean: %s\n", config_error->message);
-                g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
-                return false;
-            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
-            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
-                g_error_free(config_error);
-                config_error = NULL;
-                config->sandbox_network = false;
-                break;
-            default:
-                g_assert_not_reached();
-                break;
-        }
     }
 
     // Get prefix.write
@@ -369,29 +371,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
         g_strfreev(exec_prefixes);
     }
 
-    // Get net.auto_whitelist_bind
-    config->network_auto_whitelist_bind = g_key_file_get_boolean(config_fd,
-            "net", "auto_whitelist_bind", &config_error);
-    if (config_error) {
-        switch (config_error->code) {
-            case G_KEY_FILE_ERROR_INVALID_VALUE:
-                g_printerr("net.auto_whitelist_bind not a boolean: %s\n", config_error->message);
-                g_error_free(config_error);
-                g_key_file_free(config_fd);
-                g_free(config);
-                return false;
-            case G_KEY_FILE_ERROR_GROUP_NOT_FOUND:
-            case G_KEY_FILE_ERROR_KEY_NOT_FOUND:
-                g_error_free(config_error);
-                config_error = NULL;
-                config->network_auto_whitelist_bind = false;
-                break;
-            default:
-                g_assert_not_reached();
-                break;
-        }
-    }
-
     // Get net.whitelist_bind
     char **netwhitelist_bind = g_key_file_get_string_list(config_fd, "net", "whitelist_bind", NULL, NULL);
     if (NULL != netwhitelist_bind) {
@@ -405,8 +384,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
                             expaddr[j], i);
                     g_strfreev(expaddr);
                     g_strfreev(netwhitelist_bind);
-                    g_key_file_free(config_fd);
-                    g_free(config);
                     return false;
                 }
                 config->network_whitelist_bind = g_slist_prepend(config->network_whitelist_bind, addr);
@@ -416,7 +393,7 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
         g_strfreev(netwhitelist_bind);
     }
 
-    // Get net.whitelist_bind
+    // Get net.whitelist_connect
     char **netwhitelist_connect = g_key_file_get_string_list(config_fd, "net", "whitelist_connect", NULL, NULL);
     if (NULL != netwhitelist_connect) {
         for (unsigned int i = 0; NULL != netwhitelist_connect[i]; i++) {
@@ -429,8 +406,6 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
                             expaddr[j], i);
                     g_strfreev(expaddr);
                     g_strfreev(netwhitelist_connect);
-                    g_key_file_free(config_fd);
-                    g_free(config);
                     return false;
                 }
                 config->network_whitelist_connect = g_slist_prepend(config->network_whitelist_connect, addr);
@@ -440,15 +415,14 @@ static bool sydbox_config_load_local(const gchar * const config_file) {
         g_strfreev(netwhitelist_connect);
     }
 
-    // Cleanup and return
-    g_key_file_free(config_fd);
     return true;
 }
 
 bool sydbox_config_load(const gchar * const file, const gchar * const profile)
 {
-    gchar *config_file;
-    bool return_value;
+    char *config_file;
+    GKeyFile *config_fd;
+    GError *config_error = NULL;
 
     g_return_val_if_fail(!config, true);
 
@@ -473,12 +447,57 @@ bool sydbox_config_load(const gchar * const file, const gchar * const profile)
     else
         config_file = g_strdup(SYSCONFDIR G_DIR_SEPARATOR_S "sydbox.conf");
 
-    return_value = sydbox_config_load_local(config_file);
-    if (return_value && g_getenv(ENV_USER_CONFIG))
-        return_value = sydbox_config_load_local(g_getenv(ENV_USER_CONFIG));
+    if ((config_fd = sydbox_config_open(config_file, &config_error)) == NULL) {
+        switch (config_error->code) {
+            case G_FILE_ERROR_NOENT:
+                /* Configuration file not found!
+                 * Set the defaults.
+                 */
+                sydbox_config_set_defaults();
+                break;
+            default:
+                g_printerr("failed to parse config file: %s\n", config_error->message);
+                g_error_free(config_error);
+                g_free(config_file);
+                g_free(config);
+                config = NULL;
+                return false;
+        }
+    }
+    else {
+        if (!sydbox_config_load_settings(config_fd) || !sydbox_config_load_lists(config_fd)) {
+            g_key_file_free(config_fd);
+            g_free(config_file);
+            g_free(config);
+            config = NULL;
+            return false;
+        }
+        g_free(config_file);
+        g_key_file_free(config_fd);
+    }
 
-    g_free(config_file);
-    return return_value;
+    // Handle SYDBOX_USER_CONFIG
+    if (g_getenv(ENV_USER_CONFIG)) {
+        config_error = NULL;
+        if ((config_fd = sydbox_config_open(g_getenv(ENV_USER_CONFIG), &config_error)) == NULL) {
+            g_printerr("failed to parse config file: %s\n", config_error->message);
+            g_error_free(config_error);
+            g_free(config);
+            config = NULL;
+            return false;
+        }
+
+        // We only load lists from the additional configuration file
+        if (!sydbox_config_load_lists(config_fd)) {
+            g_key_file_free(config_fd);
+            g_free(config);
+            config = NULL;
+            return false;
+        }
+        g_key_file_free(config_fd);
+    }
+
+    return true;
 }
 
 void sydbox_config_update_from_environment(void)

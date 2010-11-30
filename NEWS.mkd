@@ -3,6 +3,8 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Restrict variables loaded from configuration file supplied via **SYDBOX_USER_CONFIG**
+
 ### 0.7.1
 * Require pinktrace-0.0.3
 * Use pink\_decode\_string\_array\_member() from *pinktrace*

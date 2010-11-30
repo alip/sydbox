@@ -5,7 +5,7 @@
 SYDBOX(1)
 =========
 :man source: sydbox
-:man version: 0.6.7
+:man version: 0.7.2
 :man manual: Sydbox Manual
 
 NAME
@@ -193,8 +193,9 @@ This is equivalent to the *-W* option.
 
 SYDBOX_USER_CONFIG
 ~~~~~~~~~~~~~~~~~~
-If this variable is set, sydbox will use the config file supplied as a
-suppliment to any other config files sydbox would already use.
+If this variable is set, sydbox will use the config file supplied as a suppliment to any other config files sydbox would
+already use. The exception is that sydbox will only *update* various lists using this configuration file. Other
+variables may not be altered this way.
 
 MAGIC COMMANDS
 --------------
