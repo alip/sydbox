@@ -230,6 +230,7 @@ int trace_loop(context_t *ctx)
                     return exit_code;
                 break;
             case PINK_EVENT_GENUINE:
+            case PINK_EVENT_TRAP:
                 if (0 != event_genuine(ctx, child, status))
                     return exit_code;
                 break;
