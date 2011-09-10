@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Handle `wait()` interrupts
 * Handle `PINK_EVENT_TRAP` event as a genuine signal
 
 ### 0.7.3

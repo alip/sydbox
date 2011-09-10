@@ -162,7 +162,9 @@ int trace_loop(context_t *ctx)
     while (g_hash_table_size(ctx->children) > 0) {
         pid = waitpid(-1, &status, __WALL);
         if (G_UNLIKELY(0 > pid)) {
-            if (ECHILD == errno)
+            if (EINTR == errno)
+                continue;
+            else if (ECHILD == errno)
                 break;
             else {
                 g_critical("waitpid failed: %s", g_strerror(errno));
