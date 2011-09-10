@@ -46,7 +46,7 @@ static int event_setup(context_t *ctx, struct tchild *child)
     if (!pinkw_trace_setup_all(child->pid)) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to set tracing options: %s", g_strerror(errno));
-            g_printerr("failed to set tracing options: %s\n", g_strerror (errno));
+            g_printerr("failed to set tracing options: %s\n", g_strerror(errno));
             exit(-1);
         }
         return context_remove_child(ctx, child->pid);
@@ -60,8 +60,8 @@ static int event_syscall(context_t *ctx, struct tchild *child)
 {
     if (!pink_trace_syscall(child->pid, 0)) {
         if (G_UNLIKELY(ESRCH != errno)) {
-            g_critical("failed to resume child %i: %s", child->pid, g_strerror (errno));
-            g_printerr("failed to resume child %i: %s\n", child->pid, g_strerror (errno));
+            g_critical("failed to resume child %i: %s", child->pid, g_strerror(errno));
+            g_printerr("failed to resume child %i: %s\n", child->pid, g_strerror(errno));
             exit(-1);
         }
         return context_remove_child(ctx, child->pid);
@@ -78,7 +78,7 @@ static int event_fork(context_t *ctx, struct tchild *child)
     if (G_UNLIKELY(!pink_trace_geteventmsg(child->pid, &childpid))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to get the pid of the newborn child: %s", g_strerror(errno));
-            g_printerr("failed to get the pid of the newborn child: %s\n", g_strerror (errno));
+            g_printerr("failed to get the pid of the newborn child: %s\n", g_strerror(errno));
             exit(-1);
         }
         return context_remove_child(ctx, child->pid);
