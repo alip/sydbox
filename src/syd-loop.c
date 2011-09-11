@@ -105,6 +105,59 @@ static int event_fork(context_t *ctx, struct tchild *child)
     return 0;
 }
 
+static int event_exit(context_t *ctx, struct tchild *child, int *code_ptr)
+{
+    bool eldest = ctx->eldest == child->pid;
+    int code;
+    unsigned long status;
+
+    // Get the exit status
+    if (G_UNLIKELY(!pink_trace_geteventmsg(child->pid, &status))) {
+        if (G_UNLIKELY(ESRCH != errno)) {
+            g_critical("failed to get the exit status of the dying child: %s", g_strerror(errno));
+            g_printerr("failed to get the exit status of the dying child: %s\n", g_strerror(errno));
+            exit(-1);
+        }
+    }
+
+    if (WIFEXITED(status)) {
+        code = WEXITSTATUS(status);
+        g_info("%schild %i is exiting with status:%#lx", eldest ? "eldest " : "",
+                child->pid, status);
+    }
+    else if (WIFSIGNALED(status)) {
+        code = 128 + WTERMSIG(status);
+        g_info("%schild %i is terminating with status:%#lx", eldest ? "eldest " : "",
+                child->pid, status);
+    }
+    else
+        g_assert_not_reached();
+
+    if (eldest) {
+        // Eldest child, keep the return value.
+        if (code_ptr)
+            *code_ptr = code;
+
+        if (!sydbox_config_get_wait_all()) {
+            g_hash_table_foreach(ctx->children, tchild_resume_one, NULL);
+            g_hash_table_destroy(ctx->children);
+            ctx->children = NULL;
+            return -1;
+        }
+    }
+
+    if (G_UNLIKELY(!pink_trace_resume(child->pid, 0))) {
+        if (G_UNLIKELY(ESRCH != errno)) {
+            g_critical("failed to resume the dying child: %s", g_strerror(errno));
+            g_printerr("failed to resume the dying child: %s\n", g_strerror(errno));
+            exit(-1);
+        }
+    }
+
+    tchild_delete(ctx->children, child->pid);
+    return 0;
+}
+
 static int event_genuine(context_t * ctx, struct tchild *child, int status)
 {
     int sig = WSTOPSIG(status);
@@ -231,60 +284,25 @@ int trace_loop(context_t *ctx)
                 if (0 != event_syscall(ctx, child))
                     return exit_code;
                 break;
+            case PINK_EVENT_EXIT:
+                if (0 != event_exit(ctx, child, &exit_code))
+                    return exit_code;
+                break;
             case PINK_EVENT_GENUINE:
             case PINK_EVENT_TRAP:
                 if (0 != event_genuine(ctx, child, status))
                     return exit_code;
                 break;
-            case PINK_EVENT_EXIT_GENUINE:
-                if (G_UNLIKELY(ctx->eldest == pid)) {
-                    // Eldest child, keep return value.
-                    exit_code = WEXITSTATUS(status);
-                    if (EXIT_SUCCESS != exit_code)
-                        g_message("eldest child %i exited with return code %d", pid, exit_code);
-                    else
-                        g_info("eldest child %i exited with return code %d", pid, exit_code);
-                    if (!sydbox_config_get_wait_all()) {
-                        g_hash_table_foreach(ctx->children, tchild_resume_one, NULL);
-                        g_hash_table_destroy(ctx->children);
-                        ctx->children = NULL;
-                        return exit_code;
-                    }
-                }
-                else
-                    g_debug("child %i exited with return code %d", pid, WEXITSTATUS(status));
-                tchild_delete(ctx->children, pid);
-                break;
-            case PINK_EVENT_EXIT_SIGNAL:
-                if (G_UNLIKELY(ctx->eldest == pid)) {
-                    exit_code = 128 + WTERMSIG(status);
-#ifdef HAVE_STRSIGNAL
-                    g_message("eldest child %i exited with signal %d (%s)", pid,
-                            WTERMSIG(status), strsignal(WTERMSIG(status)));
-#else
-                    g_message("eldest child %i exited with signal %d", pid, WTERMSIG(status));
-#endif /* HAVE_STRSIGNAL */
-                    if (!sydbox_config_get_wait_all()) {
-                        g_hash_table_foreach(ctx->children, tchild_resume_one, NULL);
-                        g_hash_table_destroy(ctx->children);
-                        ctx->children = NULL;
-                        return exit_code;
-                    }
-                }
-                else {
-#ifdef HAVE_STRSIGNAL
-                    g_info("child %i exited with signal %d (%s)", pid,
-                            WTERMSIG(status), strsignal(WTERMSIG(status)));
-#else
-                    g_info("child %i exited with signal %d", pid, WTERMSIG(status));
-#endif /* HAVE_STRSIGNAL */
-                }
-
-                tchild_delete(ctx->children, pid);
-                break;
             case PINK_EVENT_UNKNOWN:
                 if (0 != event_unknown(ctx, child, status))
                     return exit_code;
+                break;
+            case PINK_EVENT_EXIT_GENUINE:
+            case PINK_EVENT_EXIT_SIGNAL:
+                if (NULL != child) {
+                    g_warning("dead child %i is still being traced!", child->pid);
+                    tchild_delete(ctx->children, child->pid);
+                }
                 break;
             default:
                 g_assert_not_reached();

@@ -35,7 +35,8 @@ bool pinkw_trace_setup_all(pid_t pid)
                 | PINK_TRACE_OPTION_FORK
                 | PINK_TRACE_OPTION_VFORK
                 | PINK_TRACE_OPTION_CLONE
-                | PINK_TRACE_OPTION_EXEC);
+                | PINK_TRACE_OPTION_EXEC
+                | PINK_TRACE_OPTION_EXIT);
 }
 
 bool pinkw_encode_stat(pid_t pid, pink_bitness_t bitness)
