@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010, 2011 Ali Polatel <alip@exherbo.org>
  * Based in part upon catbox which is:
  *  Copyright (c) 2006-2007 TUBITAK/UEKAE
  *
@@ -227,7 +227,6 @@ int trace_loop(context_t *ctx)
         }
         child = tchild_find(ctx->children, pid);
         event = pink_event_decide(status);
-        g_assert(NULL != child || PINK_EVENT_STOP == event || PINK_EVENT_EXIT_GENUINE == event || PINK_EVENT_EXIT_SIGNAL == event);
 
         switch(event) {
             case PINK_EVENT_STOP:
