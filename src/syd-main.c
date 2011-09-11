@@ -216,7 +216,7 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
 
     /* Make sure SIGCHLD has the default handler */
     new_action.sa_handler = SIG_DFL;
-    HANDLE_SIGNAL(SIGCHLD);
+    sigaction(SIGCHLD, &new_action, NULL);
 
 #undef HANDLE_SIGNAL
 
