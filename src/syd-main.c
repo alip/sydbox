@@ -204,15 +204,19 @@ static int sydbox_execute_parent(int argc, char **argv, pid_t pid)
 
 #define HANDLE_SIGNAL(sig)                          \
     do {                                            \
-        sigaction ((sig), NULL, &old_action);       \
+        sigaction((sig), NULL, &old_action);        \
         if (old_action.sa_handler != SIG_IGN)       \
-            sigaction ((sig), &new_action, NULL);   \
+            sigaction((sig), &new_action, NULL);    \
     } while (0)
 
     HANDLE_SIGNAL(SIGABRT);
     HANDLE_SIGNAL(SIGSEGV);
     HANDLE_SIGNAL(SIGINT);
     HANDLE_SIGNAL(SIGTERM);
+
+    /* Make sure SIGCHLD has the default handler */
+    new_action.sa_handler = SIG_DFL;
+    HANDLE_SIGNAL(SIGCHLD);
 
 #undef HANDLE_SIGNAL
 
