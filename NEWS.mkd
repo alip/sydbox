@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.7.4
 * Use the pre-exit notification mechanism of `ptrace()` for cleaner child cleanup
 * Make sure SIGCHLD has the default handler
 * Handle `wait()` interrupts
