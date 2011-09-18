@@ -3,6 +3,7 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+* Fix a bug in pre-exit callback which caused sydbox to segfault
 * Fix port checking in socket address comparison
 
 ### 0.7.4

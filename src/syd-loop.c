@@ -105,14 +105,16 @@ static int event_fork(context_t *ctx, struct tchild *child)
     return 0;
 }
 
-static int event_exit(context_t *ctx, struct tchild *child, int *code_ptr)
+static int event_exit(context_t *ctx, pid_t pid, int *code_ptr)
 {
-    bool eldest = ctx->eldest == child->pid;
     int code;
     unsigned long status;
 
+    if (pid != ctx->eldest)
+        goto resume;
+
     // Get the exit status
-    if (G_UNLIKELY(!pink_trace_geteventmsg(child->pid, &status))) {
+    if (G_UNLIKELY(!pink_trace_geteventmsg(pid, &status))) {
         if (G_UNLIKELY(ESRCH != errno)) {
             g_critical("failed to get the exit status of the dying child: %s", g_strerror(errno));
             g_printerr("failed to get the exit status of the dying child: %s\n", g_strerror(errno));
@@ -122,39 +124,35 @@ static int event_exit(context_t *ctx, struct tchild *child, int *code_ptr)
 
     if (WIFEXITED(status)) {
         code = WEXITSTATUS(status);
-        g_info("%schild %i is exiting with status:%#lx", eldest ? "eldest " : "",
-                child->pid, status);
+        g_info("Eldest child %i is exiting with status:%#lx", pid, status);
     }
     else if (WIFSIGNALED(status)) {
         code = 128 + WTERMSIG(status);
-        g_info("%schild %i is terminating with status:%#lx", eldest ? "eldest " : "",
-                child->pid, status);
+        g_info("Eldest child %i is terminating with status:%#lx", pid, status);
     }
     else
         g_assert_not_reached();
 
-    if (eldest) {
-        // Eldest child, keep the return value.
-        if (code_ptr)
-            *code_ptr = code;
+    if (code_ptr)
+        *code_ptr = code;
 
-        if (!sydbox_config_get_wait_all()) {
-            g_hash_table_foreach(ctx->children, tchild_resume_one, NULL);
-            g_hash_table_destroy(ctx->children);
-            ctx->children = NULL;
-            return -1;
-        }
+    if (!sydbox_config_get_wait_all()) {
+        g_hash_table_foreach(ctx->children, tchild_resume_one, NULL);
+        g_hash_table_destroy(ctx->children);
+        ctx->children = NULL;
+        return -1;
     }
 
-    if (G_UNLIKELY(!pink_trace_resume(child->pid, 0))) {
+resume:
+    if (G_UNLIKELY(!pink_trace_resume(pid, 0))) {
         if (G_UNLIKELY(ESRCH != errno)) {
-            g_critical("failed to resume the dying child: %s", g_strerror(errno));
-            g_printerr("failed to resume the dying child: %s\n", g_strerror(errno));
+            g_critical("failed to resume the dying child %i: %s", pid, g_strerror(errno));
+            g_printerr("failed to resume the dying child %i: %s\n", pid, g_strerror(errno));
             exit(-1);
         }
     }
 
-    tchild_delete(ctx->children, child->pid);
+    tchild_delete(ctx->children, pid);
     return 0;
 }
 
@@ -284,7 +282,7 @@ int trace_loop(context_t *ctx)
                     return exit_code;
                 break;
             case PINK_EVENT_EXIT:
-                if (0 != event_exit(ctx, child, &exit_code))
+                if (0 != event_exit(ctx, pid, &exit_code))
                     return exit_code;
                 break;
             case PINK_EVENT_GENUINE:
