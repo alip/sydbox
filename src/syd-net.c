@@ -61,18 +61,18 @@ bool address_cmp(const struct sydbox_addr *addr1, const struct sydbox_addr *addr
         case AF_INET:
             if (addr1->u.sa.netmask != addr2->u.sa.netmask)
                 return false;
-            if (addr1->u.sa.port[0] != addr2->u.sa.port[1])
+            if (addr1->u.sa.port[0] != addr2->u.sa.port[0])
                 return false;
-            if (addr1->u.sa.port[1] != addr2->u.sa.port[2])
+            if (addr1->u.sa.port[1] != addr2->u.sa.port[1])
                 return false;
             return (0 == memcmp(&addr1->u.sa.sin_addr, &addr2->u.sa.sin_addr, sizeof(struct in_addr)));
 #if SYDBOX_HAVE_IPV6
         case AF_INET6:
             if (addr1->u.sa6.netmask != addr2->u.sa6.netmask)
                 return false;
-            if (addr1->u.sa6.port[0] != addr2->u.sa6.port[1])
+            if (addr1->u.sa6.port[0] != addr2->u.sa6.port[0])
                 return false;
-            if (addr1->u.sa6.port[1] != addr2->u.sa6.port[2])
+            if (addr1->u.sa6.port[1] != addr2->u.sa6.port[1])
                 return false;
             return (0 == memcmp(&addr1->u.sa6.sin6_addr, &addr2->u.sa6.sin6_addr, sizeof(struct in6_addr)));
 #endif /* SYDBOX_HAVE_IPV6 */
