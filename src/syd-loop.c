@@ -144,10 +144,10 @@ static int event_exit(context_t *ctx, pid_t pid, int *code_ptr)
     }
 
 resume:
-    if (G_UNLIKELY(!pink_trace_resume(pid, 0))) {
+    if (G_UNLIKELY(!pink_trace_detach(pid, 0))) {
         if (G_UNLIKELY(ESRCH != errno)) {
-            g_critical("failed to resume the dying child %i: %s", pid, g_strerror(errno));
-            g_printerr("failed to resume the dying child %i: %s\n", pid, g_strerror(errno));
+            g_critical("failed to detach the dying child %i: %s", pid, g_strerror(errno));
+            g_printerr("failed to detach the dying child %i: %s\n", pid, g_strerror(errno));
             exit(-1);
         }
     }
