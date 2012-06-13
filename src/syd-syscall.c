@@ -1549,7 +1549,7 @@ int syscall_handle(context_t *ctx, struct tchild *child)
                 case RS_DENY:
                     g_debug("denying access to system call %lu(%s)", sno, sname);
                     child->flags |= TCHILD_DENYSYSCALL;
-                    if (!pink_util_set_syscall(child->pid, child->bitness, PINKTRACE_INVALID_SYSCALL)) {
+                    if (!pink_util_set_syscall(child->pid, child->bitness, PINK_SYSCALL_INVALID)) {
                         if (G_UNLIKELY(ESRCH != errno)) {
                             g_critical("failed to set system call: %s", g_strerror(errno));
                             g_printerr("failed to set system call: %s\n", g_strerror(errno));

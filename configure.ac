@@ -340,7 +340,7 @@ AC_ARG_ENABLE([gprof],
 			  SYDBOX_PROFILE="no")
 AC_MSG_RESULT([$SYDBOX_PROFILE])
 if test x"$SYDBOX_PROFILE" = x"yes" ; then
-	AX_CHECK_COMPILER_FLAGS([-pg],, AC_MSG_ERROR([your compiler doesn't support -pg flag]))
+	AX_CHECK_COMPILER_FLAGS([-pg],, AC_MSG_ERROR([your compiler does not support -pg flag]))
 	SYDBOX_CFLAGS="$SYDBOX_CFLAGS -pg"
 	LDFLAGS="$LDFLAGS -pg"
 fi
@@ -361,7 +361,7 @@ dnl }}}
 
 dnl {{{ Check for libraries
 GLIB_REQUIRED=2.0
-PINKTRACE_REQUIRED=0.0.3
+PINKTRACE_REQUIRED=0.2.0
 
 PKG_PROG_PKG_CONFIG([0.20.0])
 PKG_CHECK_MODULES([glib], [glib-2.0 >= $GLIB_REQUIRED],,
@@ -376,7 +376,7 @@ old_CPPFLAGS="${CPPFLAGS}"
 CPPFLAGS="${CPPFLAGS} ${pkg_cv_pinktrace_CFLAGS}"
 AC_PREPROC_IFELSE([
 #include <pinktrace/pink.h>
-#ifndef PINKTRACE_LINUX
+#if !PINK_OS_LINUX
 #error nope
 #endif
 ],
@@ -414,7 +414,7 @@ if test x"$WANT_IPV6" = x"yes" ; then
 	CPPFLAGS="${CPPFLAGS} ${pkg_cv_pinktrace_CFLAGS}"
 	AC_PREPROC_IFELSE([
 	#include <pinktrace/pink.h>
-	#if PINKTRACE_HAVE_IPV6 == 0
+	#if !PINK_HAVE_IPV6
 	#error nope
 	#endif
 	],
