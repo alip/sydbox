@@ -323,12 +323,21 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
     struct sydbox_addr *addr;
 
     g_debug("checking if stat(\"%s\") is magic", path);
-    if (G_LIKELY(!path_magic_dir(path))) {
+    if (G_LIKELY(!path_magic_prefix(path))) {
         g_debug("stat(\"%s\") not magic", path);
         return;
     }
 
-    if (path_magic_on(path)) {
+    if (path_magic_dir(path)) {
+        data->result = RS_MAGIC;
+    }
+    else if (path_magic_api_match(path)) {
+        data->result = RS_MAGIC;
+    }
+    else if (child->sandbox->path && path_magic_enabled(path)) {
+        data->result = RS_MAGIC;
+    }
+    else if (path_magic_on(path)) {
         data->result = RS_MAGIC;
         child->sandbox->path = true;
         g_info("path sandboxing is now enabled for child %i", child->pid);
@@ -552,8 +561,6 @@ static void syscall_magic_stat(struct tchild *child, struct checkdata *data)
         }
         g_strfreev(expaddr);
     }
-    else if (child->sandbox->path || !path_magic_enabled(path))
-        data->result = RS_MAGIC;
 
     if (data->result == RS_MAGIC) {
         g_debug("stat(\"%s\") is magic, encoding stat buffer", path);

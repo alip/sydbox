@@ -25,7 +25,9 @@
 
 #include <glib.h>
 
-#define CMD_PATH                        "/dev/sydbox/"
+#define CMD_DIR                         "/dev/sydbox"
+#define CMD_PATH                        CMD_DIR"/"
+#define CMD_API_VERSION                 CMD_PATH"0"
 #define CMD_ON                          CMD_PATH"on"
 #define CMD_OFF                         CMD_PATH"off"
 #define CMD_TOGGLE                      CMD_PATH"toggle"
@@ -55,7 +57,11 @@
 #define CMD_NET_WHITELIST_CONNECT       CMD_PATH"net/whitelist/connect/"
 #define CMD_NET_UNWHITELIST_CONNECT     CMD_PATH"net/unwhitelist/connect/"
 
+bool path_magic_prefix(const char *path);
+
 bool path_magic_dir(const char *path);
+
+bool path_magic_api_match(const char *path);
 
 bool path_magic_on(const char *path);
 

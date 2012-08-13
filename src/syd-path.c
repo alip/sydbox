@@ -54,9 +54,19 @@ static char *shell_expand(const char * const str)
     return output;
 }
 
-inline bool path_magic_dir(const char *path)
+inline bool path_magic_prefix(const char *path)
 {
     return (0 == strncmp(path, CMD_PATH, sizeof(CMD_PATH) - 2));
+}
+
+inline bool path_magic_dir(const char *path)
+{
+    return (0 == strncmp(path, CMD_DIR, sizeof(CMD_DIR)));
+}
+
+inline bool path_magic_api_match(const char *path)
+{
+    return (0 == strncmp(path, CMD_API_VERSION, sizeof(CMD_API_VERSION)));
 }
 
 inline bool path_magic_on(const char *path)
