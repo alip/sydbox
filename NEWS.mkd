@@ -3,6 +3,10 @@
 This file lists the major changes between versions. For a more detailed list of
 every change, see git log.
 
+### 0.7.6
+* Fix a race condition
+* Fix erroneous magic path detection
+
 ### 0.7.5
 * Fix a bug in pre-exit callback which caused sydbox to segfault
 * Fix port checking in socket address comparison
