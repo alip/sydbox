@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010, 2012 Ali Polatel <alip@exherbo.org>
  * Copyright (c) 2009 Saleem Abdulrasool <compnerd@compnerd.org>
  *
  * This file is part of the sydbox sandbox tool. sydbox is free software;
@@ -295,7 +295,7 @@ static int sydbox_internal_main(int argc, char **argv)
     dispatch_init();
     ctx = context_new();
 
-    g_atexit(cleanup);
+    atexit(cleanup);
 
     /*
      * options are loaded from config file, user config file, updated from the
