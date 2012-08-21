@@ -1,7 +1,7 @@
 /* vim: set sw=4 sts=4 et foldmethod=syntax : */
 
 /*
- * Copyright (c) 2009, 2010 Ali Polatel <alip@exherbo.org>
+ * Copyright (c) 2009, 2010, 2012 Ali Polatel <alip@exherbo.org>
  * Based in part upon courier which is:
  *     Copyright 1998-2009 Double Precision, Inc
  *
@@ -392,7 +392,7 @@ struct sydbox_addr *address_from_string(const gchar *src, bool canlog)
                     addr, saddr->u.sa6.netmask, saddr->u.sa6.port[0], saddr->u.sa6.port[1]);
         g_free(addr);
 #else
-        g_warning("inet6:// not supported (no IPV6 support)");
+        g_info("inet6:// not supported (no IPV6 support)");
         g_free(saddr);
         return NULL;
 #endif /* SYDBOX_HAVE_IPV6 */
